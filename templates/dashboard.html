@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AppVault Cloud — Dashboard</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0e1a;
+            color: #e2e8f0;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+        h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 30px; }
+        .instance-card {
+            background: #111827;
+            border: 1px solid #1e293b;
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .instance-card .info { flex: 1; }
+        .instance-card h3 { font-size: 1.1rem; font-weight: 700; color: #f1f5f9; margin-bottom: 4px; }
+        .instance-card p { font-size: 0.88rem; color: #94a3b8; }
+        .instance-card .status {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            margin-left: 16px;
+        }
+        .status-active { background: #064e3b; color: #34d399; }
+        .status-pending { background: #451a03; color: #fbbf24; }
+        .status-provisioning { background: #1e3a5f; color: #60a5fa; }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            color: #fff;
+        }
+        .empty { text-align: center; padding: 60px 24px; color: #64748b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Your AppVault Instances</h1>
+        
+        {% if instances %}
+            {% for inst in instances %}
+            <div class="instance-card">
+                <div class="info">
+                    <h3>{{ inst.tier | capitalize }} — {{ inst.created_at[:10] }}</h3>
+                    <p>ID: {{ inst.id[:8] }}... | Status: {{ inst.status }}</p>
+                    {% if inst.url %}
+                    <p style="margin-top:4px;"><a href="{{ inst.url }}" style="color:#38bdf8;">{{ inst.url }}</a></p>
+                    {% endif %}
+                </div>
+                <span class="status status-{{ inst.status }}">{{ inst.status }}</span>
+                {% if inst.url %}
+                <a href="{{ inst.url }}" class="btn btn-primary" style="margin-left:16px;">Open</a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty">
+                <p>No instances yet. Purchase a plan to get started.</p>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AppVault Cloud — Your AI App Store</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0e1a;
+            color: #e2e8f0;
+            line-height: 1.6;
+        }
+        .hero {
+            min-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 24px;
+            text-align: center;
+            background: radial-gradient(ellipse at 50% 0%, #1a1f3a 0%, #0a0e1a 70%);
+        }
+        .hero h1 {
+            font-size: clamp(2.2rem, 5vw, 3.8rem);
+            font-weight: 800;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+        }
+        .hero p {
+            font-size: 1.2rem;
+            color: #94a3b8;
+            max-width: 600px;
+            margin-bottom: 40px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 18px 40px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+        .btn:hover { transform: translateY(-2px); }
+        .btn-primary {
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            color: #fff;
+            box-shadow: 0 8px 32px rgba(56,189,248,0.25);
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 60px 24px;
+        }
+        .feature-card {
+            background: #111827;
+            border: 1px solid #1e293b;
+            border-radius: 14px;
+            padding: 32px;
+            text-align: center;
+        }
+        .feature-card .icon { font-size: 2.5rem; margin-bottom: 16px; }
+        .feature-card h3 { font-size: 1.1rem; font-weight: 700; color: #f1f5f9; margin-bottom: 8px; }
+        .feature-card p { font-size: 0.92rem; color: #94a3b8; }
+        .pricing {
+            padding: 80px 24px;
+            text-align: center;
+        }
+        .pricing h2 { font-size: 2rem; font-weight: 700; margin-bottom: 40px; }
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .plan {
+            background: #111827;
+            border: 1px solid #1e293b;
+            border-radius: 16px;
+            padding: 32px;
+            text-align: left;
+        }
+        .plan.featured { border-color: #38bdf8; box-shadow: 0 0 30px rgba(56,189,248,0.1); }
+        .plan h3 { font-size: 1.2rem; color: #f1f5f9; margin-bottom: 8px; }
+        .plan .price { font-size: 2.5rem; font-weight: 800; color: #38bdf8; margin-bottom: 4px; }
+        .plan .price span { font-size: 1rem; font-weight: 400; color: #64748b; }
+        .plan ul { list-style: none; margin: 20px 0; font-size: 0.92rem; color: #cbd5e1; }
+        .plan ul li { padding: 8px 0; border-bottom: 1px solid #1e293b; }
+        .plan .btn { width: 100%; text-align: center; margin-top: 10px; }
+        footer { text-align: center; padding: 40px 24px; color: #475569; font-size: 0.82rem; border-top: 1px solid #1e293b; margin-top: 40px; }
+        .checkout-form { margin-top: 10px; }
+        .checkout-form input {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background: #1e293b;
+            color: #e2e8f0;
+            font-size: 0.92rem;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <section class="hero">
+        <h1>Your AI App Store</h1>
+        <p>No installs. No setup. We host everything. Just log in and start using powerful AI tools from your browser.</p>
+        <a href="#pricing" class="btn btn-primary">Get Started</a>
+    </section>
+
+    <section class="features">
+        <div class="feature-card">
+            <div class="icon">🌐</div>
+            <h3>Browser-Based</h3>
+            <p>No Docker, no installs, no hardware requirements. Works on any device with a browser.</p>
+        </div>
+        <div class="feature-card">
+            <div class="icon">🤖</div>
+            <h3>40+ AI Tools</h3>
+            <p>Open WebUI, Ollama, Stable Diffusion, Whisper, ComfyUI, and more — one click away.</p>
+        </div>
+        <div class="feature-card">
+            <div class="icon">🔒</div>
+            <h3>Private & Secure</h3>
+            <p>Your own isolated instance. Your data stays on your dedicated server.</p>
+        </div>
+    </section>
+
+    <section class="pricing" id="pricing">
+        <h2>Simple Pricing</h2>
+        <div class="pricing-grid">
+            <div class="plan">
+                <h3>Starter</h3>
+                <div class="price">$9<span>/mo</span></div>
+                <ul>
+                    <li>10 AI apps included</li>
+                    <li>2 GB RAM, 40 GB SSD</li>
+                    <li>Community support</li>
+                </ul>
+                <button class="btn btn-primary" onclick="checkout('starter')">Choose Starter</button>
+            </div>
+            <div class="plan featured">
+                <h3>Pro</h3>
+                <div class="price">$19<span>/mo</span></div>
+                <ul>
+                    <li>25 AI apps included</li>
+                    <li>4 GB RAM, 80 GB SSD</li>
+                    <li>Priority support</li>
+                </ul>
+                <button class="btn btn-primary" onclick="checkout('pro')">Choose Pro</button>
+            </div>
+            <div class="plan">
+                <h3>Power</h3>
+                <div class="price">$39<span>/mo</span></div>
+                <ul>
+                    <li>Unlimited apps</li>
+                    <li>8 GB RAM, 160 GB SSD</li>
+                    <li>Priority resources</li>
+                </ul>
+                <button class="btn btn-primary" onclick="checkout('power')">Choose Power</button>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>AppVault Cloud — Your one-click AI app store</p>
+        <p style="margin-top:6px;">&copy; 2026</p>
+    </footer>
+
+    <script>
+        function checkout(tier) {
+            const email = prompt("Enter your email:");
+            if (!email) return;
+            
+            fetch("/api/checkout", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({tier: tier, email: email})
+            })
+            .then(r => r.json())
+            .then(d => { if (d.url) window.location.href = d.url; })
+            .catch(e => alert("Error: " + e));
+        }
+    </script>
+</body>
+</html>
