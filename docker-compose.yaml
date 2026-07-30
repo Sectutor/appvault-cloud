@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  appvault-central:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: appvault-central
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - central-data:/data
+    environment:
+      - CENTRAL_PORT=8000
+      - CENTRAL_URL=https://appvault.airepoindex.com
+      - ADMIN_USERNAME=admin
+      - "ADMIN_PASSWORD=${ADMIN_PASSWORD:-AppVault2026!}"
+      - DB_PATH=/data/appvault.db
+      - CATALOG_PATH=/app/static/catalog.json
+      - AGENT_POLL_SECONDS=30
+      - AGENT_TIMEOUT_SECONDS=300
+      - DOMAIN=appvault.airepoindex.com
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  central-data:
