@@ -15,7 +15,7 @@ services:
       - CENTRAL_PORT=8000
       - CENTRAL_URL=https://appvault.airepoindex.com
       - ADMIN_USERNAME=admin
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-AppVault2026!}
+      - "ADMIN_PASSWORD=${ADMIN_PASSWORD:-AppVault2026!}"
       - DB_PATH=/data/appvault.db
       - CATALOG_PATH=/app/static/catalog.json
       - AGENT_POLL_SECONDS=30
