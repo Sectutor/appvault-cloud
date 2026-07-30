@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Details — AppVault Admin</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0e1a; color: #e2e8f0; padding: 20px; }
+h1 { font-size: 24px; font-weight: 800; margin-bottom: 20px; }
+h2 { font-size: 16px; font-weight: 700; margin: 20px 0 10px; color: #f1f5f9; }
+.card { background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; padding: 8px; border-bottom: 2px solid #1e293b; color: #94a3b8; font-size: 11px; text-transform: uppercase; }
+td { padding: 8px; border-bottom: 1px solid #1e293b; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 8px; font-size: 11px; font-weight: 700; }
+.badge-online { background: rgba(34,197,94,0.15); color: #22c55e; }
+.badge-offline { background: rgba(100,116,139,0.15); color: #64748b; }
+.badge-completed { background: rgba(34,197,94,0.15); color: #22c55e; }
+.badge-pending { background: rgba(234,179,8,0.15); color: #eab308; }
+.badge-failed { background: rgba(239,68,68,0.15); color: #ef4444; }
+.btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; }
+.btn-primary { background: linear-gradient(135deg, #38bdf8, #818cf8); color: #fff; }
+.btn-uninstall { background: #ef4444; color: #fff; }
+.back { color: #38bdf8; text-decoration: none; font-size: 14px; }
+code { color: #38bdf8; }
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.info-label { color: #64748b; font-size: 12px; }
+.info-value { font-weight: 600; }
+</style>
+</head>
+<body>
+<p><a href="/admin" class="back">← Back to Admin Panel</a></p>
+<h1>🤖 Agent: {{ agent.name }}</h1>
+
+<div class="card">
+  <div class="info-grid">
+    <div><div class="info-label">Agent ID</div><div class="info-value"><code>{{ agent.id }}</code></div></div>
+    <div><div class="info-label">API Key</div><div class="info-value"><code style="color:#64748b;">{{ agent.api_key[:16] }}…</code></div></div>
+    <div><div class="info-label">OS</div><div class="info-value">{{ agent.os }}</div></div>
+    <div><div class="info-label">Docker Version</div><div class="info-value">{{ agent.docker_version }}</div></div>
+    <div><div class="info-label">App Version</div><div class="info-value">{{ agent.app_version }}</div></div>
+    <div><div class="info-label">IP Address</div><div class="info-value">{{ agent.ip_address }}</div></div>
+    <div><div class="info-label">Status</div><div class="info-value"><span class="badge badge-{{ agent.status }}">{{ agent.status }}</span></div></div>
+    <div><div class="info-label">Last Seen</div><div class="info-value">{{ agent.last_seen or 'never' }}</div></div>
+    <div><div class="info-label">Registered</div><div class="info-value">{{ agent.registered_at }}</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Push a Remote Install</h2>
+  <form id="pushForm" style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;">
+    <div>
+      <label style="font-size:12px;color:#94a3b8;">Action</label>
+      <select id="jobAction" style="display:block;margin-top:4px;padding:6px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;">
+        <option value="install">Install</option>
+        <option value="uninstall">Uninstall</option>
+        <option value="restart">Restart</option>
+      </select>
+    </div>
+    <div>
+      <label style="font-size:12px;color:#94a3b8;">App</label>
+      <select id="jobApp" style="display:block;margin-top:4px;padding:6px 10px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;">
+        {% for app in catalog.apps %}
+        <option value="{{ app.id }}">{{ app.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary">🚀 Push Job</button>
+  </form>
+</div>
+
+<h2>Installed Apps</h2>
+<div class="card">
+  {% if installed %}
+  <table>
+    <tr><th>App</th><th>Status</th></tr>
+    {% for i in installed %}
+    <tr><td>{{ i.app_id }}</td><td><span class="badge badge-completed">installed</span></td></tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <div style="color:#64748b;">No apps installed yet. Push a remote install above.</div>
+  {% endif %}
+</div>
+
+<h2>Job History</h2>
+<div class="card">
+  {% if jobs %}
+  <table>
+    <tr><th>#</th><th>Action</th><th>App</th><th>Status</th><th>Created</th><th>Completed</th><th>Result</th></tr>
+    {% for j in jobs %}
+    <tr>
+      <td>{{ j.id }}</td>
+      <td>{{ j.action }}</td>
+      <td>{{ j.app_id }}</td>
+      <td><span class="badge badge-{{ j.status }}">{{ j.status }}</span></td>
+      <td>{{ j.created_at[:19] if j.created_at else '' }}</td>
+      <td>{{ j.completed_at[:19] if j.completed_at else '-' }}</td>
+      <td style="color:#64748b;font-size:11px;">{{ (j.result or '')[:50] }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <div style="color:#64748b;">No jobs yet.</div>
+  {% endif %}
+</div>
+
+<div id="toast" style="position:fixed;top:20px;right:20px;padding:12px 24px;border-radius:8px;color:#fff;font-weight:600;z-index:10000;transform:translateX(120%);transition:transform 0.3s;"></div>
+
+<script>
+document.getElementById('pushForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const action = document.getElementById('jobAction').value;
+  const appId = document.getElementById('jobApp').value;
+  
+  const r = await fetch('/admin/agents/{{ agent.id }}/jobs', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({action, app_id: appId})
+  });
+  const d = await r.json();
+  const toast = document.getElementById('toast');
+  if (d.status === 'queued') {
+    toast.textContent = '✅ Job #' + d.job_id + ' queued! Agent will pick it up on next poll.';
+    toast.className = 'toast show';
+    toast.style.background = '#22c55e';
+    setTimeout(() => location.reload(), 2000);
+  } else {
+    toast.textContent = '❌ ' + (d.detail || 'Failed');
+    toast.className = 'toast show';
+    toast.style.background = '#ef4444';
+  }
+  setTimeout(() => toast.classList.remove('show'), 3000);
+});
+</script>
+</body>
+</html>

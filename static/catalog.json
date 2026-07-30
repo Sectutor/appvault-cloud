@@ -1,0 +1,1023 @@
+{
+  "apps": [
+    {
+      "id": "central-mariadb",
+      "name": "Central MariaDB",
+      "description": "Shared MariaDB. All apps use this instead of individual DBs.",
+      "image": "mariadb:10.11",
+      "category": "database",
+      "hidden": true,
+      "min_ram_mb": 512,
+      "container_port": 3306,
+      "volumes": [
+        "central-mariadb-data:/var/lib/mysql"
+      ],
+      "env": [
+        "MYSQL_ROOT_PASSWORD=appvault_root_secret"
+      ]
+    },
+    {
+      "id": "central-postgres",
+      "name": "Central PostgreSQL",
+      "description": "Shared PostgreSQL. All apps use this instead of individual DBs.",
+      "image": "postgres:15-alpine",
+      "category": "database",
+      "hidden": true,
+      "min_ram_mb": 512,
+      "container_port": 5432,
+      "volumes": [
+        "central-postgres-data:/var/lib/postgresql/data"
+      ],
+      "env": [
+        "POSTGRES_PASSWORD=appvault_root_secret"
+      ]
+    },
+    {
+      "id": "owncloud",
+      "name": "ownCloud",
+      "description": "Self-hosted file sync & share platform",
+      "image": "owncloud/server:latest",
+      "container_port": 8080,
+      "volumes": [
+        "owncloud-data:/mnt/data"
+      ],
+      "env": [
+        "OWNCLOUD_DOMAIN=localhost:${OWNCLOUD_PORT}",
+        "OWNCLOUD_DB_TYPE=mysql",
+        "OWNCLOUD_DB_NAME=owncloud",
+        "OWNCLOUD_DB_USERNAME=owncloud",
+        "OWNCLOUD_DB_PASSWORD=owncloud",
+        "OWNCLOUD_DB_HOST=app-central-mariadb",
+        "OWNCLOUD_ADMIN_USERNAME=admin",
+        "OWNCLOUD_ADMIN_PASSWORD=admin",
+        "OWNCLOUD_MYSQL_UTF8MB4=true"
+      ],
+      "category": "productivity",
+      "min_ram_mb": 512,
+      "education": {
+        "docs_url": "https://doc.owncloud.com/server/",
+        "quick_start": "ownCloud gives you a private file sync & share platform. After install, visit the app URL and log in with admin/admin. Upload files, share links, and sync with desktop/mobile clients.",
+        "default_login": {
+          "username": "admin",
+          "password": "admin"
+        },
+        "setup_steps": [
+          "Log in with admin / admin",
+          "Go to Settings \u2192 Admin \u2192 set a secure admin password",
+          "Configure email server for password resets",
+          "Install desktop sync client from owncloud.com"
+        ]
+      }
+    },
+    {
+      "id": "n8n",
+      "name": "n8n",
+      "description": "Workflow automation & integration platform",
+      "image": "n8nio/n8n:latest",
+      "container_port": 5678,
+      "volumes": [
+        "n8n-data:/home/node/.n8n"
+      ],
+      "env": [
+        "N8N_SECURE_COOKIE=false",
+        "N8N_HOST=localhost",
+        "N8N_PORT=5678",
+        "N8N_PROTOCOL=http"
+      ],
+      "category": "automation",
+      "min_ram_mb": 256,
+      "education": {
+        "docs_url": "https://docs.n8n.io/",
+        "quick_start": "n8n is a workflow automation tool that connects apps together. After install, create an account, then build workflows by dragging and connecting 400+ integrations.",
+        "default_login": {
+          "username": "user@example.com",
+          "password": "set on first login"
+        },
+        "setup_steps": [
+          "Open the app URL \u2192 create your account (first user is owner)",
+          "Explore the template library for ready-made workflows",
+          "Connect your apps via the integrations panel",
+          "Set up the n8n desktop app for local triggers"
+        ]
+      }
+    },
+    {
+      "id": "pihole",
+      "name": "Pi-hole",
+      "description": "Network-wide ad blocking DNS server",
+      "image": "pihole/pihole:latest",
+      "container_port": 80,
+      "volumes": [
+        "pihole-data:/etc/pihole",
+        "pihole-dnsmasq:/etc/dnsmasq.d"
+      ],
+      "env": [
+        "TZ=Etc/UTC",
+        "WEBPASSWORD=admin",
+        "PIHOLE_DNS_=1.1.1.1;8.8.8.8"
+      ],
+      "category": "networking",
+      "min_ram_mb": 128,
+      "web_path": "/admin/",
+      "education": {
+        "docs_url": "https://docs.pi-hole.net/",
+        "quick_start": "Pi-hole blocks ads across your entire network at the DNS level. After install, set the admin password, configure upstream DNS, then point your router's DNS to this machine.",
+        "default_login": {
+          "username": "admin",
+          "password": "auto-generated (check console logs)",
+          "path": "/admin/"
+        },
+        "setup_steps": [
+          "Set admin password: docker exec -it app-pihole pihole -a -p",
+          "Visit http://localhost:PORT/admin/ and log in",
+          "Check the Query Log to see blocked ads",
+          "Set your router's DNS to this machine's IP for network-wide blocking"
+        ],
+        "video_url": "https://www.youtube.com/watch?v=xtMcRIGoMJQ"
+      }
+    },
+    {
+      "id": "openwebui",
+      "name": "Open WebUI",
+      "description": "Self-hosted AI chat interface for LLMs",
+      "image": "ghcr.io/open-webui/open-webui:main",
+      "container_port": 8080,
+      "volumes": [
+        "openwebui-data:/app/backend/data"
+      ],
+      "env": [
+        "OLLAMA_BASE_URL=http://host.docker.internal:11434"
+      ],
+      "category": "ai",
+      "min_ram_mb": 512,
+      "education": {
+        "docs_url": "https://docs.openwebui.com/",
+        "quick_start": "Open WebUI is a ChatGPT-like interface for local LLMs. Connect it to Ollama or any OpenAI-compatible API to chat with AI models privately.",
+        "default_login": {
+          "username": "admin@example.com",
+          "password": "set on first login"
+        },
+        "setup_steps": [
+          "Open the app \u2192 create your admin account",
+          "Go to Settings \u2192 Connections \u2192 add your Ollama endpoint",
+          "Browse and pull models from the model library",
+          "Start chatting with your local AI"
+        ]
+      }
+    },
+    {
+      "id": "crewai-studio",
+      "name": "CrewAI Studio",
+      "description": "Streamlit-based visual interface to build and orchestrate multi-agent crews without code.",
+      "image": "tham0nk/crewai-studio:latest",
+      "container_port": 8501,
+      "env": [
+        "DB_HOST=app-central-postgres",
+        "DB_PORT=5432",
+        "DB_USER=crewai_user",
+        "DB_PASSWORD=crewai_secret_pass",
+        "POSTGRES_DB=crewai"
+      ],
+      "category": "ai",
+      "tier": "premium",
+      "min_ram_mb": 512,
+      "education": {
+        "docs_url": "https://docs.crewai.com/",
+        "quick_start": "CrewAI Studio lets you build and run AI agent crews with a visual interface. Define agents, assign tasks, and watch them collaborate.",
+        "default_login": {
+          "password": "set on first login"
+        },
+        "setup_steps": [
+          "Open the app \u2192 create your account",
+          "Define your first AI agent (role, goal, backstory)",
+          "Create a task for the agent",
+          "Assemble a crew and run it"
+        ]
+      }
+    },
+    {
+      "id": "hermes-agent",
+      "name": "Hermes Agent",
+      "description": "An open-source, persistent, self-improving autonomous AI agent developed by Nous Research.",
+      "image": "nousresearch/hermes-agent:latest",
+      "container_port": 8642,
+      "extra_ports": {
+        "9119": 9119
+      },
+      "volumes": [
+        "hermes-agent-data:/opt/data"
+      ],
+      "env": [
+        "TZ=UTC"
+      ],
+      "category": "ai",
+      "tier": "premium",
+      "min_ram_mb": 512,
+      "education": {
+        "docs_url": "https://github.com/NousResearch/hermes-agent",
+        "quick_start": "Hermes Agent is an AI agent from Nous Research. Note: This is a very large download (several GB) that includes AI models.",
+        "setup_steps": [
+          "The image is large (>5GB) \u2014 first pull may take 5-10 minutes",
+          "Once running, the agent provides an API for AI tasks",
+          "Check the logs for access instructions: docker logs app-hermes-agent"
+        ]
+      }
+    },
+    {
+      "id": "adguard",
+      "name": "AdGuard Home",
+      "description": "Network-wide ad blocking and DNS filtering",
+      "image": "adguard/adguardhome:latest",
+      "container_port": 80,
+      "volumes": [
+        "adguard-data:/opt/adguardhome/work",
+        "adguard-conf:/opt/adguardhome/conf"
+      ],
+      "env": [],
+      "category": "networking",
+      "min_ram_mb": 128,
+      "education": {
+        "docs_url": "https://adguard.com/en/adguard-home/overview.html",
+        "quick_start": "AdGuard Home is a network-wide ad blocker similar to Pi-hole. It runs a DNS server that filters ads before they reach any device.",
+        "default_login": {
+          "username": "admin",
+          "password": "set on first login",
+          "path": "/"
+        },
+        "setup_steps": [
+          "Open http://localhost:PORT/ \u2014 the setup wizard will appear",
+          "Set up your admin credentials",
+          "Configure upstream DNS (Cloudflare, Google, etc.)",
+          "Point your router's DNS to this machine's IP"
+        ]
+      }
+    },
+    {
+      "id": "wordpress",
+      "name": "WordPress",
+      "description": "Blog and website CMS platform",
+      "image": "wordpress:latest",
+      "container_port": 80,
+      "volumes": [
+        "wordpress-data:/var/www/html"
+      ],
+      "env": [
+        "WORDPRESS_DB_HOST=app-central-mariadb:3306",
+        "WORDPRESS_DB_USER=wordpress",
+        "WORDPRESS_DB_PASSWORD=wordpress",
+        "WORDPRESS_DB_NAME=wordpress"
+      ],
+      "category": "productivity",
+      "min_ram_mb": 256,
+      "education": {
+        "docs_url": "https://wordpress.org/documentation/",
+        "quick_start": "WordPress is the world's most popular CMS. After install, the setup wizard will guide you through creating your site \u2014 choose a language, set up your database (already configured), and create your admin account.",
+        "default_login": {
+          "username": "set during setup",
+          "password": "set during setup"
+        },
+        "setup_steps": [
+          "Open the app URL \u2192 WordPress setup wizard will appear",
+          "Select your language and click Continue",
+          "Enter a Site Title, Username, and Password",
+          "Your site is ready! Visit /wp-admin to manage it"
+        ]
+      }
+    },
+    {
+      "id": "nextcloud",
+      "name": "Nextcloud",
+      "description": "Self-hosted file sync, calendar, contacts, office suite",
+      "image": "nextcloud:latest",
+      "volumes": [
+        "nextcloud-data:/var/www/html"
+      ],
+      "env": [
+        "MYSQL_PASSWORD=nextcloud",
+        "MYSQL_DATABASE=nextcloud",
+        "MYSQL_USER=nextcloud",
+        "MYSQL_HOST=app-central-mariadb"
+      ],
+      "category": "productivity",
+      "min_ram_mb": 512,
+      "main_port": 9085,
+      "extra_ports": {
+        "80": "${NEXTCLOUD_PORT:-9085}"
+      },
+      "education": {
+        "docs_url": "https://docs.nextcloud.com/",
+        "quick_start": "Nextcloud is a self-hosted productivity platform with file sync, calendar, contacts, and collaborative office tools. Create an admin account, then configure storage and users.",
+        "default_login": {
+          "username": "set during setup",
+          "password": "set during setup"
+        },
+        "setup_steps": [
+          "Open the app URL \u2192 create your admin account",
+          "Choose 'Install Recommended Apps' for full functionality",
+          "Install desktop/mobile sync clients from nextcloud.com",
+          "Set up calendar & contacts sync"
+        ]
+      }
+    },
+    {
+      "id": "onlyoffice",
+      "name": "OnlyOffice",
+      "description": "Self-hosted office suite (docs, sheets, slides)",
+      "image": "onlyoffice/documentserver:latest",
+      "volumes": [
+        "onlyoffice-data:/var/www/onlyoffice/Data",
+        "onlyoffice-log:/var/log/onlyoffice"
+      ],
+      "env": [
+        "JWT_SECRET=supersecret"
+      ],
+      "category": "productivity",
+      "min_ram_mb": 1024,
+      "main_port": 9086,
+      "extra_ports": {
+        "80": "${ONLYOFFICE_PORT:-9086}"
+      },
+      "education": {
+        "docs_url": "https://helpcenter.onlyoffice.com/",
+        "quick_start": "OnlyOffice Document Server provides online document editing (Word, Excel, PowerPoint) that integrates with Nextcloud, ownCloud, and other platforms.",
+        "setup_steps": [
+          "This is a backend service \u2014 it works with Nextcloud/ownCloud apps",
+          "Install the ONLYOFFICE connector plugin in your cloud platform",
+          "Configure the connector to point to http://app-onlyoffice:PORT/",
+          "Test by creating/editing a document in your cloud"
+        ]
+      }
+    },
+    {
+      "id": "gitlab",
+      "name": "GitLab CE",
+      "description": "Self-hosted Git repository and CI/CD",
+      "image": "gitlab/gitlab-ce:latest",
+      "container_port": 80,
+      "extra_ports": {
+        "443": "${GITLAB_HTTPS_PORT:-8443}",
+        "22": "${GITLAB_SSH_PORT:-8022}"
+      },
+      "volumes": [
+        "gitlab-config:/etc/gitlab",
+        "gitlab-logs:/var/log/gitlab",
+        "gitlab-data:/var/opt/gitlab"
+      ],
+      "env": [
+        "GITLAB_OMNIBUS_CONFIG=external_url 'http://localhost:${GITLAB_PORT:-8085}'"
+      ],
+      "category": "development",
+      "min_ram_mb": 4096,
+      "education": {
+        "docs_url": "https://docs.gitlab.com/",
+        "quick_start": "GitLab is a complete DevOps platform with Git repos, CI/CD, and project management. After install, set the root password, then create projects and configure runners.",
+        "default_login": {
+          "username": "root",
+          "password": "set on first login"
+        },
+        "setup_steps": [
+          "Open the app URL \u2192 set the root password",
+          "Log in with root and your chosen password",
+          "Create your first project",
+          "Add SSH keys in Preferences \u2192 SSH Keys"
+        ]
+      }
+    },
+    {
+      "id": "bookstack",
+      "name": "BookStack",
+      "description": "Documentation/wiki platform",
+      "image": "lscr.io/linuxserver/bookstack:latest",
+      "volumes": [
+        "bookstack-data:/config"
+      ],
+      "env": [
+        "PUID=1000",
+        "PGID=1000",
+        "TZ=Etc/UTC",
+        "DB_HOST=app-central-mariadb",
+        "DB_USERNAME=bookstack",
+        "DB_PASSWORD=bookstack",
+        "DB_DATABASE=bookstackapp",
+        "APP_KEY=base64:bdb3Swyj3nhkPIK2TwejdgiP+d8tFQb4cddyXVGSGaU=",
+        "APP_URL=http://localhost:9087"
+      ],
+      "category": "productivity",
+      "min_ram_mb": 256,
+      "main_port": 9087,
+      "extra_ports": {
+        "80": "${BOOKSTACK_PORT:-9087}"
+      },
+      "education": {
+        "docs_url": "https://www.bookstackapp.com/docs/",
+        "quick_start": "BookStack is a self-hosted wiki/documentation platform. Organize content into Shelves \u2192 Books \u2192 Chapters \u2192 Pages hierarchy.",
+        "default_login": {
+          "username": "admin@admin.com",
+          "password": "password"
+        },
+        "setup_steps": [
+          "Log in with admin@admin.com / password",
+          "Change the default credentials immediately",
+          "Create your first Shelf \u2192 Book \u2192 Page",
+          "Configure SMTP for email notifications"
+        ]
+      }
+    },
+    {
+      "id": "paperless",
+      "name": "Paperless-ngx",
+      "description": "Document management and OCR",
+      "image": "ghcr.io/paperless-ngx/paperless-ngx:latest",
+      "container_port": 8000,
+      "volumes": [
+        "paperless-data:/usr/src/paperless/data",
+        "paperless-media:/usr/src/paperless/media",
+        "paperless-consume:/usr/src/paperless/consume"
+      ],
+      "env": [
+        "PAPERLESS_REDIS=redis://app-paperless-redis:6379",
+        "PAPERLESS_DBHOST=app-central-postgres",
+        "USERMAP_UID=1000",
+        "USERMAP_GID=1000"
+      ],
+      "category": "productivity",
+      "min_ram_mb": 1024,
+      "education": {
+        "docs_url": "https://docs.paperless-ngx.com/",
+        "quick_start": "Paperless-ngx automatically organizes your documents. Drop PDFs into the consumption folder, and it tags, dates, and indexes them for search.",
+        "default_login": {
+          "username": "superuser",
+          "password": "set on first login"
+        },
+        "setup_steps": [
+          "Open the app \u2192 create your superuser account",
+          "Configure the consumption folder for auto-importing",
+          "Set up document types and correspondents",
+          "Install the mobile app for scanning on the go"
+        ]
+      }
+    },
+    {
+      "id": "jellyfin",
+      "name": "Jellyfin",
+      "description": "Media server (alternative to Plex)",
+      "image": "lscr.io/linuxserver/jellyfin:latest",
+      "container_port": 8096,
+      "volumes": [
+        "jellyfin-config:/config",
+        "jellyfin-media:/data/tvshows",
+        "jellyfin-movies:/data/movies"
+      ],
+      "env": [
+        "PUID=1000",
+        "PGID=1000",
+        "TZ=Etc/UTC"
+      ],
+      "category": "media",
+      "min_ram_mb": 512,
+      "education": {
+        "docs_url": "https://jellyfin.org/docs/",
+        "quick_start": "Jellyfin is a media server for movies, TV, music, and photos. After setup, add your media libraries and enjoy on any device.",
+        "default_login": {
+          "username": "set during setup",
+          "password": "set during setup"
+        },
+        "setup_steps": [
+          "Open the app URL \u2192 complete the setup wizard",
+          "Add your media folders (Movies, TV Shows, Music)",
+          "Wait for the library scan to complete",
+          "Install Jellyfin clients on your TV, phone, or tablet"
+        ]
+      }
+    },
+    {
+      "id": "navidrome",
+      "name": "Navidrome",
+      "description": "Music streaming server",
+      "image": "deluan/navidrome:latest",
+      "container_port": 4533,
+      "volumes": [
+        "navidrome-data:/data",
+        "navidrome-music:/music:ro"
+      ],
+      "env": [
+        "ND_LOGLEVEL=info"
+      ],
+      "category": "media",
+      "min_ram_mb": 256,
+      "education": {
+        "docs_url": "https://navidrome.org/docs/",
+        "quick_start": "Navidrome is a personal music streaming server. Point it to your music folder and stream your collection from anywhere.",
+        "setup_steps": [
+          "Place your music files in the music volume",
+          "Open the app \u2014 Navidrome will scan automatically",
+          "Log in and start streaming",
+          "Use Subsonic-compatible apps (Ultrasonic, DSub) for mobile access"
+        ]
+      }
+    },
+    {
+      "id": "kavita",
+      "name": "Kavita",
+      "description": "E-book and comic reader",
+      "image": "lscr.io/linuxserver/kavita:latest",
+      "container_port": 5000,
+      "volumes": [
+        "kavita-config:/config",
+        "kavita-data:/manga"
+      ],
+      "env": [
+        "PUID=1000",
+        "PGID=1000",
+        "TZ=Etc/UTC"
+      ],
+      "category": "media",
+      "min_ram_mb": 256,
+      "education": {
+        "docs_url": "https://wiki.kavitareader.com/",
+        "quick_start": "Kavita is a self-hosted digital library for comics, manga, ebooks, and magazines. It supports CBR, CBZ, EPUB, PDF, and more.",
+        "default_login": {
+          "username": "admin",
+          "password": "admin"
+        },
+        "setup_steps": [
+          "Log in with admin / admin",
+          "Go to Settings \u2192 Libraries \u2192 Add your media folders",
+          "Set up the library scanner",
+          "Start reading in your browser or mobile app"
+        ]
+      }
+    },
+    {
+      "id": "photoprism",
+      "name": "PhotoPrism",
+      "description": "AI-powered photo management",
+      "image": "photoprism/photoprism:latest",
+      "container_port": 2342,
+      "volumes": [
+        "photoprism-data:/photoprism/storage",
+        "photoprism-originals:/photoprism/originals"
+      ],
+      "env": [
+        "PHOTOPRISM_ADMIN_PASSWORD=insecure",
+        "PHOTOPRISM_DATABASE_DRIVER=mysql",
+        "PHOTOPRISM_DATABASE_SERVER=app-central-mariadb:3306",
+        "PHOTOPRISM_DATABASE_NAME=photoprism",
+        "PHOTOPRISM_DATABASE_USER=photoprism",
+        "PHOTOPRISM_DATABASE_PASSWORD=photoprism"
+      ],
+      "category": "media",
+      "min_ram_mb": 2048,
+      "education": {
+        "docs_url": "https://docs.photoprism.app/",
+        "quick_start": "PhotoPrism is an AI-powered photo manager. It automatically organizes your photos by date, location, and even detects faces and objects.",
+        "default_login": {
+          "username": "admin",
+          "password": "set on first login"
+        },
+        "setup_steps": [
+          "Open the app \u2192 set your admin password",
+          "Point PhotoPrism to your photo directory",
+          "Let the indexing run (may take time for large libraries)",
+          "Explore the map view, albums, and search"
+        ]
+      }
+    },
+    {
+      "id": "immich",
+      "name": "Immich",
+      "description": "Self-hosted Google Photos alternative",
+      "image": "ghcr.io/immich-app/immich-server:release",
+      "main_port": 2283,
+      "extra_ports": {
+        "2283": "${IMMICH_PORT:-2283}"
+      },
+      "volumes": [
+        "immich-data:/usr/src/app/upload",
+        "/etc/localtime:/etc/localtime:ro"
+      ],
+      "env": [
+        "DB_HOSTNAME=app-central-postgres",
+        "DB_USERNAME=postgres",
+        "DB_PASSWORD=postgres",
+        "DB_DATABASE_NAME=immich",
+        "REDIS_HOSTNAME=app-immich-redis"
+      ],
+      "dependencies": [
+        "immich-machine-learning"
+      ],
+      "category": "media",
+      "min_ram_mb": 2048,
+      "education": {
+        "docs_url": "https://immich.app/docs/",
+        "quick_start": "Immich is a Google Photos alternative for your phone. Auto-backup photos, search by objects/faces, and share albums.",
+        "default_login": {
+          "username": "set during setup",
+          "password": "set during setup"
+        },
+        "setup_steps": [
+          "Open the app \u2192 create your admin account",
+          "Install the Immich mobile app from the app store",
+          "Enable auto-backup on your phone",
+          "Wait for ML-powered search indexing (face detection, object recognition)"
+        ]
+      }
+    },
+    {
+      "id": "immich-machine-learning",
+      "name": "Immich ML",
+      "description": "Machine learning container for Immich",
+      "image": "ghcr.io/immich-app/immich-machine-learning:release",
+      "volumes": [
+        "immich-model-cache:/cache"
+      ],
+      "env": [],
+      "category": "ai",
+      "min_ram_mb": 1024,
+      "hidden": true
+    },
+    {
+      "id": "wireguard",
+      "name": "Wireguard",
+      "description": "Modern VPN server",
+      "image": "lscr.io/linuxserver/wireguard:latest",
+      "container_port": 51820,
+      "privileged": true,
+      "cap_add": [
+        "NET_ADMIN",
+        "SYS_MODULE"
+      ],
+      "volumes": [
+        "wireguard-config:/config",
+        "/lib/modules:/lib/modules"
+      ],
+      "env": [
+        "PUID=1000",
+        "PGID=1000",
+        "TZ=Etc/UTC",
+        "SERVERURL=auto",
+        "SERVERPORT=51820",
+        "PEERS=1",
+        "PEERDNS=auto"
+      ],
+      "category": "networking",
+      "min_ram_mb": 128,
+      "education": {
+        "docs_url": "https://www.wireguard.com/",
+        "quick_start": "WireGuard is a modern, fast VPN. Create a VPN server to securely access your home network from anywhere.",
+        "setup_steps": [
+          "Configure WireGuard by editing config files in the volume",
+          "Generate client configs: docker exec -it app-wireguard /app/show-peer",
+          "Import the config file into the WireGuard client app",
+          "Connect and test your VPN"
+        ]
+      }
+    },
+    {
+      "id": "vaultwarden",
+      "name": "Vaultwarden",
+      "description": "Self-hosted Bitwarden password manager",
+      "image": "vaultwarden/server:latest",
+      "volumes": [
+        "vaultwarden-data:/data"
+      ],
+      "env": [],
+      "category": "networking",
+      "min_ram_mb": 256,
+      "main_port": 9088,
+      "extra_ports": {
+        "80": "${VAULTWARDEN_PORT:-9088}"
+      },
+      "education": {
+        "docs_url": "https://github.com/dani-garcia/vaultwarden/wiki",
+        "quick_start": "Vaultwarden is a self-hosted Bitwarden-compatible password manager. Store, generate, and sync passwords across all devices.",
+        "setup_steps": [
+          "Open the app \u2192 create your account",
+          "Install the Bitwarden browser extension",
+          "Configure the extension to use your self-hosted server URL",
+          "Install the Bitwarden mobile app and connect to your server"
+        ]
+      }
+    },
+    {
+      "id": "nginx-proxy-manager",
+      "name": "Nginx Proxy Manager",
+      "description": "Reverse proxy with Let's Encrypt",
+      "image": "jc21/nginx-proxy-manager:latest",
+      "container_port": 81,
+      "extra_ports": {
+        "80": "${NPM_HTTP_PORT:-8087}",
+        "443": "${NPM_HTTPS_PORT:-8444}"
+      },
+      "volumes": [
+        "npm-data:/data",
+        "npm-letsencrypt:/etc/letsencrypt"
+      ],
+      "env": [],
+      "category": "networking",
+      "min_ram_mb": 256,
+      "education": {
+        "docs_url": "https://nginxproxymanager.com/guide/",
+        "quick_start": "Nginx Proxy Manager provides a web UI for managing Nginx reverse proxies, SSL certificates, and access lists.",
+        "default_login": {
+          "username": "admin@example.com",
+          "password": "changeme"
+        },
+        "setup_steps": [
+          "Log in with admin@example.com / changeme",
+          "Change the admin email and password immediately",
+          "Add your first Proxy Host (domain \u2192 internal service)",
+          "Request SSL certificates via Let's Encrypt"
+        ]
+      }
+    },
+    {
+      "id": "traefik",
+      "name": "Traefik",
+      "description": "Cloud-native reverse proxy",
+      "image": "traefik:v3.0",
+      "container_port": 8080,
+      "extra_ports": {
+        "80": "${TRAEFIK_HTTP_PORT:-8088}",
+        "443": "${TRAEFIK_HTTPS_PORT:-8445}"
+      },
+      "volumes": [
+        "/var/run/docker.sock:/var/run/docker.sock:ro"
+      ],
+      "env": [],
+      "category": "networking",
+      "min_ram_mb": 256,
+      "education": {
+        "docs_url": "https://doc.traefik.io/traefik/",
+        "quick_start": "Traefik is a cloud-native reverse proxy and load balancer with automatic SSL. It auto-detects Docker containers and routes traffic.",
+        "setup_steps": [
+          "Traefik is configured via Docker labels on other containers",
+          "Access the dashboard at http://localhost:PORT/dashboard/",
+          "Add labels to your containers to enable routing",
+          "Configure Let's Encrypt for automatic SSL"
+        ]
+      }
+    },
+    {
+      "id": "uptime-kuma",
+      "name": "Uptime Kuma",
+      "description": "Uptime monitoring dashboard",
+      "image": "louislam/uptime-kuma:1",
+      "container_port": 3001,
+      "volumes": [
+        "uptime-kuma-data:/app/data"
+      ],
+      "env": [],
+      "category": "networking",
+      "min_ram_mb": 256,
+      "education": {
+        "docs_url": "https://github.com/louislam/uptime-kuma/wiki",
+        "quick_start": "Uptime Kuma monitors your services and sends alerts when they go down. Add monitors for HTTP, Ping, Port, DNS, and more.",
+        "default_login": {
+          "username": "set during setup",
+          "password": "set during setup"
+        },
+        "setup_steps": [
+          "Open the app \u2192 create your admin account",
+          "Click 'Add Monitor' to monitor your first service",
+          "Configure notification methods (Email, Telegram, Slack, etc.)",
+          "Set up the status page for public display"
+        ]
+      }
+    },
+    {
+      "id": "portainer",
+      "name": "Portainer",
+      "description": "Docker management UI",
+      "image": "portainer/portainer-ce:latest",
+      "container_port": 9000,
+      "extra_ports": {
+        "8000": "${PORTAINER_EDGE_PORT:-8000}",
+        "9443": "${PORTAINER_HTTPS_PORT:-9443}"
+      },
+      "volumes": [
+        "/var/run/docker.sock:/var/run/docker.sock",
+        "portainer-data:/data"
+      ],
+      "env": [],
+      "category": "development",
+      "min_ram_mb": 256,
+      "education": {
+        "docs_url": "https://docs.portainer.io/",
+        "quick_start": "Portainer provides a web UI for managing Docker containers, images, volumes, and networks. It's the easiest way to manage Docker.",
+        "default_login": {
+          "username": "admin",
+          "password": "set on first login"
+        },
+        "setup_steps": [
+          "Open the app \u2192 set your admin password (min 8 chars)",
+          "Select your Docker environment (local socket)",
+          "Explore the dashboard \u2014 containers, images, volumes",
+          "Use Portainer's App Templates to quickly deploy services"
+        ]
+      }
+    },
+    {
+      "id": "dozzle",
+      "name": "Dozzle",
+      "description": "Real-time Docker log viewer",
+      "image": "amir20/dozzle:latest",
+      "container_port": 8080,
+      "volumes": [
+        "/var/run/docker.sock:/var/run/docker.sock:ro"
+      ],
+      "env": [],
+      "category": "development",
+      "min_ram_mb": 128,
+      "education": {
+        "docs_url": "https://github.com/amir20/dozzle",
+        "quick_start": "Dozzle is a real-time Docker log viewer. See logs from all your containers in one browser window with search and filtering.",
+        "setup_steps": [
+          "Open the app \u2192 see live logs from all running containers",
+          "Click any container to see its logs",
+          "Use the search bar to filter log entries",
+          "Bookmark specific containers for quick access"
+        ]
+      }
+    },
+    {
+      "id": "code-server",
+      "name": "Code Server",
+      "description": "VS Code in the browser",
+      "image": "lscr.io/linuxserver/code-server:latest",
+      "container_port": 8443,
+      "volumes": [
+        "code-server-config:/config"
+      ],
+      "env": [
+        "PUID=1000",
+        "PGID=1000",
+        "TZ=Etc/UTC",
+        "PASSWORD=password",
+        "SUDO_PASSWORD=password"
+      ],
+      "category": "development",
+      "min_ram_mb": 512,
+      "education": {
+        "docs_url": "https://coder.com/docs/code-server",
+        "quick_start": "Code-server runs VS Code in your browser. Access your development environment from any device with a full VS Code experience.",
+        "default_login": {
+          "password": "set on first login (check logs)"
+        },
+        "setup_steps": [
+          "Open the app \u2192 enter the password shown in container logs",
+          "Install extensions from the VS Code marketplace",
+          "Open a terminal and start coding",
+          "Configure settings sync across devices"
+        ]
+      }
+    },
+    {
+      "id": "gitea",
+      "name": "Gitea",
+      "description": "Lightweight self-hosted Git service",
+      "image": "gitea/gitea:latest",
+      "container_port": 3000,
+      "extra_ports": {
+        "22": "${GITEA_SSH_PORT:-2222}"
+      },
+      "volumes": [
+        "gitea-data:/data"
+      ],
+      "env": [
+        "USER_UID=1000",
+        "USER_GID=1000"
+      ],
+      "category": "development",
+      "min_ram_mb": 256,
+      "education": {
+        "docs_url": "https://docs.gitea.com/",
+        "quick_start": "Gitea is a lightweight Git service. Create repositories, manage issues, and collaborate with pull requests \u2014 like GitHub but self-hosted.",
+        "default_login": {
+          "username": "set during setup",
+          "password": "set during setup"
+        },
+        "setup_steps": [
+          "Open the app \u2192 the setup page will appear",
+          "Configure your Gitea instance (DB is already set up)",
+          "Create your admin account",
+          "Create your first repository and push code"
+        ]
+      }
+    },
+    {
+      "id": "stirling-pdf",
+      "name": "Stirling-PDF",
+      "description": "A robust, local-first web application that allows you to perform various operations on PDF files (merge, split, OCR, convert).",
+      "image": "stirlingtools/stirling-pdf:latest",
+      "container_port": 8080,
+      "volumes": [
+        "stirling-pdf-training:/usr/share/tessdata",
+        "stirling-pdf-configs:/configs",
+        "stirling-pdf-custom:/customFiles/",
+        "stirling-pdf-logs:/logs/",
+        "stirling-pdf-pipeline:/pipeline/"
+      ],
+      "env": [
+        "DISABLE_ADDITIONAL_FEATURES=false",
+        "LANGS=en_GB"
+      ],
+      "category": "productivity",
+      "tier": "premium",
+      "min_ram_mb": 512,
+      "education": {
+        "docs_url": "https://www.stirlingpdf.com/",
+        "quick_start": "Stirling PDF is a tool for manipulating PDFs \u2014 merge, split, convert, compress, and more. All processing happens locally.",
+        "setup_steps": [
+          "Open the app \u2192 see the full PDF toolset",
+          "Upload a PDF and choose an operation",
+          "Download the result",
+          "No configuration needed \u2014 just use it"
+        ]
+      }
+    },
+    {
+      "id": "excalidraw",
+      "name": "Excalidraw",
+      "description": "Virtual whiteboard for sketching hand-drawn like diagrams.",
+      "image": "excalidraw/excalidraw:latest",
+      "container_port": 80,
+      "env": [],
+      "category": "productivity",
+      "tier": "premium",
+      "min_ram_mb": 256,
+      "education": {
+        "docs_url": "https://docs.excalidraw.com/",
+        "quick_start": "Excalidraw is a whiteboard tool for sketching diagrams. Draw flowcharts, wireframes, and diagrams with a hand-drawn feel.",
+        "setup_steps": [
+          "Open the app \u2192 start drawing immediately",
+          "Use the library for pre-made shapes and icons",
+          "Collaborate in real-time by sharing the room link",
+          "Export as PNG or SVG"
+        ]
+      }
+    },
+    {
+      "id": "drawio",
+      "name": "Draw.io",
+      "description": "Online diagramming and whiteboarding tool for creating flowcharts, diagrams, and vector graphics.",
+      "image": "jgraph/drawio:latest",
+      "container_port": 8080,
+      "volumes": [
+        "drawio-data:/data"
+      ],
+      "env": [],
+      "category": "productivity",
+      "min_ram_mb": 256,
+      "education": {
+        "docs_url": "https://drawio-app.com/",
+        "quick_start": "Draw.io is a diagramming tool for flowcharts, network diagrams, UML, and more. Integrates with Google Drive, OneDrive, and GitHub.",
+        "setup_steps": [
+          "Open the app \u2192 choose where to save your diagrams",
+          "Drag shapes from the left panel to create diagrams",
+          "Export as PNG, SVG, or PDF",
+          "Save to cloud storage or locally"
+        ]
+      }
+    },
+    {
+      "id": "9router",
+      "name": "9Router",
+      "description": "Unlimited FREE AI coding. Connect Claude Code, Codex, Cursor, Cline, Copilot, Antigravity to FREE Claude/GPT/Gemini via 40+ providers. Auto-fallback, RTK -40% tokens, never hit limits.",
+      "image": "ghcr.io/decolua/9router:latest",
+      "container_port": 20128,
+      "volumes": [],
+      "env": [
+        "PORT=20128",
+        "HOSTNAME=0.0.0.0",
+        "NEXT_TELEMETRY_DISABLED=1",
+        "DATA_DIR=/app/data"
+      ],
+      "category": "ai",
+      "min_ram_mb": 256,
+      "education": {
+        "docs_url": "https://github.com/decolua/9router#readme",
+        "quick_start": "9Router runs on port 20128. After install, open the URL and follow the app's setup wizard.",
+        "setup_steps": [
+          "Open http://localhost:20128/ in your browser",
+          "Follow the on-screen setup wizard",
+          "Configure the app for your needs"
+        ]
+      }
+    },
+    {
+      "id": "openmaic",
+      "name": "OpenMAIC",
+      "description": "",
+      "image": "",
+      "container_port": 3000,
+      "volumes": [],
+      "env": [],
+      "category": "ai",
+      "min_ram_mb": 512,
+      "type": "stack",
+      "is_stack": true,
+      "compose_url": "https://raw.githubusercontent.com/THU-MAIC/OpenMAIC/main/docker-compose.yml"
+    }
+  ]
+}

@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AppVault Admin</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0e1a; color: #e2e8f0; padding: 20px; }
+h1 { font-size: 24px; font-weight: 800; margin-bottom: 24px; background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+h2 { font-size: 18px; font-weight: 700; margin: 24px 0 12px; color: #f1f5f9; }
+.card { background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; padding: 10px 8px; border-bottom: 2px solid #1e293b; color: #94a3b8; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+td { padding: 10px 8px; border-bottom: 1px solid #1e293b; }
+tr:hover td { background: rgba(56,189,248,0.03); }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 8px; font-size: 11px; font-weight: 700; }
+.badge-online { background: rgba(34,197,94,0.15); color: #22c55e; }
+.badge-offline { background: rgba(100,116,139,0.15); color: #64748b; }
+.badge-pending { background: rgba(234,179,8,0.15); color: #eab308; }
+.badge-completed { background: rgba(34,197,94,0.15); color: #22c55e; }
+.badge-failed { background: rgba(239,68,68,0.15); color: #ef4444; }
+.badge-running { background: rgba(56,189,248,0.15); color: #38bdf8; }
+.btn { padding: 6px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; transition: opacity 0.2s; }
+.btn:hover { opacity: 0.8; }
+.btn-install { background: #22c55e; color: #fff; }
+.btn-uninstall { background: #ef4444; color: #fff; }
+.btn-restart { background: #f59e0b; color: #1e293b; }
+.btn-primary { background: linear-gradient(135deg, #38bdf8, #818cf8); color: #fff; }
+select, input { padding: 6px 10px; border-radius: 6px; border: 1px solid #334155; background: #1e293b; color: #e2e8f0; font-size: 13px; }
+.toast { position: fixed; top: 20px; right: 20px; padding: 12px 24px; border-radius: 8px; color: #fff; font-weight: 600; z-index: 10000; transform: translateX(120%); transition: transform 0.3s; }
+.toast.show { transform: translateX(0); }
+.toast-success { background: #22c55e; }
+.toast-error { background: #ef4444; }
+.section-tabs { display: flex; gap: 4px; margin-bottom: 20px; }
+.section-tabs button { padding: 8px 18px; border: 1px solid #334155; border-radius: 8px; background: #111827; color: #94a3b8; cursor: pointer; font-weight: 600; font-size: 13px; }
+.section-tabs button.active { background: linear-gradient(135deg, #38bdf8, #818cf8); color: #fff; border-color: transparent; }
+.section { display: none; }
+.section.active { display: block; }
+.agent-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+.agent-dot.online { background: #22c55e; }
+.agent-dot.offline { background: #64748b; }
+.empty { color: #64748b; font-style: italic; padding: 20px; text-align: center; }
+</style>
+</head>
+<body>
+<h1>🔐 AppVault Admin Panel</h1>
+
+<div class="section-tabs">
+  <button class="active" onclick="switchTab('agents')">🤖 Agents</button>
+  <button onclick="switchTab('jobs')">📋 Job Queue</button>
+  <button onclick="switchTab('catalog')">📦 Catalog</button>
+</div>
+
+<!-- AGENTS SECTION -->
+<div id="tab-agents" class="section active">
+  <div class="card">
+    <h2>Connected Agents</h2>
+    {% if agents %}
+    <table>
+      <tr><th>Agent ID</th><th>Name</th><th>OS</th><th>Docker</th><th>Status</th><th>Last Seen</th><th>Actions</th></tr>
+      {% for a in agents %}
+      <tr>
+        <td><code style="color:#38bdf8;font-size:12px;">{{ a.id[:12] }}…</code></td>
+        <td>{{ a.name }}</td>
+        <td>{{ a.os }}</td>
+        <td>{{ a.docker_version }}</td>
+        <td><span class="agent-dot {{ a.status }}"></span><span class="badge badge-{{ a.status }}">{{ a.status }}</span></td>
+        <td>{{ a.last_seen or 'never' }}</td>
+        <td>
+          <a href="/admin/agents/{{ a.id }}" style="color:#38bdf8;text-decoration:none;">Details</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% else %}
+    <div class="empty">No agents registered yet. Deploy an agent and it will appear here.</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- JOBS SECTION -->
+<div id="tab-jobs" class="section">
+  <div class="card">
+    <h2>Push a Remote Install</h2>
+    <form id="pushJobForm" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;">
+      <div>
+        <label style="display:block;font-size:12px;color:#94a3b8;margin-bottom:4px;">Agent ID</label>
+        <select id="jobAgent" required>
+          <option value="">Select agent…</option>
+          {% for a in agents %}
+          <option value="{{ a.id }}">{{ a.name }} ({{ a.id[:12] }}…)</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label style="display:block;font-size:12px;color:#94a3b8;margin-bottom:4px;">Action</label>
+        <select id="jobAction">
+          <option value="install">Install</option>
+          <option value="uninstall">Uninstall</option>
+          <option value="restart">Restart</option>
+        </select>
+      </div>
+      <div>
+        <label style="display:block;font-size:12px;color:#94a3b8;margin-bottom:4px;">App</label>
+        <select id="jobApp">
+          {% for app in catalog.apps %}
+          <option value="{{ app.id }}">{{ app.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">Push Job</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Job History</h2>
+    {% if jobs %}
+    <table>
+      <tr><th>#</th><th>Agent</th><th>Action</th><th>App</th><th>Status</th><th>Created</th><th>Completed</th></tr>
+      {% for j in jobs %}
+      <tr>
+        <td>{{ j.id }}</td>
+        <td><code style="color:#64748b;font-size:12px;">{{ (j.agent_name or j.agent_id)[:12] }}…</code></td>
+        <td><span class="badge badge-{{ 'completed' if j.action == 'install' else 'failed' }}">{{ j.action }}</span></td>
+        <td>{{ j.app_id }}</td>
+        <td><span class="badge badge-{{ j.status }}">{{ j.status }}</span></td>
+        <td>{{ j.created_at[:19] if j.created_at else '' }}</td>
+        <td>{{ j.completed_at[:19] if j.completed_at else '-' }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% else %}
+    <div class="empty">No jobs yet. Push a remote install above.</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- CATALOG SECTION -->
+<div id="tab-catalog" class="section">
+  <div class="card">
+    <h2>Global Catalog <span style="font-size:12px;color:#64748b;">v{{ catalog_version }}</span></h2>
+
+    <div style="padding:16px;background:#0f172a;border-radius:8px;margin-bottom:16px;">
+      <h3 style="font-size:14px;font-weight:700;margin-bottom:8px;color:#f1f5f9;">🤖 Auto-Import from GitHub</h3>
+      <form id="autoImportForm" style="display:flex;gap:10px;align-items:end;">
+        <div style="flex:1;">
+          <label style="display:block;font-size:12px;color:#94a3b8;margin-bottom:4px;">GitHub URL or Docker Image</label>
+          <input id="importUrl" type="text" placeholder="https://github.com/user/repo  or  ghcr.io/user/app:latest" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:13px;">
+        </div>
+        <button type="submit" class="btn btn-primary" id="importBtn" style="padding:8px 20px;">🔍 Detect & Import</button>
+      </form>
+      <div id="importResult" style="display:none;margin-top:12px;padding:12px;background:#111827;border-radius:8px;border:1px solid #1e293b;"></div>
+    </div>
+    
+    <form id="addAppForm" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;padding:16px;background:#0f172a;border-radius:8px;">
+      <div><label style="font-size:12px;color:#94a3b8;">App ID</label><input id="appId" placeholder="my-app" required></div>
+      <div><label style="font-size:12px;color:#94a3b8;">Name</label><input id="appName" placeholder="My App" required></div>
+      <div><label style="font-size:12px;color:#94a3b8;">Image</label><input id="appImage" placeholder="myapp/server:latest" required></div>
+      <div><label style="font-size:12px;color:#94a3b8;">Description</label><input id="appDesc" placeholder="Description"></div>
+      <div><label style="font-size:12px;color:#94a3b8;">Port</label><input id="appPort" placeholder="8080" type="number"></div>
+      <div><label style="font-size:12px;color:#94a3b8;">Category</label>
+        <select id="appCategory">
+          <option>ai</option><option>productivity</option><option>networking</option><option>development</option><option>media</option><option>automation</option><option>database</option>
+        </select>
+      </div>
+      <div style="grid-column:1/-1;"><button type="submit" class="btn btn-primary">Add App to Catalog</button></div>
+    </form>
+
+    <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+      <span style="color:#94a3b8;font-size:13px;">{{ catalog.apps|length }} apps in catalog</span>
+      <button class="btn btn-primary" onclick="publishCatalog()">📢 Publish New Version</button>
+    </div>
+
+    <table>
+      <tr><th>ID</th><th>Name</th><th>Image</th><th>Category</th><th>RAM</th><th>Video URL</th><th></th></tr>
+      {% for app in catalog.apps %}
+      <tr>
+        <td><code style="color:#38bdf8;">{{ app.id }}</code></td>
+        <td>{{ app.name }}</td>
+        <td style="color:#94a3b8;font-size:12px;">{{ app.image }}</td>
+        <td><span class="badge badge-online">{{ app.category }}</span></td>
+        <td>{{ app.min_ram_mb }}MB</td>
+        <td>
+          <form onsubmit="setVideo(event, '{{ app.id }}')" style="display:flex;gap:4px;">
+            <input id="vid-{{ app.id }}" type="url" placeholder="https://youtu.be/..." 
+                   value="{{ app.education.video_url if app.education and app.education.video_url else '' }}"
+                   style="padding:4px 8px;border-radius:4px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:11px;width:200px;">
+            <button type="submit" class="btn btn-primary" style="padding:4px 10px;font-size:11px;">Save</button>
+          </form>
+        </td>
+        <td><button class="btn btn-uninstall" onclick="removeApp('{{ app.id }}')">Remove</button></td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+function switchTab(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.section-tabs button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast toast-' + type + ' show';
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Push job
+document.getElementById('pushJobForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const agentId = document.getElementById('jobAgent').value;
+  const action = document.getElementById('jobAction').value;
+  const appId = document.getElementById('jobApp').value;
+  if (!agentId) { showToast('Select an agent', 'error'); return; }
+  
+  try {
+    const r = await fetch('/admin/agents/' + agentId + '/jobs', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({action, app_id: appId})
+    });
+    const d = await r.json();
+    if (d.status === 'queued') {
+      showToast('✅ Job #' + d.job_id + ' queued on ' + agentId.slice(0,8) + '… → ' + action + ' ' + appId, 'success');
+      setTimeout(() => location.reload(), 1500);
+    } else {
+      showToast('❌ ' + (d.detail || 'Failed'), 'error');
+    }
+  } catch(err) {
+    showToast('❌ ' + err.message, 'error');
+  }
+});
+
+// Auto-Import app
+document.getElementById('autoImportForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const val = document.getElementById('importUrl').value.trim();
+  const btn = document.getElementById('importBtn');
+  const resultDiv = document.getElementById('importResult');
+  if (!val) { showToast('Enter a URL or image name', 'error'); return; }
+  
+  btn.textContent = 'Detecting...';
+  btn.disabled = true;
+  resultDiv.style.display = 'none';
+  
+  const body = val.includes('github.com') ? { url: val } : { image: val };
+  
+  try {
+    const r = await fetch('/admin/catalog/auto-import', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body)
+    });
+    const d = await r.json();
+    
+    if (d.error) {
+      showToast(d.error, 'error');
+      btn.textContent = 'Detect & Import';
+      btn.disabled = false;
+      return;
+    }
+    
+    resultDiv.style.display = 'block';
+    var isStack = d.is_stack;
+    resultDiv.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">'
+      + '<div><strong style="font-size:14px;color:' + (isStack ? '#22c55e' : '#38bdf8') + ';">' + (isStack ? '[STACK] ' : '') + d.name + '</strong>'
+      + '<span style="font-size:11px;color:#64748b;margin-left:8px;">id: ' + d.id + '</span></div>'
+      + '<button class="btn btn-primary" onclick="confirmImport(\'' + d.id + '\')" style="padding:6px 16px;">+ Add to Catalog</button>'
+      + '</div>';
+    
+    if (isStack) {
+      resultDiv.innerHTML += '<div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">'
+        + 'Stack with ' + d.services.length + ' services (docker-compose)'
+        + (d.github_stars ? ' | Stars: ' + d.github_stars : '')
+        + '</div>'
+        + '<div style="margin-bottom:6px;">';
+      d.services.forEach(function(svc) {
+        if (!svc.optional) {
+          resultDiv.innerHTML += '<div style="display:inline-block;margin:2px;padding:3px 8px;background:#1e293b;border-radius:4px;font-size:11px;color:#e2e8f0;">'
+            + (svc.build ? '🔨 ' : '📦 ') + svc.name
+            + (svc.ports.length > 0 ? ' <span style="color:#94a3b8;">port ' + svc.ports[0].host + '</span>' : '')
+            + '</div>';
+        }
+      });
+      resultDiv.innerHTML += '</div>';
+      // Show optional services
+      var optionalServices = d.services.filter(function(s) { return s.optional; });
+      if (optionalServices.length > 0) {
+        resultDiv.innerHTML += '<div style="font-size:11px;color:#64748b;">Optional services: '
+          + optionalServices.map(function(s) { return s.name; }).join(', ')
+          + '</div>';
+      }
+    } else {
+      resultDiv.innerHTML += '<div style="font-size:12px;color:#94a3b8;margin-bottom:6px;">'
+        + 'Image: <code style="color:#38bdf8;">' + d.image + '</code>'
+        + ' | Port: <code>' + d.container_port + '</code>'
+        + (d.detected_ports ? ' | Detected ports: ' + d.detected_ports.join(', ') : '')
+        + (d.github_stars ? ' | Stars: ' + d.github_stars : '')
+        + '</div>';
+    }
+    
+    resultDiv.innerHTML += (d.env && d.env.length > 0 ? '<details style="font-size:11px;color:#94a3b8;margin-bottom:4px;"><summary style="cursor:pointer;">Env vars (' + d.env.length + ')</summary><pre style="margin:4px 0;padding:6px;background:#0a0e1a;border-radius:4px;font-size:10px;">' + d.env.join('\n') + '</pre></details>' : '')
+      + (d.volumes && d.volumes.length > 0 ? '<div style="font-size:11px;color:#94a3b8;">Volumes: ' + d.volumes.join(', ') + '</div>' : '')
+      + '<div style="font-size:11px;color:#64748b;margin-top:6px;">Category: ' + d.category + ' | RAM: ' + d.min_ram_mb + 'MB</div>';
+    
+    window._lastAutoImport = d;
+    btn.textContent = 'Detect & Import';
+    btn.disabled = false;
+  } catch(err) {
+    showToast(err.message, 'error');
+    btn.textContent = 'Detect & Import';
+    btn.disabled = false;
+  }
+});
+
+window.confirmImport = async function(appId) {
+  const d = window._lastAutoImport;
+  if (!d) return;
+  
+  try {
+    const r = await fetch('/admin/catalog/apps', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(d)
+    });
+    const result = await r.json();
+    if (result.status === 'added') {
+      showToast(d.name + ' added to catalog (v' + result.new_catalog_version + ')', 'success');
+      if (d.education) {
+        await fetch('/admin/catalog/apps/' + appId + '/education', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(d.education)
+        });
+      }
+      document.getElementById('importResult').innerHTML = '<div style="color:#22c55e;font-weight:600;">+ ' + d.name + ' added! <a href="javascript:location.reload()" style="color:#38bdf8;">Refresh page</a></div>';
+    } else {
+      showToast(result.detail || 'Failed', 'error');
+    }
+  } catch(err) {
+    showToast(err.message, 'error');
+  }
+};
+
+// Add app
+document.getElementById('addAppForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const body = {
+    id: document.getElementById('appId').value,
+    name: document.getElementById('appName').value,
+    image: document.getElementById('appImage').value,
+    description: document.getElementById('appDesc').value,
+    container_port: parseInt(document.getElementById('appPort').value) || undefined,
+    category: document.getElementById('appCategory').value,
+    min_ram_mb: 256,
+  };
+  try {
+    const r = await fetch('/admin/catalog/apps', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body)
+    });
+    const d = await r.json();
+    if (d.status === 'added') {
+      showToast('✅ ' + d.app_id + ' added (catalog v' + d.new_catalog_version + ')', 'success');
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      showToast('❌ ' + (d.detail || 'Failed'), 'error');
+    }
+  } catch(err) {
+    showToast('❌ ' + err.message, 'error');
+  }
+});
+
+async function removeApp(appId) {
+  if (!confirm('Remove ' + appId + ' from catalog?')) return;
+  try {
+    const r = await fetch('/admin/catalog/apps/' + appId, { method: 'DELETE' });
+    const d = await r.json();
+    if (d.status === 'removed') {
+      showToast('🗑️ ' + appId + ' removed (catalog v' + d.new_catalog_version + ')', 'success');
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      showToast('❌ ' + (d.detail || 'Failed'), 'error');
+    }
+  } catch(err) {
+    showToast('❌ ' + err.message, 'error');
+  }
+}
+
+async function setVideo(event, appId) {
+  event.preventDefault();
+  const url = document.getElementById('vid-' + appId).value.trim();
+  try {
+    const r = await fetch('/admin/catalog/apps/' + appId + '/education', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({video_url: url})
+    });
+    const d = await r.json();
+    if (d.status === 'updated') {
+      showToast('🎬 Video URL saved for ' + appId + ' (v' + d.new_catalog_version + ')', 'success');
+    } else {
+      showToast('❌ ' + (d.detail || 'Failed'), 'error');
+    }
+  } catch(err) {
+    showToast('❌ ' + err.message, 'error');
+  }
+}
+
+// Cloud sync functions
+function toggleCloudFields() {
+  var p = document.getElementById('cloudProvider').value;
+  document.querySelectorAll('.cloud-field').forEach(function(el){ el.style.display = 'none'; });
+  if (p === 's3') {
+    document.querySelectorAll('.cloud-field.s3').forEach(function(el){ el.style.display = 'block'; });
+  } else {
+    document.querySelectorAll('.cloud-field.oauth').forEach(function(el){ el.style.display = 'block'; });
+  }
+}
+
+var AGENT_API = 'http://localhost:8086';
+
+function loadCloudStatus() {
+  fetch(AGENT_API + '/api/cloud/status')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var statusDiv = document.getElementById('cloud-status');
+      var formDiv = document.getElementById('cloud-config-form');
+      if (d.enabled) {
+        statusDiv.innerHTML = '<div style="color:#22c55e;font-weight:600;">☁️ Cloud Sync Active</div>'
+          + '<div style="margin-top:6px;">Provider: <strong>' + d.provider + '</strong></div>'
+          + '<div>Remote: <code>' + d.remote_path + '</code></div>'
+          + '<div>Last sync: ' + (d.last_sync || 'never') + '</div>'
+          + '<div>Status: ' + (d.status || 'ok') + '</div>'
+          + (d.message ? '<div style="color:#94a3b8;font-size:11px;margin-top:4px;">' + d.message + '</div>' : '')
+          + '<div style="margin-top:8px;"><button class="btn btn-primary" onclick="triggerSync()">🔄 Sync Now</button></div>';
+        formDiv.style.display = 'none';
+      } else {
+        statusDiv.innerHTML = '<div style="color:#94a3b8;">Cloud sync is not configured.</div>'
+          + '<div style="margin-top:4px;font-size:11px;">rclone: ' + (d.rclone_version || '?') + '</div>';
+        formDiv.style.display = 'block';
+      }
+    })
+    .catch(function(err){
+      document.getElementById('cloud-status').innerHTML = '<div style="color:#ef4444;">Error loading: ' + err.message + '</div>';
+    });
+}
+
+function triggerSync() {
+  fetch(AGENT_API + '/api/cloud/sync', { method: 'POST' })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      showToast('☁️ ' + d.message, 'success');
+      setTimeout(loadCloudStatus, 3000);
+    })
+    .catch(function(err){ showToast('❌ ' + err.message, 'error'); });
+}
+
+function disableCloud() {
+  if (!confirm('Disable cloud sync?')) return;
+  fetch(AGENT_API + '/api/cloud/disable', { method: 'POST' })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      showToast('☁️ Cloud sync disabled', 'success');
+      loadCloudStatus();
+    })
+    .catch(function(err){ showToast('❌ ' + err.message, 'error'); });
+}
+
+// Cloud form submit
+document.getElementById('cloudForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  var provider = document.getElementById('cloudProvider').value;
+  var body = {
+    provider: provider,
+    remote_path: document.getElementById('cloudPath').value
+  };
+  if (provider === 's3') {
+    body.access_key = document.getElementById('s3AccessKey').value;
+    body.secret_key = document.getElementById('s3SecretKey').value;
+    body.bucket = document.getElementById('s3Bucket').value;
+    body.region = document.getElementById('s3Region').value;
+  } else {
+    body.client_id = document.getElementById('oauthClientId').value;
+    body.client_secret = document.getElementById('oauthClientSecret').value;
+  }
+  try {
+    var r = await fetch(AGENT_API + '/api/cloud/configure', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body)
+    });
+    var d = await r.json();
+    if (d.status === 'configured') {
+      showToast('☁️ Cloud sync configured with ' + provider, 'success');
+      loadCloudStatus();
+    } else {
+      showToast('❌ ' + (d.error || 'Failed'), 'error');
+    }
+  } catch(err) {
+    showToast('❌ ' + err.message, 'error');
+  }
+});
+
+// Load cloud status on tab switch
+var origSwitchTab = switchTab;
+switchTab = function(name) {
+  document.querySelectorAll('.section').forEach(function(s){ s.classList.remove('active'); });
+  document.querySelectorAll('.section-tabs button').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'cloud') loadCloudStatus();
+};
+
+async function publishCatalog() {
+  try {
+    const r = await fetch('/admin/catalog/publish', { method: 'POST' });
+    const d = await r.json();
+    if (d.status === 'published') {
+      showToast('📢 Catalog v' + d.new_catalog_version + ' published — agents will sync', 'success');
+    }
+  } catch(err) {
+    showToast('❌ ' + err.message, 'error');
+  }
+}
+</script>
+</body>
+</html>
