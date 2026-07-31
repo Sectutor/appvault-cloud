@@ -21,6 +21,14 @@ services:
       - AGENT_POLL_SECONDS=30
       - AGENT_TIMEOUT_SECONDS=300
       - DOMAIN=appvault.airepoindex.com
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.appvault.rule=Host(`appvault.airepoindex.com`) || Host(`fu1crnjv7udjcxc96zufhor0.169.58.9.191.sslip.io`)"
+      - "traefik.http.routers.appvault.entrypoints=http"
+      - "traefik.http.routers.appvault-https.rule=Host(`appvault.airepoindex.com`) || Host(`fu1crnjv7udjcxc96zufhor0.169.58.9.191.sslip.io`)"
+      - "traefik.http.routers.appvault-https.entrypoints=https"
+      - "traefik.http.routers.appvault-https.tls.certresolver=letsencrypt"
+      - "traefik.http.services.appvault.loadbalancer.server.port=8000"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
