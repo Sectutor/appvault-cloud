@@ -8,9 +8,10 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from fastapi import FastAPI, Request, HTTPException, Query
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.middleware.sessions import SessionMiddleware
 from pydantic import BaseModel
 
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -32,6 +33,10 @@ AGENT_TIMEOUT_SECONDS = int(os.getenv("AGENT_TIMEOUT_SECONDS", "300"))
 
 app = FastAPI(title="AppVault Cloud")
 templates = Jinja2Templates(directory="templates")
+
+# Session-based admin login (signed cookie)
+SESSION_SECRET = os.getenv("SESSION_SECRET", ADMIN_PASSWORD + "-appvault-session")
+app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET, max_age=86400, same_site="lax")
 
 # Check Docker CLI availability (optional â€” used only for auto-import)
 try:
@@ -145,7 +150,11 @@ def verify_agent(agent_id: str, api_key: str) -> bool:
     return row is not None and row["api_key"] == api_key
 
 def require_admin(request: Request):
-    """Verify admin credentials or raise 401 with WWW-Authenticate header."""
+    """Verify admin via session cookie or Basic auth."""
+    # 1) Session cookie (set by /login page)
+    if request.session.get("admin"):
+        return True
+    # 2) Basic auth (API clients / curl)
     auth = request.headers.get("Authorization", "")
     if auth.startswith("Basic "):
         try:
@@ -156,9 +165,26 @@ def require_admin(request: Request):
                 return True
         except:
             pass
+    # 3) Browser request -> redirect to login page
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept:
+        raise HTTPException(status_code=303, headers={"Location": "/login?next=/admin"})
     raise HTTPException(status_code=401, detail="Unauthorized",
                         headers={"WWW-Authenticate": 'Basic realm="AppVault Admin"'})
 
+
+class AgentRegister(BaseModel):
+    agent_id: Optional[str] = None
+    name: str
+    os: str = "unknown"
+    docker_version: str = "unknown"
+    app_version: str = "unknown"
+
+class JobStatusUpdate(BaseModel):
+    agent_id: str
+    api_key: str
+    status: str
+    result: Optional[str] = None
 
 @app.post("/api/agent/register")
 async def agent_register(data: AgentRegister, request: Request):
@@ -271,9 +297,36 @@ async def agent_get_catalog(agent_id: str = Query(...), api_key: str = Query(...
 # ADMIN ENDPOINTS (protected, not for distribution)
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
+@app.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request, next: str = "/admin"):
+    """Admin login page."""
+    if request.session.get("admin"):
+        return RedirectResponse(next, status_code=303)
+    return templates.TemplateResponse("login.html", {"request": request, "next": next, "error": None})
+
+@app.post("/login")
+async def login_submit(request: Request):
+    """Validate admin credentials, set session cookie."""
+    form = await request.form()
+    username = form.get("username", "")
+    password = form.get("password", "")
+    next_url = form.get("next", "/admin")
+    if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+        request.session["admin"] = True
+        return RedirectResponse(next_url, status_code=303)
+    return templates.TemplateResponse("login.html", {
+        "request": request, "next": next_url, "error": "Invalid credentials"
+    })
+
+@app.get("/logout")
+async def logout(request: Request):
+    """Clear admin session."""
+    request.session.clear()
+    return RedirectResponse("/login", status_code=303)
+
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_panel(request: Request):
-    """Admin dashboard â€” list agents, jobs, catalog."""
+    """Admin dashboard — list agents, jobs, catalog."""
     require_admin(request)
     db = get_db()
     agents = db.execute("SELECT * FROM agents ORDER BY last_seen DESC").fetchall()
