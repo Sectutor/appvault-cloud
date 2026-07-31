@@ -41,10 +41,66 @@ select, input { padding: 6px 10px; border-radius: 6px; border: 1px solid #334155
 .agent-dot.online { background: #22c55e; }
 .agent-dot.offline { background: #64748b; }
 .empty { color: #64748b; font-style: italic; padding: 20px; text-align: center; }
+
+/* ── Top bar + user menu ── */
+.topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.topbar h1 { margin-bottom: 0; }
+.user-menu { position: relative; }
+.user-btn {
+  display: flex; align-items: center; gap: 10px;
+  background: #111827; border: 1px solid #334155; border-radius: 10px;
+  padding: 6px 12px 6px 6px; cursor: pointer; color: #e2e8f0;
+  font-size: 13px; font-weight: 600; transition: border-color 0.2s;
+}
+.user-btn:hover { border-color: #38bdf8; }
+.avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: linear-gradient(135deg, #38bdf8, #818cf8);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800; color: #fff;
+}
+.user-btn .caret { font-size: 10px; color: #64748b; transition: transform 0.2s; }
+.user-menu.open .caret { transform: rotate(180deg); }
+.dropdown {
+  position: absolute; right: 0; top: calc(100% + 8px); min-width: 200px;
+  background: #111827; border: 1px solid #334155; border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5); padding: 6px;
+  display: none; z-index: 1000;
+}
+.user-menu.open .dropdown { display: block; }
+.dropdown .user-info { padding: 10px 12px; border-bottom: 1px solid #1e293b; margin-bottom: 6px; }
+.dropdown .user-info .name { font-size: 13px; font-weight: 700; color: #f1f5f9; }
+.dropdown .user-info .role { font-size: 11px; color: #64748b; margin-top: 2px; }
+.dropdown a, .dropdown button {
+  display: block; width: 100%; text-align: left;
+  padding: 9px 12px; border: none; border-radius: 8px; background: none;
+  color: #e2e8f0; font-size: 13px; font-weight: 600; cursor: pointer;
+  text-decoration: none; transition: background 0.15s;
+}
+.dropdown a:hover, .dropdown button:hover { background: #1e293b; }
+.dropdown .logout { color: #f87171; }
+.dropdown .logout:hover { background: rgba(239,68,68,0.12); }
 </style>
 </head>
 <body>
-<h1>🔐 AppVault Admin Panel</h1>
+<div class="topbar">
+  <h1>🔐 AppVault Admin Panel</h1>
+  <div class="user-menu" id="userMenu">
+    <button class="user-btn" onclick="toggleMenu(event)">
+      <div class="avatar">A</div>
+      <span>Admin</span>
+      <span class="caret">▼</span>
+    </button>
+    <div class="dropdown">
+      <div class="user-info">
+        <div class="name">AppVault Administrator</div>
+        <div class="role">Signed in · {{ request.client.host if request.client else 'session' }}</div>
+      </div>
+      <a href="/" target="_blank">🌐 View Landing Page</a>
+      <button class="logout" onclick="logout()">🚪 Sign Out</button>
+    </div>
+  </div>
+</div>
 
 <div class="section-tabs">
   <button class="active" onclick="switchTab('agents')">🤖 Agents</button>
@@ -474,6 +530,18 @@ function disableCloud() {
       loadCloudStatus();
     })
     .catch(function(err){ showToast('❌ ' + err.message, 'error'); });
+}
+
+// ── User menu / logout ──
+function toggleMenu(e) {
+  e.stopPropagation();
+  document.getElementById('userMenu').classList.toggle('open');
+}
+document.addEventListener('click', function() {
+  document.getElementById('userMenu').classList.remove('open');
+});
+function logout() {
+  window.location.href = '/logout';
 }
 
 // Cloud form submit
