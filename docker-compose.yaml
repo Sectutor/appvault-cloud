@@ -7,8 +7,6 @@ services:
       dockerfile: Dockerfile
     container_name: appvault-central
     restart: unless-stopped
-    ports:
-      - "8001:8000"
     volumes:
       - central-data:/data
     environment:
@@ -35,6 +33,12 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+    networks:
+      - coolify
+
+networks:
+  coolify:
+    external: true
 
 volumes:
   central-data:
