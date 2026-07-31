@@ -10,6 +10,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+# Admin credentials (overridable via env)
+ENV ADMIN_USERNAME=admin
+ENV ADMIN_PASSWORD=appvault-admin
+
 EXPOSE 8000
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
