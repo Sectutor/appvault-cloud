@@ -145,7 +145,7 @@ def verify_agent(agent_id: str, api_key: str) -> bool:
     return row is not None and row["api_key"] == api_key
 
 def require_admin(request: Request):
-    """Verify admin credentials or raise 401."""
+    """Verify admin credentials or raise 401 with WWW-Authenticate header."""
     auth = request.headers.get("Authorization", "")
     if auth.startswith("Basic "):
         try:
@@ -156,24 +156,9 @@ def require_admin(request: Request):
                 return True
         except:
             pass
-    raise HTTPException(status_code=401, detail="Unauthorized â€” provide admin credentials")
+    raise HTTPException(status_code=401, detail="Unauthorized",
+                        headers={"WWW-Authenticate": 'Basic realm="AppVault Admin"'})
 
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-# AGENT API ENDPOINTS (called by agents)
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-
-class AgentRegister(BaseModel):
-    agent_id: Optional[str] = None
-    name: str
-    os: str = "unknown"
-    docker_version: str = "unknown"
-    app_version: str = "unknown"
-
-class JobStatusUpdate(BaseModel):
-    agent_id: str
-    api_key: str
-    status: str
-    result: Optional[str] = None
 
 @app.post("/api/agent/register")
 async def agent_register(data: AgentRegister, request: Request):
