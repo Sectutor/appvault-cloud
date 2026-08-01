@@ -1038,6 +1038,63 @@
       "compose_url": "https://raw.githubusercontent.com/KatalystDigital/shieldsign-core/main/docker/docker-compose.yml",
       "github_url": "https://github.com/KatalystDigital/shieldsign-core",
       "free_tier": true
+    },
+    {
+      "id": "documenso",
+      "name": "Documenso",
+      "description": "Open-source document signing platform (DocuSign alternative)",
+      "image": "documenso/documenso:latest",
+      "container_port": 3000,
+      "volumes": [
+        "documenso-data:/app/data"
+      ],
+      "env": [
+        "DB_HOST=app-central-postgres",
+        "DB_NAME=documenso",
+        "DB_USER=documenso",
+        "DB_PASS=documenso",
+        "DATABASE_URL=postgresql://documenso:documenso@app-central-postgres:5432/documenso",
+        "NEXTAUTH_URL=http://localhost:3000",
+        "NEXT_PUBLIC_WEBAPP_URL=http://localhost:3000"
+      ],
+      "category": "productivity",
+      "min_ram_mb": 512,
+      "education": {
+        "docs_url": "https://docs.documenso.com/",
+        "quick_start": "Documenso is an open-source e-signature platform. Sign documents locally and privately.",
+        "setup_steps": [
+          "Open the app and create your account",
+          "Upload a document to sign",
+          "Send or sign it"
+        ]
+      },
+      "free_tier": true
+    },
+    {
+      "id": "appflowy",
+      "name": "AppFlowy Cloud",
+      "description": "Open-source Notion alternative - collaboration workspace",
+      "type": "stack",
+      "is_stack": true,
+      "image": "",
+      "container_port": 8000,
+      "compose_url": "https://raw.githubusercontent.com/AppFlowy-IO/AppFlowy-Cloud/main/docker-compose.yml",
+      "category": "productivity",
+      "min_ram_mb": 2048,
+      "free_tier": true
+    },
+    {
+      "id": "appflowy-test",
+      "name": "AppFlowy Test",
+      "description": "Second AppFlowy instance for testing (separate ports/data)",
+      "type": "stack",
+      "is_stack": true,
+      "image": "",
+      "container_port": 8000,
+      "compose_url": "https://raw.githubusercontent.com/AppFlowy-IO/AppFlowy-Cloud/main/docker-compose.yml",
+      "category": "productivity",
+      "min_ram_mb": 2048,
+      "free_tier": true
     }
   ]
 }
