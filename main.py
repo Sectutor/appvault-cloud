@@ -766,9 +766,10 @@ COOLIFY_TOKEN = os.getenv("COOLIFY_TOKEN", "")
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 DOMAIN = os.getenv("DOMAIN", "appvault.airepoindex.com")
-STRIPE_PRICE_STARTER = os.getenv("STRIPE_PRICE_STARTER", "price_xxx_starter")
-STRIPE_PRICE_PRO = os.getenv("STRIPE_PRICE_PRO", "price_xxx_pro")
-STRIPE_PRICE_POWER = os.getenv("STRIPE_PRICE_POWER", "price_xxx_power")
+STRIPE_PRICE_SELFHOST_PRO = os.getenv("STRIPE_PRICE_SELFHOST_PRO", "price_1Tzd8G08dNwwNbqftPXLISUo")
+STRIPE_PRICE_MANAGED_STARTER = os.getenv("STRIPE_PRICE_MANAGED_STARTER", "price_1Tzd8H08dNwwNbqffIBmjrYO")
+STRIPE_PRICE_MANAGED_BUSINESS = os.getenv("STRIPE_PRICE_MANAGED_BUSINESS", "price_1Tzd8H08dNwwNbqfWzYba8Qu")
+STRIPE_PRICE_MANAGED_POWER = os.getenv("STRIPE_PRICE_MANAGED_POWER", "price_1Tzd8I08dNwwNbqfdBrwp0Fr")
 SMTP_HOST = os.getenv("SMTP_HOST", "")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 SMTP_USER = os.getenv("SMTP_USER", "")
@@ -919,12 +920,17 @@ async def create_checkout(request: Request):
     import stripe
     stripe.api_key = STRIPE_SECRET_KEY
     body = await request.json()
-    tier = body.get("tier", "starter")
+    tier = body.get("tier", "selfhost_pro")
     email = body.get("email")
     if not email:
         raise HTTPException(status_code=400, detail="email is required")
-    prices = {"starter": STRIPE_PRICE_STARTER, "pro": STRIPE_PRICE_PRO, "power": STRIPE_PRICE_POWER}
-    price_id = prices.get(tier, prices["starter"])
+    prices = {
+        "selfhost_pro": STRIPE_PRICE_SELFHOST_PRO,
+        "managed_starter": STRIPE_PRICE_MANAGED_STARTER,
+        "managed_business": STRIPE_PRICE_MANAGED_BUSINESS,
+        "managed_power": STRIPE_PRICE_MANAGED_POWER,
+    }
+    price_id = prices.get(tier, prices["selfhost_pro"])
     if not price_id or price_id.startswith("price_xxx"):
         raise HTTPException(status_code=503, detail="Checkout not configured yet (missing Stripe price)")
     
