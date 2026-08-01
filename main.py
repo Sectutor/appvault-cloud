@@ -367,7 +367,8 @@ async def agent_catalog_version(agent_id: str = Query(...), api_key: str = Query
         raise HTTPException(status_code=401, detail="Invalid auth")
     
     version = get_catalog_version()
-    return {"version": version}
+    plan = get_agent_plan(agent_id)
+    return {"version": version, "plan": plan}
 
 @app.get("/api/agent/catalog")
 async def agent_get_catalog(agent_id: str = Query(...), api_key: str = Query(...)):
