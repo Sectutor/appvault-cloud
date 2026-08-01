@@ -1018,6 +1018,26 @@
       "type": "stack",
       "is_stack": true,
       "compose_url": "https://raw.githubusercontent.com/THU-MAIC/OpenMAIC/main/docker-compose.yml"
+    },
+    {
+      "id": "shieldsign",
+      "name": "ShieldSign Core",
+      "description": "Enterprise e-signatures built for security (AGPL-3.0 fork of Documenso)",
+      "image": "",
+      "container_port": 3000,
+      "volumes": [],
+      "env": [
+        "NEXT_PUBLIC_WEBAPP_URL=http://localhost:3000",
+        "NEXTAUTH_URL=http://localhost:3000",
+        "NEXT_PUBLIC_DISABLE_SIGNUP=false"
+      ],
+      "category": "productivity",
+      "min_ram_mb": 2048,
+      "type": "stack",
+      "is_stack": true,
+      "compose_url": "https://raw.githubusercontent.com/KatalystDigital/shieldsign-core/main/docker/docker-compose.yml",
+      "github_url": "https://github.com/KatalystDigital/shieldsign-core",
+      "free_tier": true
     }
   ]
 }
