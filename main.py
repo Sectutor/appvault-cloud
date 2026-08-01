@@ -26,6 +26,26 @@ DB_PATH = os.getenv("DB_PATH", "/data/appvault.db")
 CATALOG_PATH = os.getenv("CATALOG_PATH", "/app/static/catalog.json")
 AGENT_POLL_SECONDS = int(os.getenv("AGENT_POLL_SECONDS", "30"))
 AGENT_TIMEOUT_SECONDS = int(os.getenv("AGENT_TIMEOUT_SECONDS", "300"))
+PAID_LICENSE_KEYS = {k.strip() for k in os.getenv("PAID_LICENSE_KEYS", "").split(",") if k.strip()}
+
+def license_is_valid(key: str) -> bool:
+    """A license is valid if in PAID_LICENSE_KEYS env or an active row in licenses."""
+    if not key:
+        return False
+    if key in PAID_LICENSE_KEYS:
+        return True
+    try:
+        db = get_db()
+        row = db.execute("SELECT status FROM licenses WHERE key = ?", (key,)).fetchone()
+        db.close()
+        return row is not None and row["status"] == "active"
+    except Exception:
+        return False
+
+def generate_license_key() -> str:
+    import random
+    grp = lambda: "".join(random.choices("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", k=4))
+    return "APPVAULT-" + "-".join(grp() for _ in range(4))
 
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # APP
@@ -103,11 +123,25 @@ def init_db():
             version INTEGER NOT NULL DEFAULT 1,
             published_at TEXT DEFAULT (datetime('now'))
         );
+        CREATE TABLE IF NOT EXISTS licenses (
+            key TEXT PRIMARY KEY,
+            email TEXT NOT NULL,
+            tier TEXT NOT NULL,
+            status TEXT DEFAULT 'active',
+            stripe_session_id TEXT,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
     """)
     # Ensure at least one catalog version exists
     row = db.execute("SELECT COUNT(*) as cnt FROM catalog_versions").fetchone()
     if row["cnt"] == 0:
         db.execute("INSERT INTO catalog_versions (version) VALUES (1)")
+    # Migration: plan / license_key columns on agents
+    cols = [r[1] for r in db.execute("PRAGMA table_info(agents)").fetchall()]
+    if "plan" not in cols:
+        db.execute("ALTER TABLE agents ADD COLUMN plan TEXT DEFAULT 'free'")
+    if "license_key" not in cols:
+        db.execute("ALTER TABLE agents ADD COLUMN license_key TEXT DEFAULT ''")
     db.commit()
     db.close()
 
@@ -149,6 +183,36 @@ def verify_agent(agent_id: str, api_key: str) -> bool:
     db.close()
     return row is not None and row["api_key"] == api_key
 
+# ---- Login rate limiting + audit log (brute-force protection) ----
+RATE_LIMIT_WINDOW = 300   # 5 minutes
+RATE_LIMIT_MAX = 10       # max login attempts per IP per window
+_login_attempts = {}
+_login_lock = threading.Lock()
+AUDIT_LOG = os.environ.get("AUDIT_LOG", "/data/audit.log")
+
+def _audit(action, detail=""):
+    try:
+        with open(AUDIT_LOG, "a") as f:
+            f.write(f"{time.strftime('%Y-%m-%dT%H:%M:%S')} {action} {detail}\n")
+    except Exception:
+        pass
+
+def _check_login_rate(client_ip):
+    now = time.time()
+    with _login_lock:
+        ts = [t for t in _login_attempts.get(client_ip, []) if now - t < RATE_LIMIT_WINDOW]
+        if len(ts) >= RATE_LIMIT_MAX:
+            return False
+        return True
+
+def _record_login(client_ip, ok):
+    now = time.time()
+    with _login_lock:
+        ts = [t for t in _login_attempts.get(client_ip, []) if now - t < RATE_LIMIT_WINDOW]
+        ts.append(now)
+        _login_attempts[client_ip] = ts
+    _audit("login", f"{'ok' if ok else 'FAILED'} ip={client_ip}")
+
 def require_admin(request: Request):
     """Verify admin via session cookie or Basic auth."""
     # 1) Session cookie (set by /login page)
@@ -173,12 +237,25 @@ def require_admin(request: Request):
                         headers={"WWW-Authenticate": 'Basic realm="AppVault Admin"'})
 
 
+def get_agent_plan(agent_id):
+    db = get_db()
+    row = db.execute("SELECT plan FROM agents WHERE id = ?", (agent_id,)).fetchone()
+    db.close()
+    return row["plan"] if row and row["plan"] else "free"
+
+def set_agent_plan(agent_id, plan):
+    db = get_db()
+    db.execute("UPDATE agents SET plan=? WHERE id=?", (plan, agent_id))
+    db.commit()
+    db.close()
+
 class AgentRegister(BaseModel):
     agent_id: Optional[str] = None
     name: str
     os: str = "unknown"
     docker_version: str = "unknown"
     app_version: str = "unknown"
+    license_key: Optional[str] = None
 
 class JobStatusUpdate(BaseModel):
     agent_id: str
@@ -197,18 +274,26 @@ async def agent_register(data: AgentRegister, request: Request):
     existing = db.execute("SELECT id FROM agents WHERE id = ?", (agent_id,)).fetchone()
     
     if existing:
-        # Re-register: update info, keep API key
+        # Re-register: update info, keep API key and plan
         current_key = db.execute("SELECT api_key FROM agents WHERE id = ?", (agent_id,)).fetchone()["api_key"]
+        current_plan = db.execute("SELECT plan FROM agents WHERE id = ?", (agent_id,)).fetchone()["plan"]
+        if data.license_key:
+            # Valid license -> paid; invalid/revoked -> downgrade to free
+            plan = "paid" if license_is_valid(data.license_key) else "free"
+        else:
+            # License removed/cleared -> downgrade to free (premium apps hidden)
+            plan = "free"
         db.execute("""
-            UPDATE agents SET name=?, os=?, docker_version=?, app_version=?, ip_address=?, status='online', last_seen=datetime('now')
+            UPDATE agents SET name=?, os=?, docker_version=?, app_version=?, ip_address=?, plan=?, license_key=?, status='online', last_seen=datetime('now')
             WHERE id=?
-        """, (data.name, data.os, data.docker_version, data.app_version, ip, agent_id))
+        """, (data.name, data.os, data.docker_version, data.app_version, ip, plan, data.license_key or "", agent_id))
         api_key = current_key
     else:
+        plan = "paid" if license_is_valid(data.license_key or "") else "free"
         db.execute("""
-            INSERT INTO agents (id, name, os, docker_version, app_version, ip_address, api_key, status, last_seen)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'online', datetime('now'))
-        """, (agent_id, data.name, data.os, data.docker_version, data.app_version, ip, api_key))
+            INSERT INTO agents (id, name, os, docker_version, app_version, ip_address, api_key, plan, license_key, status, last_seen)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'online', datetime('now'))
+        """, (agent_id, data.name, data.os, data.docker_version, data.app_version, ip, api_key, plan, data.license_key or ""))
     
     db.commit()
     db.close()
@@ -291,7 +376,11 @@ async def agent_get_catalog(agent_id: str = Query(...), api_key: str = Query(...
         raise HTTPException(status_code=401, detail="Invalid auth")
     
     version = get_catalog_version()
-    return {"version": version, "apps": GLOBAL_CATALOG.get("apps", [])}
+    plan = get_agent_plan(agent_id)
+    apps = GLOBAL_CATALOG.get("apps", [])
+    if plan != "paid":
+        apps = [a for a in apps if a.get("free_tier") and not a.get("hidden")]
+    return {"version": version, "plan": plan, "apps": apps}
 
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # ADMIN ENDPOINTS (protected, not for distribution)
@@ -311,9 +400,23 @@ async def login_submit(request: Request):
     username = form.get("username", "")
     password = form.get("password", "")
     next_url = form.get("next", "/admin")
+    # Real client IP: behind Caddy all requests share the bridge IP, so use X-Forwarded-For (last hop = appended by Caddy)
+    xff = request.headers.get("x-forwarded-for", "")
+    if xff:
+        client_ip = xff.split(",")[-1].strip()
+    else:
+        client_ip = request.client.host if request.client else "unknown"
+    if not _check_login_rate(client_ip):
+        _audit("login", f"RATE-LIMITED ip={client_ip}")
+        return templates.TemplateResponse("login.html", {
+            "request": request, "next": next_url,
+            "error": "Too many login attempts — try again in a few minutes"
+        })
     if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+        _record_login(client_ip, True)
         request.session["admin"] = True
         return RedirectResponse(next_url, status_code=303)
+    _record_login(client_ip, False)
     return templates.TemplateResponse("login.html", {
         "request": request, "next": next_url, "error": "Invalid credentials"
     })
@@ -335,6 +438,10 @@ async def admin_panel(request: Request):
         LEFT JOIN agents a ON j.agent_id = a.id
         ORDER BY j.created_at DESC LIMIT 100
     """).fetchall()
+    licenses = db.execute("""
+        SELECT l.*, (SELECT COUNT(*) FROM agents a WHERE a.license_key = l.key) as agent_count
+        FROM licenses l ORDER BY l.created_at DESC
+    """).fetchall()
     db.close()
     
     return templates.TemplateResponse("admin.html", {
@@ -342,6 +449,7 @@ async def admin_panel(request: Request):
         "agents": [dict(a) for a in agents],
         "jobs": [dict(j) for j in jobs],
         "catalog": GLOBAL_CATALOG,
+        "licenses": [dict(l) for l in licenses],
         "catalog_version": get_catalog_version(),
     })
 
@@ -430,6 +538,20 @@ async def admin_add_app(request: Request):
             app_entry["services"] = body["services"]
         app_entry["image"] = ""  # Stacks don't need an image
     
+    # Extra ports (setup/secondary ports) -> published on random host ports by the agent
+    extra_ports = body.get("extra_ports") or body.get("extraPorts") or []
+    if isinstance(extra_ports, dict):
+        extra_ports = list(extra_ports.keys())
+    if isinstance(extra_ports, (list, tuple)):
+        ep = {}
+        for p in extra_ports:
+            p = str(p).strip()
+            if p and p.isdigit():
+                ep[p] = "auto"
+        extra_ports = ep
+    if extra_ports:
+        app_entry["extra_ports"] = extra_ports
+
     if not app_entry["id"] or not app_entry["name"]:
         raise HTTPException(status_code=400, detail="id and name are required")
     if not is_stack and not app_entry.get("image"):
@@ -447,6 +569,7 @@ async def admin_add_app(request: Request):
         json.dump(GLOBAL_CATALOG, f, indent=2)
     
     new_version = increment_catalog_version()
+    _audit("catalog.add", app_entry["id"])
     
     return {"status": "added", "app_id": app_entry["id"], "new_catalog_version": new_version}
 
@@ -465,7 +588,83 @@ async def admin_remove_app(app_id: str, request: Request):
         json.dump(GLOBAL_CATALOG, f, indent=2)
     
     new_version = increment_catalog_version()
+    _audit("catalog.remove", app_id)
     return {"status": "removed", "app_id": app_id, "new_catalog_version": new_version}
+
+@app.post("/admin/catalog/apps/{app_id}/free")
+async def admin_toggle_free(app_id: str, request: Request):
+    """Admin: mark/unmark an app as free-tier. Persists to catalog.json and bumps version."""
+    require_admin(request)
+    body = await request.json()
+    is_free = bool(body.get("free", True))
+    app = next((a for a in GLOBAL_CATALOG.get("apps", []) if a.get("id") == app_id), None)
+    if not app:
+        raise HTTPException(status_code=404, detail="App not found")
+    app["free_tier"] = is_free
+    with open(CATALOG_PATH, "w", encoding="utf-8") as f:
+        json.dump(GLOBAL_CATALOG, f, indent=2)
+    _audit("catalog.free", f"{app_id} -> {'free' if is_free else 'paid-only'}")
+    new_version = increment_catalog_version()
+    free_count = sum(1 for a in GLOBAL_CATALOG.get("apps", []) if a.get("free_tier"))
+    return {"status": "ok", "app_id": app_id, "free": is_free,
+            "free_count": free_count, "new_catalog_version": new_version}
+
+@app.post("/admin/licenses")
+async def admin_create_license(request: Request):
+    """Admin: manually create a license key."""
+    require_admin(request)
+    body = await request.json()
+    email = body.get("email", "").strip()
+    tier = body.get("tier", "pro")
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="Valid email required")
+    key = generate_license_key()
+    db = get_db()
+    db.execute("INSERT INTO licenses (key, email, tier, status) VALUES (?, ?, ?, 'active')", (key, email, tier))
+    db.commit()
+    db.close()
+    _audit("license.created", f"{tier} {email} key={key[:16]}...")
+    return {"status": "ok", "key": key, "email": email, "tier": tier}
+
+@app.post("/admin/licenses/{license_key}/revoke")
+async def admin_revoke_license(license_key: str, request: Request):
+    """Revoke a license - agents using it drop to free immediately."""
+    require_admin(request)
+    db = get_db()
+    db.execute("UPDATE licenses SET status='revoked' WHERE key=?", (license_key,))
+    db.execute("UPDATE agents SET plan='free' WHERE license_key=?", (license_key,))
+    db.commit()
+    db.close()
+    _audit("license.revoked", license_key[:16])
+    return {"status": "ok", "key": license_key, "revoked": True}
+
+@app.post("/admin/licenses/{license_key}/activate")
+async def admin_activate_license(license_key: str, request: Request):
+    """Re-activate a license."""
+    require_admin(request)
+    db = get_db()
+    db.execute("UPDATE licenses SET status='active' WHERE key=?", (license_key,))
+    db.commit()
+    db.close()
+    _audit("license.activated", license_key[:16])
+    return {"status": "ok", "key": license_key, "active": True}
+
+@app.post("/admin/catalog/apps/{app_id}/disable")
+async def admin_toggle_disabled(app_id: str, request: Request):
+    """Admin: disable or re-enable an app for EVERYONE (free + paid)."""
+    require_admin(request)
+    body = await request.json()
+    disabled = bool(body.get("disabled", True))
+    app = next((a for a in GLOBAL_CATALOG.get("apps", []) if a.get("id") == app_id), None)
+    if not app:
+        raise HTTPException(status_code=404, detail="App not found")
+    app["disabled"] = disabled
+    with open(CATALOG_PATH, "w", encoding="utf-8") as f:
+        json.dump(GLOBAL_CATALOG, f, indent=2)
+    _audit("catalog.disable", f"{app_id} -> {'disabled' if disabled else 'enabled'}")
+    new_version = increment_catalog_version()
+    return {"status": "ok", "app_id": app_id, "disabled": disabled,
+            "new_catalog_version": new_version}
 
 @app.post("/admin/catalog/apps/{app_id}/education")
 async def admin_update_education(app_id: str, request: Request):
@@ -503,6 +702,17 @@ async def admin_touch_agent(agent_id: str):
     db.commit()
     db.close()
     return {"status": "touched", "agent_id": agent_id}
+
+@app.post("/admin/agents/{agent_id}/plan")
+async def admin_set_agent_plan(agent_id: str, request: Request):
+    """Admin: set an agent's plan (free/paid)."""
+    require_admin(request)
+    body = await request.json()
+    plan = body.get("plan", "free")
+    if plan not in ("free", "paid"):
+        raise HTTPException(status_code=400, detail="Plan must be free or paid")
+    set_agent_plan(agent_id, plan)
+    return {"status": "ok", "agent_id": agent_id, "plan": plan}
 
 @app.post("/api/agent/ping")
 async def agent_ping(request: Request):
@@ -542,6 +752,44 @@ COOLIFY_TOKEN = os.getenv("COOLIFY_TOKEN", "")
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 DOMAIN = os.getenv("DOMAIN", "appvault.airepoindex.com")
+STRIPE_PRICE_STARTER = os.getenv("STRIPE_PRICE_STARTER", "price_xxx_starter")
+STRIPE_PRICE_PRO = os.getenv("STRIPE_PRICE_PRO", "price_xxx_pro")
+STRIPE_PRICE_POWER = os.getenv("STRIPE_PRICE_POWER", "price_xxx_power")
+SMTP_HOST = os.getenv("SMTP_HOST", "")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USER = os.getenv("SMTP_USER", "")
+SMTP_PASS = os.getenv("SMTP_PASS", "")
+MAIL_FROM = os.getenv("MAIL_FROM", "AppVault <no-reply@airepoindex.com>")
+INSTALL_URL = os.getenv("INSTALL_URL", "https://144.217.89.129/install.sh")
+
+def send_email(to, subject, html):
+    if not SMTP_HOST:
+        try:
+            with open("/data/emails.log", "a") as f:
+                f.write(f"{time.strftime('%Y-%m-%dT%H:%M:%S')} TO={to} SUBJECT={subject}\n{html}\n---\n")
+        except Exception:
+            pass
+        _audit("email.logged", f"to={to} subject={subject} (SMTP not configured)")
+        return False
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"] = MAIL_FROM
+    msg["To"] = to
+    msg.attach(MIMEText(html, "html"))
+    try:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=20) as s:
+            s.starttls()
+            if SMTP_USER:
+                s.login(SMTP_USER, SMTP_PASS)
+            s.sendmail(MAIL_FROM, [to], msg.as_string())
+        _audit("email.sent", f"to={to} subject={subject}")
+        return True
+    except Exception as e:
+        _audit("email.error", f"to={to} {e}")
+        return False
 
 async def provision_coolify(instance_id: str, email: str, tier: str) -> Optional[str]:
     """Deploy AppVault on Coolify and return the URL."""
@@ -557,8 +805,9 @@ async def provision_coolify(instance_id: str, email: str, tier: str) -> Optional
         "HEIMDALL_PORT": "8085",
         "APP_MANAGER_PORT": "8086",
     }
-    tier_limits = {"starter": "10", "pro": "25", "power": "999"}
-    env["FREE_LIMIT"] = tier_limits.get(tier, "10")
+    # Dynamic: FREE_LIMIT = number of apps the admin marked free (no hardcoded count)
+    free_count = sum(1 for a in GLOBAL_CATALOG.get("apps", []) if a.get("free_tier"))
+    env["FREE_LIMIT"] = str(free_count)
     
     headers = {"Authorization": f"Bearer {COOLIFY_TOKEN}"}
     
@@ -608,23 +857,37 @@ async def stripe_webhook(request: Request):
         instance_id = metadata.get("instance_id")
         tier = metadata.get("tier", "starter")
         
-        if instance_id and email:
+        if email:
+            license_key = generate_license_key()
             db = get_db()
-            db.execute("UPDATE instances SET status='provisioning', stripe_session_id=?, updated_at=datetime('now') WHERE id=?", (session["id"], instance_id))
+            try:
+                db.execute("INSERT OR REPLACE INTO licenses (key, email, tier, status, stripe_session_id) VALUES (?, ?, ?, 'active', ?)",
+                           (license_key, email, tier, session.get("id", "")))
+            except Exception:
+                pass
+            if instance_id:
+                db.execute("UPDATE instances SET status='paid', stripe_session_id=?, updated_at=datetime('now') WHERE id=?",
+                           (session.get("id", ""), instance_id))
             db.commit()
             db.close()
+            _audit("license.issued", f"{tier} -> {email} key={license_key[:16]}...")
             
-            url = await provision_coolify(instance_id, email, tier)
-            if url:
-                db = get_db()
-                db.execute("UPDATE instances SET status='active', url=?, updated_at=datetime('now') WHERE id=?", (url, instance_id))
-                db.commit()
-                db.close()
+            subject = "Your AppVault license is ready"
+            html = f"""<p>Hi,</p><p>Your AppVault <b>{tier}</b> plan is active. Here's your license key:</p>
+<p style="font-family:monospace;font-size:18px;background:#f1f5f9;padding:12px;border-radius:8px;"><b>{license_key}</b></p>
+<p>Install AppVault on your server (or keep it on your desktop):</p>
+<p><code>curl -fsSL {INSTALL_URL} | sudo bash -s -- --license {license_key}</code></p>
+<p>Questions? Just reply to this email.</p>"""
+            send_email(email, subject, html)
     
     return JSONResponse({"status": "ok"})
 
 @app.get("/")
 async def landing(request: Request):
+    return templates.TemplateResponse("landing.html", {"request": request})
+
+@app.get("/pricing", response_class=HTMLResponse)
+async def pricing_page(request: Request):
     return templates.TemplateResponse("landing.html", {"request": request})
 
 @app.get("/dashboard")
@@ -644,7 +907,12 @@ async def create_checkout(request: Request):
     body = await request.json()
     tier = body.get("tier", "starter")
     email = body.get("email")
-    prices = {"starter": "price_xxx_starter", "pro": "price_xxx_pro", "power": "price_xxx_power"}
+    if not email:
+        raise HTTPException(status_code=400, detail="email is required")
+    prices = {"starter": STRIPE_PRICE_STARTER, "pro": STRIPE_PRICE_PRO, "power": STRIPE_PRICE_POWER}
+    price_id = prices.get(tier, prices["starter"])
+    if not price_id or price_id.startswith("price_xxx"):
+        raise HTTPException(status_code=503, detail="Checkout not configured yet (missing Stripe price)")
     
     instance_id = str(uuid.uuid4())
     db = get_db()
@@ -659,8 +927,9 @@ async def create_checkout(request: Request):
         success_url=f"https://{DOMAIN}/dashboard?email={email}",
         cancel_url=f"https://{DOMAIN}",
         customer_email=email,
-        metadata={"instance_id": instance_id, "tier": tier},
+        metadata={"instance_id": instance_id, "tier": tier, "email": email},
     )
+    _audit("checkout.created", f"{tier} {email}")
     return JSONResponse({"url": session.url})
 
 @app.get("/api/status/{instance_id}")
@@ -671,6 +940,16 @@ async def check_status(instance_id: str):
     if not row:
         raise HTTPException(status_code=404, detail="Instance not found")
     return {"id": row["id"], "status": row["status"], "url": row["url"], "tier": row["tier"], "created_at": row["created_at"]}
+
+@app.get("/api/license/{license_key}")
+async def check_license(license_key: str):
+    """Public license verification."""
+    db = get_db()
+    row = db.execute("SELECT key, email, tier, status, created_at FROM licenses WHERE key = ?", (license_key,)).fetchone()
+    db.close()
+    if not row:
+        raise HTTPException(status_code=404, detail="License not found")
+    return dict(row)
 
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # AUTO-IMPORT APP FROM GITHUB
