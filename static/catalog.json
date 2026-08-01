@@ -317,7 +317,8 @@
           "Install desktop/mobile sync clients from nextcloud.com",
           "Set up calendar & contacts sync"
         ]
-      }
+      },
+      "container_port": 80
     },
     {
       "id": "onlyoffice",
@@ -346,7 +347,8 @@
           "Configure the connector to point to http://app-onlyoffice:PORT/",
           "Test by creating/editing a document in your cloud"
         ]
-      }
+      },
+      "container_port": 80
     },
     {
       "id": "gitlab",
@@ -421,7 +423,8 @@
           "Create your first Shelf → Book → Page",
           "Configure SMTP for email notifications"
         ]
-      }
+      },
+      "container_port": 80
     },
     {
       "id": "paperless",
@@ -621,7 +624,8 @@
           "Enable auto-backup on your phone",
           "Wait for ML-powered search indexing (face detection, object recognition)"
         ]
-      }
+      },
+      "container_port": 2283
     },
     {
       "id": "immich-machine-learning",
@@ -634,14 +638,14 @@
       "env": [],
       "category": "ai",
       "min_ram_mb": 1024,
-      "hidden": true
+      "hidden": true,
+      "container_port": 8085
     },
     {
       "id": "wireguard",
       "name": "Wireguard",
       "description": "Modern VPN server",
       "image": "lscr.io/linuxserver/wireguard:latest",
-      "container_port": 51820,
       "privileged": true,
       "cap_add": [
         "NET_ADMIN",
@@ -671,7 +675,8 @@
           "Import the config file into the WireGuard client app",
           "Connect and test your VPN"
         ]
-      }
+      },
+      "disable_proxy": true
     },
     {
       "id": "vaultwarden",
@@ -697,7 +702,8 @@
           "Configure the extension to use your self-hosted server URL",
           "Install the Bitwarden mobile app and connect to your server"
         ]
-      }
+      },
+      "container_port": 80
     },
     {
       "id": "nginx-proxy-manager",
