@@ -774,7 +774,7 @@ SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 SMTP_USER = os.getenv("SMTP_USER", "")
 SMTP_PASS = os.getenv("SMTP_PASS", "")
 MAIL_FROM = os.getenv("MAIL_FROM", "AppVault <no-reply@airepoindex.com>")
-INSTALL_URL = os.getenv("INSTALL_URL", "https://144.217.89.129/install.sh")
+INSTALL_URL = os.getenv("INSTALL_URL", "https://raw.githubusercontent.com/Sectutor/appvault-agent/main/install.sh")
 
 def send_email(to, subject, html):
     if not SMTP_HOST:
