@@ -552,7 +552,7 @@ async def provision_coolify(instance_id: str, email: str, tier: str) -> Optional
     
     env = {
         "API_KEY": str(uuid.uuid4()).replace("-", "")[:32],
-        "ADMIN_ENABLED": "true",
+        "ADMIN_ENABLED": "false",
         "ADMIN_EMAIL": email,
         "HEIMDALL_PORT": "8085",
         "APP_MANAGER_PORT": "8086",
