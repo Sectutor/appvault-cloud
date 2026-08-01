@@ -377,9 +377,22 @@ async def agent_get_catalog(agent_id: str = Query(...), api_key: str = Query(...
     
     version = get_catalog_version()
     plan = get_agent_plan(agent_id)
-    apps = GLOBAL_CATALOG.get("apps", [])
-    if plan != "paid":
-        apps = [a for a in apps if a.get("free_tier") and not a.get("hidden")]
+    if plan == "paid":
+        apps = [a for a in GLOBAL_CATALOG.get("apps", []) if not a.get("hidden")]
+    else:
+        # Free agents: show free apps + PREMIUM apps marked as locked (for upsell UX).
+        apps = []
+        for a in GLOBAL_CATALOG.get("apps", []):
+            if a.get("hidden"):
+                continue
+            if a.get("free_tier"):
+                apps.append(a)
+            else:
+                locked = dict(a)
+                locked["locked"] = True
+                locked["requires_paid"] = True
+                locked["status"] = "locked"
+                apps.append(locked)
     return {"version": version, "plan": plan, "apps": apps}
 
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
