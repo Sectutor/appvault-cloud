@@ -259,10 +259,7 @@
           "Point your router's DNS to this machine's IP"
         ]
       },
-      "free_tier": true,
-      "extra_ports": {
-        "3000": "auto"
-      }
+      "free_tier": true
     },
     {
       "id": "wordpress",
