@@ -379,12 +379,12 @@ async def agent_get_catalog(agent_id: str = Query(...), api_key: str = Query(...
     version = get_catalog_version()
     plan = get_agent_plan(agent_id)
     if plan == "paid":
-        apps = [a for a in GLOBAL_CATALOG.get("apps", []) if not a.get("hidden")]
+        apps = [a for a in GLOBAL_CATALOG.get("apps", []) if (not a.get("hidden")) or str(a.get("id", "")).startswith("central-")]
     else:
         # Free agents: show free apps + PREMIUM apps marked as locked (for upsell UX).
         apps = []
         for a in GLOBAL_CATALOG.get("apps", []):
-            if a.get("hidden"):
+            if a.get("hidden") and not str(a.get("id", "")).startswith("central-"):
                 continue
             if a.get("free_tier"):
                 apps.append(a)
@@ -766,16 +766,15 @@ COOLIFY_TOKEN = os.getenv("COOLIFY_TOKEN", "")
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 DOMAIN = os.getenv("DOMAIN", "appvault.airepoindex.com")
-STRIPE_PRICE_SELFHOST_PRO = os.getenv("STRIPE_PRICE_SELFHOST_PRO", "price_1Tzd8G08dNwwNbqftPXLISUo")
-STRIPE_PRICE_MANAGED_STARTER = os.getenv("STRIPE_PRICE_MANAGED_STARTER", "price_1Tzd8H08dNwwNbqffIBmjrYO")
-STRIPE_PRICE_MANAGED_BUSINESS = os.getenv("STRIPE_PRICE_MANAGED_BUSINESS", "price_1Tzd8H08dNwwNbqfWzYba8Qu")
-STRIPE_PRICE_MANAGED_POWER = os.getenv("STRIPE_PRICE_MANAGED_POWER", "price_1Tzd8I08dNwwNbqfdBrwp0Fr")
+STRIPE_PRICE_STARTER = os.getenv("STRIPE_PRICE_STARTER", "price_xxx_starter")
+STRIPE_PRICE_PRO = os.getenv("STRIPE_PRICE_PRO", "price_xxx_pro")
+STRIPE_PRICE_POWER = os.getenv("STRIPE_PRICE_POWER", "price_xxx_power")
 SMTP_HOST = os.getenv("SMTP_HOST", "")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 SMTP_USER = os.getenv("SMTP_USER", "")
 SMTP_PASS = os.getenv("SMTP_PASS", "")
 MAIL_FROM = os.getenv("MAIL_FROM", "AppVault <no-reply@airepoindex.com>")
-INSTALL_URL = os.getenv("INSTALL_URL", "https://raw.githubusercontent.com/Sectutor/appvault-agent/main/install.sh")
+INSTALL_URL = os.getenv("INSTALL_URL", "https://144.217.89.129/install.sh")
 
 def send_email(to, subject, html):
     if not SMTP_HOST:
@@ -920,17 +919,12 @@ async def create_checkout(request: Request):
     import stripe
     stripe.api_key = STRIPE_SECRET_KEY
     body = await request.json()
-    tier = body.get("tier", "selfhost_pro")
+    tier = body.get("tier", "starter")
     email = body.get("email")
     if not email:
         raise HTTPException(status_code=400, detail="email is required")
-    prices = {
-        "selfhost_pro": STRIPE_PRICE_SELFHOST_PRO,
-        "managed_starter": STRIPE_PRICE_MANAGED_STARTER,
-        "managed_business": STRIPE_PRICE_MANAGED_BUSINESS,
-        "managed_power": STRIPE_PRICE_MANAGED_POWER,
-    }
-    price_id = prices.get(tier, prices["selfhost_pro"])
+    prices = {"starter": STRIPE_PRICE_STARTER, "pro": STRIPE_PRICE_PRO, "power": STRIPE_PRICE_POWER}
+    price_id = prices.get(tier, prices["starter"])
     if not price_id or price_id.startswith("price_xxx"):
         raise HTTPException(status_code=503, detail="Checkout not configured yet (missing Stripe price)")
     

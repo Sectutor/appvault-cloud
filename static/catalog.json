@@ -14,7 +14,8 @@
       ],
       "env": [
         "MYSQL_ROOT_PASSWORD=appvault_root_secret"
-      ]
+      ],
+      "free_tier": true
     },
     {
       "id": "central-postgres",
@@ -30,7 +31,8 @@
       ],
       "env": [
         "POSTGRES_PASSWORD=appvault_root_secret"
-      ]
+      ],
+      "free_tier": false
     },
     {
       "id": "owncloud",
@@ -67,7 +69,8 @@
           "Configure email server for password resets",
           "Install desktop sync client from owncloud.com"
         ]
-      }
+      },
+      "free_tier": false
     },
     {
       "id": "n8n",
@@ -99,7 +102,8 @@
           "Connect your apps via the integrations panel",
           "Set up the n8n desktop app for local triggers"
         ]
-      }
+      },
+      "free_tier": true
     },
     {
       "id": "pihole",
@@ -134,7 +138,8 @@
           "Set your router's DNS to this machine's IP for network-wide blocking"
         ],
         "video_url": "https://www.youtube.com/watch?v=xtMcRIGoMJQ"
-      }
+      },
+      "free_tier": false
     },
     {
       "id": "openwebui",
@@ -163,7 +168,8 @@
           "Browse and pull models from the model library",
           "Start chatting with your local AI"
         ]
-      }
+      },
+      "free_tier": true
     },
     {
       "id": "crewai-studio",
@@ -193,7 +199,8 @@
           "Create a task for the agent",
           "Assemble a crew and run it"
         ]
-      }
+      },
+      "free_tier": false
     },
     {
       "id": "hermes-agent",
@@ -221,14 +228,15 @@
           "Once running, the agent provides an API for AI tasks",
           "Check the logs for access instructions: docker logs app-hermes-agent"
         ]
-      }
+      },
+      "free_tier": false
     },
     {
       "id": "adguard",
       "name": "AdGuard Home",
       "description": "Network-wide ad blocking and DNS filtering",
       "image": "adguard/adguardhome:latest",
-      "container_port": 3000,
+      "container_port": 80,
       "volumes": [
         "adguard-data:/opt/adguardhome/work",
         "adguard-conf:/opt/adguardhome/conf"
@@ -250,6 +258,10 @@
           "Configure upstream DNS (Cloudflare, Google, etc.)",
           "Point your router's DNS to this machine's IP"
         ]
+      },
+      "free_tier": true,
+      "extra_ports": {
+        "3000": "auto"
       }
     },
     {
@@ -282,7 +294,8 @@
           "Enter a Site Title, Username, and Password",
           "Your site is ready! Visit /wp-admin to manage it"
         ]
-      }
+      },
+      "free_tier": false
     },
     {
       "id": "nextcloud",
@@ -318,7 +331,7 @@
           "Set up calendar & contacts sync"
         ]
       },
-      "container_port": 80
+      "free_tier": false
     },
     {
       "id": "onlyoffice",
@@ -348,7 +361,7 @@
           "Test by creating/editing a document in your cloud"
         ]
       },
-      "container_port": 80
+      "free_tier": true
     },
     {
       "id": "gitlab",
@@ -383,7 +396,8 @@
           "Create your first project",
           "Add SSH keys in Preferences → SSH Keys"
         ]
-      }
+      },
+      "free_tier": false
     },
     {
       "id": "bookstack",
@@ -424,7 +438,7 @@
           "Configure SMTP for email notifications"
         ]
       },
-      "container_port": 80
+      "free_tier": false
     },
     {
       "id": "paperless",
@@ -458,7 +472,8 @@
           "Set up document types and correspondents",
           "Install the mobile app for scanning on the go"
         ]
-      }
+      },
+      "free_tier": false
     },
     {
       "id": "jellyfin",
@@ -491,7 +506,8 @@
           "Wait for the library scan to complete",
           "Install Jellyfin clients on your TV, phone, or tablet"
         ]
-      }
+      },
+      "free_tier": true
     },
     {
       "id": "navidrome",
@@ -517,7 +533,8 @@
           "Log in and start streaming",
           "Use Subsonic-compatible apps (Ultrasonic, DSub) for mobile access"
         ]
-      }
+      },
+      "free_tier": false
     },
     {
       "id": "kavita",
@@ -549,7 +566,8 @@
           "Set up the library scanner",
           "Start reading in your browser or mobile app"
         ]
-      }
+      },
+      "free_tier": false
     },
     {
       "id": "photoprism",
@@ -584,7 +602,8 @@
           "Let the indexing run (may take time for large libraries)",
           "Explore the map view, albums, and search"
         ]
-      }
+      },
+      "free_tier": false
     },
     {
       "id": "immich",
@@ -625,7 +644,7 @@
           "Wait for ML-powered search indexing (face detection, object recognition)"
         ]
       },
-      "container_port": 2283
+      "free_tier": false
     },
     {
       "id": "immich-machine-learning",
@@ -639,13 +658,14 @@
       "category": "ai",
       "min_ram_mb": 1024,
       "hidden": true,
-      "container_port": 8085
+      "free_tier": false
     },
     {
       "id": "wireguard",
       "name": "Wireguard",
       "description": "Modern VPN server",
       "image": "lscr.io/linuxserver/wireguard:latest",
+      "container_port": 51820,
       "privileged": true,
       "cap_add": [
         "NET_ADMIN",
@@ -676,7 +696,7 @@
           "Connect and test your VPN"
         ]
       },
-      "disable_proxy": true
+      "free_tier": false
     },
     {
       "id": "vaultwarden",
@@ -703,7 +723,7 @@
           "Install the Bitwarden mobile app and connect to your server"
         ]
       },
-      "container_port": 80
+      "free_tier": true
     },
     {
       "id": "nginx-proxy-manager",
@@ -735,7 +755,8 @@
           "Add your first Proxy Host (domain → internal service)",
           "Request SSL certificates via Let's Encrypt"
         ]
-      }
+      },
+      "free_tier": false
     },
     {
       "id": "traefik",
@@ -762,7 +783,8 @@
           "Add labels to your containers to enable routing",
           "Configure Let's Encrypt for automatic SSL"
         ]
-      }
+      },
+      "free_tier": false
     },
     {
       "id": "uptime-kuma",
@@ -789,7 +811,8 @@
           "Configure notification methods (Email, Telegram, Slack, etc.)",
           "Set up the status page for public display"
         ]
-      }
+      },
+      "free_tier": true
     },
     {
       "id": "portainer",
@@ -821,7 +844,8 @@
           "Explore the dashboard — containers, images, volumes",
           "Use Portainer's App Templates to quickly deploy services"
         ]
-      }
+      },
+      "free_tier": true
     },
     {
       "id": "dozzle",
@@ -844,7 +868,8 @@
           "Use the search bar to filter log entries",
           "Bookmark specific containers for quick access"
         ]
-      }
+      },
+      "free_tier": true
     },
     {
       "id": "code-server",
@@ -876,7 +901,8 @@
           "Open a terminal and start coding",
           "Configure settings sync across devices"
         ]
-      }
+      },
+      "free_tier": false
     },
     {
       "id": "gitea",
@@ -909,7 +935,8 @@
           "Create your admin account",
           "Create your first repository and push code"
         ]
-      }
+      },
+      "free_tier": false
     },
     {
       "id": "stirling-pdf",
@@ -940,7 +967,8 @@
           "Download the result",
           "No configuration needed — just use it"
         ]
-      }
+      },
+      "free_tier": false
     },
     {
       "id": "excalidraw",
@@ -961,7 +989,8 @@
           "Collaborate in real-time by sharing the room link",
           "Export as PNG or SVG"
         ]
-      }
+      },
+      "free_tier": false
     },
     {
       "id": "drawio",
@@ -984,7 +1013,8 @@
           "Export as PNG, SVG, or PDF",
           "Save to cloud storage or locally"
         ]
-      }
+      },
+      "free_tier": true
     },
     {
       "id": "9router",
@@ -1009,7 +1039,8 @@
           "Follow the on-screen setup wizard",
           "Configure the app for your needs"
         ]
-      }
+      },
+      "free_tier": false
     },
     {
       "id": "openmaic",
@@ -1023,26 +1054,7 @@
       "min_ram_mb": 512,
       "type": "stack",
       "is_stack": true,
-      "compose_url": "https://raw.githubusercontent.com/THU-MAIC/OpenMAIC/main/docker-compose.yml"
-    },
-    {
-      "id": "shieldsign",
-      "name": "ShieldSign Core",
-      "description": "Enterprise e-signatures built for security (AGPL-3.0 fork of Documenso)",
-      "image": "",
-      "container_port": 3000,
-      "volumes": [],
-      "env": [
-        "NEXT_PUBLIC_WEBAPP_URL=http://localhost:3000",
-        "NEXTAUTH_URL=http://localhost:3000",
-        "NEXT_PUBLIC_DISABLE_SIGNUP=false"
-      ],
-      "category": "productivity",
-      "min_ram_mb": 2048,
-      "type": "stack",
-      "is_stack": true,
-      "compose_url": "https://raw.githubusercontent.com/KatalystDigital/shieldsign-core/main/docker/docker-compose.yml",
-      "github_url": "https://github.com/KatalystDigital/shieldsign-core",
+      "compose_url": "https://raw.githubusercontent.com/THU-MAIC/OpenMAIC/main/docker-compose.yml",
       "free_tier": true
     },
     {
@@ -1064,43 +1076,35 @@
         "NEXT_PUBLIC_WEBAPP_URL=http://localhost:3000"
       ],
       "category": "productivity",
-      "min_ram_mb": 512,
-      "education": {
-        "docs_url": "https://docs.documenso.com/",
-        "quick_start": "Documenso is an open-source e-signature platform. Sign documents locally and privately.",
-        "setup_steps": [
-          "Open the app and create your account",
-          "Upload a document to sign",
-          "Send or sign it"
-        ]
-      },
-      "free_tier": true
+      "min_ram_mb": 512
     },
     {
       "id": "appflowy",
       "name": "AppFlowy Cloud",
       "description": "Open-source Notion alternative - collaboration workspace",
-      "type": "stack",
-      "is_stack": true,
       "image": "",
       "container_port": 8000,
-      "compose_url": "https://raw.githubusercontent.com/AppFlowy-IO/AppFlowy-Cloud/main/docker-compose.yml",
+      "volumes": [],
+      "env": [],
       "category": "productivity",
       "min_ram_mb": 2048,
-      "free_tier": true
+      "type": "stack",
+      "is_stack": true,
+      "compose_url": "https://raw.githubusercontent.com/AppFlowy-IO/AppFlowy-Cloud/main/docker-compose.yml"
     },
     {
       "id": "appflowy-test",
       "name": "AppFlowy Test",
       "description": "Second AppFlowy instance for testing (separate ports/data)",
-      "type": "stack",
-      "is_stack": true,
       "image": "",
       "container_port": 8000,
-      "compose_url": "https://raw.githubusercontent.com/AppFlowy-IO/AppFlowy-Cloud/main/docker-compose.yml",
+      "volumes": [],
+      "env": [],
       "category": "productivity",
       "min_ram_mb": 2048,
-      "free_tier": true
+      "type": "stack",
+      "is_stack": true,
+      "compose_url": "https://raw.githubusercontent.com/AppFlowy-IO/AppFlowy-Cloud/main/docker-compose.yml"
     }
   ]
 }
