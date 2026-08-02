@@ -311,9 +311,6 @@
       "category": "productivity",
       "min_ram_mb": 512,
       "main_port": 9085,
-      "extra_ports": {
-        "80": "${NEXTCLOUD_PORT:-9085}"
-      },
       "education": {
         "docs_url": "https://docs.nextcloud.com/",
         "quick_start": "Nextcloud is a self-hosted productivity platform with file sync, calendar, contacts, and collaborative office tools. Create an admin account, then configure storage and users.",
@@ -346,9 +343,6 @@
       "category": "productivity",
       "min_ram_mb": 1024,
       "main_port": 9086,
-      "extra_ports": {
-        "80": "${ONLYOFFICE_PORT:-9086}"
-      },
       "education": {
         "docs_url": "https://helpcenter.onlyoffice.com/",
         "quick_start": "OnlyOffice Document Server provides online document editing (Word, Excel, PowerPoint) that integrates with Nextcloud, ownCloud, and other platforms.",
@@ -420,9 +414,6 @@
       "category": "productivity",
       "min_ram_mb": 256,
       "main_port": 9087,
-      "extra_ports": {
-        "80": "${BOOKSTACK_PORT:-9087}"
-      },
       "education": {
         "docs_url": "https://www.bookstackapp.com/docs/",
         "quick_start": "BookStack is a self-hosted wiki/documentation platform. Organize content into Shelves \u2192 Books \u2192 Chapters \u2192 Pages hierarchy.",
@@ -615,10 +606,6 @@
       "name": "Immich",
       "description": "Self-hosted Google Photos alternative",
       "image": "ghcr.io/immich-app/immich-server:release",
-      "main_port": 2283,
-      "extra_ports": {
-        "2283": "${IMMICH_PORT:-2283}"
-      },
       "volumes": [
         "immich-data:/usr/src/app/upload",
         "/etc/localtime:/etc/localtime:ro"
@@ -717,9 +704,6 @@
       "category": "networking",
       "min_ram_mb": 256,
       "main_port": 9088,
-      "extra_ports": {
-        "80": "${VAULTWARDEN_PORT:-9088}"
-      },
       "education": {
         "docs_url": "https://github.com/dani-garcia/vaultwarden/wiki",
         "quick_start": "Vaultwarden is a self-hosted Bitwarden-compatible password manager. Store, generate, and sync passwords across all devices.",
