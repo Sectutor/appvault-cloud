@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from fastapi import FastAPI, Request, HTTPException, Query
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
@@ -24,6 +24,7 @@ ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "appvault-admin")
 DB_PATH = os.getenv("DB_PATH", "/data/appvault.db")
 CATALOG_PATH = os.getenv("CATALOG_PATH", "/app/static/catalog.json")
+COMPOSE_DIR = os.getenv("COMPOSE_DIR", os.path.join(os.path.dirname(DB_PATH), "compose"))
 AGENT_POLL_SECONDS = int(os.getenv("AGENT_POLL_SECONDS", "30"))
 AGENT_TIMEOUT_SECONDS = int(os.getenv("AGENT_TIMEOUT_SECONDS", "300"))
 PAID_LICENSE_KEYS = {k.strip() for k in os.getenv("PAID_LICENSE_KEYS", "").split(",") if k.strip()}
@@ -395,6 +396,26 @@ async def agent_get_catalog(agent_id: str = Query(...), api_key: str = Query(...
                 locked["status"] = "locked"
                 apps.append(locked)
     return {"version": version, "plan": plan, "apps": apps}
+
+@app.get("/api/agent/compose/{app_id}")
+async def agent_get_compose(app_id: str):
+    """Serve a catalog stack app's docker-compose.yml hosted by central.
+
+    ADDITIVE: only used by stack apps whose catalog `compose_url` points here
+    (e.g. `http://central:8000/api/agent/compose/twenty`). No existing routes
+    or behavior are changed.
+    """
+    import os as _os
+    safe = app_id.replace("/", "").replace("..", "").strip()
+    if not safe:
+        raise HTTPException(status_code=404, detail="Not found")
+    path = _os.path.join(COMPOSE_DIR, safe + ".yml")
+    if not _os.path.exists(path):
+        return JSONResponse({"error": "compose not found"}, status_code=404)
+    with open(path, "r", encoding="utf-8") as f:
+        content = f.read()
+    return Response(content=content, media_type="text/yaml")
+
 
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # ADMIN ENDPOINTS (protected, not for distribution)

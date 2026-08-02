@@ -1099,6 +1099,44 @@
       "category": "infrastructure",
       "hidden": true,
       "free_tier": true
+    },
+    {
+      "id": "twenty",
+      "name": "Twenty CRM",
+      "description": "Open-source modern CRM. Beautiful, fast, and self-hosted.",
+      "image": "twentycrm/twenty:v2.26.0",
+      "container_port": 3000,
+      "is_stack": true,
+      "type": "stack",
+      "compose_url": "http://central:8000/api/agent/compose/twenty",
+      "volumes": [
+        "twenty-db-data",
+        "twenty-server-data"
+      ],
+      "env": [
+        "SERVER_URL=http://localhost:3000",
+        "STORAGE_TYPE=local",
+        "DISABLE_DB_MIGRATIONS=false",
+        "DISABLE_CRON_JOBS_REGISTRATION=false"
+      ],
+      "category": "productivity",
+      "min_ram_mb": 2048,
+      "web_path": "/",
+      "education": {
+        "docs_url": "https://twenty.com/developers",
+        "quick_start": "Twenty is a modern open-source CRM. After install, open the app and create your workspace and admin account.",
+        "default_login": {
+          "username": "you@example.com",
+          "password": "set on first login"
+        },
+        "setup_steps": [
+          "Open the app URL and create your first workspace",
+          "Create your admin account",
+          "Import your contacts or start fresh",
+          "Configure integrations in Settings"
+        ]
+      },
+      "free_tier": true
     }
   ]
 }

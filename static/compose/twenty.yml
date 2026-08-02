@@ -1,0 +1,104 @@
+# Twenty CRM (github.com/twentyhq/twenty) — complete, self-contained AppVault stack
+# Pinned image; all required env vars inlined so `docker compose up` can never fail
+# on a missing variable. Server + worker + postgres + redis in one stack.
+name: twenty
+
+x-twenty-env: &twenty-env
+  NODE_PORT: "3000"
+  # Use an internal postgres + redis defined below (self-contained).
+  PG_DATABASE_URL: postgres://twenty:twenty_secret_change_me_min_24chars@db:5432/default
+  SERVER_URL: "http://localhost:3000"
+  REDIS_URL: "redis://redis:6379"
+  DISABLE_DB_MIGRATIONS: "false"
+  DISABLE_CRON_JOBS_REGISTRATION: "false"
+  STORAGE_TYPE: "local"
+  # Random-but-stable secrets generated for a first install.
+  ENCRYPTION_KEY: "c2VjdXJlX2VuY3J5cHRpb25fa2V5XzI1NjJpdF8xMjM0NTY3ODk="
+  FALLBACK_ENCRYPTION_KEY: ""
+  APP_SECRET: "c2VjdXJlX2FwcF9zZWNyZXRfbGVnYWN5XzI1NjJpdF8xMjM0NTY3ODk="
+
+services:
+  server:
+    image: twentycrm/twenty:v2.26.0
+    labels:
+      - "appvault.managed=true"
+      - "appvault.app=twenty"
+    environment:
+      NODE_PORT: "3000"
+      PG_DATABASE_URL: postgres://twenty:twenty_secret_change_me_min_24chars@db:5432/default
+      SERVER_URL: "http://localhost:3000"
+      REDIS_URL: "redis://redis:6379"
+      DISABLE_DB_MIGRATIONS: "false"
+      DISABLE_CRON_JOBS_REGISTRATION: "false"
+      STORAGE_TYPE: "local"
+      ENCRYPTION_KEY: "c2VjdXJlX2VuY3J5cHRpb25fa2V5XzI1NjJpdF8xMjM0NTY3ODk="
+      FALLBACK_ENCRYPTION_KEY: ""
+      APP_SECRET: "c2VjdXJlX2FwcF9zZWNyZXRfbGVnYWN5XzI1NjJpdF8xMjM0NTY3ODk="
+    volumes:
+      - twenty-server-data:/app/packages/twenty-server/.local-storage
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:3000/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 300s
+    restart: always
+
+  worker:
+    image: twentycrm/twenty:v2.26.0
+    command: ["yarn", "worker:prod"]
+    environment:
+      NODE_PORT: "3000"
+      PG_DATABASE_URL: postgres://twenty:twenty_secret_change_me_min_24chars@db:5432/default
+      SERVER_URL: "http://localhost:3000"
+      REDIS_URL: "redis://redis:6379"
+      DISABLE_DB_MIGRATIONS: "true"
+      DISABLE_CRON_JOBS_REGISTRATION: "true"
+      STORAGE_TYPE: "local"
+      ENCRYPTION_KEY: "c2VjdXJlX2VuY3J5cHRpb25fa2V5XzI1NjJpdF8xMjM0NTY3ODk="
+      FALLBACK_ENCRYPTION_KEY: ""
+      APP_SECRET: "c2VjdXJlX2FwcF9zZWNyZXRfbGVnYWN5XzI1NjJpdF8xMjM0NTY3ODk="
+    volumes:
+      - twenty-server-data:/app/packages/twenty-server/.local-storage
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: always
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: default
+      POSTGRES_USER: twenty
+      POSTGRES_PASSWORD: twenty_secret_change_me_min_24chars
+    volumes:
+      - twenty-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U twenty -h localhost -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: always
+
+  redis:
+    image: redis:7
+    restart: always
+    command: ["--maxmemory-policy", "noeviction"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  twenty-server-data:
+  twenty-db-data:
