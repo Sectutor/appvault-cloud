@@ -345,7 +345,7 @@
               "properties": {}
             },
             "method": "GET",
-            "path": "/"
+            "path": "/wp-json/wp/v2/posts?per_page=1"
           },
           {
             "name": "wordpress_posts_list",
@@ -363,7 +363,7 @@
               }
             },
             "method": "GET",
-            "path": "/wp-json/wp/v2/posts?per_page={per_page}"
+            "path": "/wp-json/wp/v2/posts"
           },
           {
             "name": "wordpress_search",
@@ -1990,7 +1990,7 @@
               }
             },
             "method": "GET",
-            "path": "/api/subscribers?page={page}"
+            "path": "/api/subscribers"
           },
           {
             "name": "listmonk_import_subscribers",
