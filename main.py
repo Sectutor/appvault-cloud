@@ -371,6 +371,14 @@ async def agent_catalog_version(agent_id: str = Query(...), api_key: str = Query
     plan = get_agent_plan(agent_id)
     return {"version": version, "plan": plan}
 
+def _app_published(a):
+    """An app is published (sent to clients) unless explicitly unpublished/disabled."""
+    if a.get("published") is False:
+        return False
+    if a.get("disabled"):
+        return False
+    return True
+
 @app.get("/api/agent/catalog")
 async def agent_get_catalog(agent_id: str = Query(...), api_key: str = Query(...)):
     """Agent downloads latest catalog."""
@@ -379,12 +387,14 @@ async def agent_get_catalog(agent_id: str = Query(...), api_key: str = Query(...
     
     version = get_catalog_version()
     plan = get_agent_plan(agent_id)
+    # Unpublished/disabled apps are NEVER sent to any client (free or paid).
+    published = [a for a in GLOBAL_CATALOG.get("apps", []) if _app_published(a)]
     if plan == "paid":
-        apps = [a for a in GLOBAL_CATALOG.get("apps", []) if (not a.get("hidden")) or str(a.get("id", "")).startswith("central-")]
+        apps = [a for a in published if (not a.get("hidden")) or str(a.get("id", "")).startswith("central-")]
     else:
         # Free agents: show free apps + PREMIUM apps marked as locked (for upsell UX).
         apps = []
-        for a in GLOBAL_CATALOG.get("apps", []):
+        for a in published:
             if a.get("hidden") and not str(a.get("id", "")).startswith("central-"):
                 continue
             if a.get("free_tier"):
@@ -562,6 +572,10 @@ async def admin_add_app(request: Request):
         "env": body.get("env", []),
         "category": body.get("category", "other"),
         "min_ram_mb": body.get("min_ram_mb", 256),
+        # New apps are published immediately (visible to clients) and premium
+        # (paid-only) by default; admin can unpublish or mark free any time.
+        "published": True,
+        "free_tier": bool(body.get("free_tier", False)),
     }
     
     if is_stack:
@@ -686,7 +700,10 @@ async def admin_activate_license(license_key: str, request: Request):
 
 @app.post("/admin/catalog/apps/{app_id}/disable")
 async def admin_toggle_disabled(app_id: str, request: Request):
-    """Admin: disable or re-enable an app for EVERYONE (free + paid)."""
+    """Admin: disable or re-enable an app for EVERYONE (free + paid).
+
+    Backwards-compatible alias for publish/unpublish: disabled == unpublished.
+    """
     require_admin(request)
     body = await request.json()
     disabled = bool(body.get("disabled", True))
@@ -694,11 +711,33 @@ async def admin_toggle_disabled(app_id: str, request: Request):
     if not app:
         raise HTTPException(status_code=404, detail="App not found")
     app["disabled"] = disabled
+    app["published"] = not disabled
     with open(CATALOG_PATH, "w", encoding="utf-8") as f:
         json.dump(GLOBAL_CATALOG, f, indent=2)
     _audit("catalog.disable", f"{app_id} -> {'disabled' if disabled else 'enabled'}")
     new_version = increment_catalog_version()
     return {"status": "ok", "app_id": app_id, "disabled": disabled,
+            "published": app["published"], "new_catalog_version": new_version}
+
+@app.post("/admin/catalog/apps/{app_id}/publish")
+async def admin_toggle_published(app_id: str, request: Request):
+    """Admin: publish or unpublish an app. Unpublished apps are NOT sent to any client.
+
+    Body: {"published": true|false}
+    """
+    require_admin(request)
+    body = await request.json()
+    published = bool(body.get("published", True))
+    app = next((a for a in GLOBAL_CATALOG.get("apps", []) if a.get("id") == app_id), None)
+    if not app:
+        raise HTTPException(status_code=404, detail="App not found")
+    app["published"] = published
+    app["disabled"] = not published
+    with open(CATALOG_PATH, "w", encoding="utf-8") as f:
+        json.dump(GLOBAL_CATALOG, f, indent=2)
+    _audit("catalog.publish", f"{app_id} -> {'published' if published else 'unpublished'}")
+    new_version = increment_catalog_version()
+    return {"status": "ok", "app_id": app_id, "published": published,
             "new_catalog_version": new_version}
 
 @app.post("/admin/catalog/apps/{app_id}/education")

@@ -106,6 +106,7 @@ select, input { padding: 6px 10px; border-radius: 6px; border: 1px solid #334155
   <button class="active" onclick="switchTab('agents')">🤖 Agents</button>
   <button onclick="switchTab('jobs')">📋 Job Queue</button>
   <button onclick="switchTab('catalog')">📦 Catalog</button>
+<button onclick="switchTab('licenses')">🔑 Licenses</button>
 </div>
 
 <!-- AGENTS SECTION -->
@@ -215,25 +216,32 @@ select, input { padding: 6px 10px; border-radius: 6px; border: 1px solid #334155
       <div><label style="font-size:12px;color:#94a3b8;">Image</label><input id="appImage" placeholder="myapp/server:latest" required></div>
       <div><label style="font-size:12px;color:#94a3b8;">Description</label><input id="appDesc" placeholder="Description"></div>
       <div><label style="font-size:12px;color:#94a3b8;">Port</label><input id="appPort" placeholder="8080" type="number"></div>
+      <div><label style="font-size:12px;color:#94a3b8;">Extra Ports (comma-sep)</label><input id="appExtraPorts" placeholder="e.g. 3000,8081 (setup/secondary)"></div>
       <div><label style="font-size:12px;color:#94a3b8;">Category</label>
         <select id="appCategory">
           <option>ai</option><option>productivity</option><option>networking</option><option>development</option><option>media</option><option>automation</option><option>database</option>
+        </select>
+      </div>
+      <div><label style="font-size:12px;color:#94a3b8;">Tier</label>
+        <select id="appFree">
+          <option value="false">Premium (paid only)</option>
+          <option value="true">Free (all users)</option>
         </select>
       </div>
       <div style="grid-column:1/-1;"><button type="submit" class="btn btn-primary">Add App to Catalog</button></div>
     </form>
 
     <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
-      <span style="color:#94a3b8;font-size:13px;">{{ catalog.apps|length }} apps in catalog</span>
+      <span style="color:#94a3b8;font-size:13px;">{{ catalog.apps|length }} apps in catalog · <b id="free-count" style="color:#fbbf24;">{{ catalog.apps|selectattr('free_tier','equalto',True)|list|length }} marked FREE</b> (free plan gets these unlocked; premium shown as locked)</span>
       <button class="btn btn-primary" onclick="publishCatalog()">📢 Publish New Version</button>
     </div>
 
     <table>
-      <tr><th>ID</th><th>Name</th><th>Image</th><th>Category</th><th>RAM</th><th>Video URL</th><th></th></tr>
+      <tr><th>ID</th><th>Name</th><th>Image</th><th>Category</th><th>RAM</th><th>Video URL</th><th>Tier</th><th>Status</th><th></th></tr>
       {% for app in catalog.apps %}
       <tr>
         <td><code style="color:#38bdf8;">{{ app.id }}</code></td>
-        <td>{{ app.name }}</td>
+        <td>{{ app.name }}{% if app.extra_ports %}<span style="color:#fbbf24;font-size:11px;margin-left:6px;">+{{ app.extra_ports|join(',') }} ports</span>{% endif %}</td>
         <td style="color:#94a3b8;font-size:12px;">{{ app.image }}</td>
         <td><span class="badge badge-online">{{ app.category }}</span></td>
         <td>{{ app.min_ram_mb }}MB</td>
@@ -245,6 +253,24 @@ select, input { padding: 6px 10px; border-radius: 6px; border: 1px solid #334155
             <button type="submit" class="btn btn-primary" style="padding:4px 10px;font-size:11px;">Save</button>
           </form>
         </td>
+        <td>
+          {% if app.free_tier %}
+          <span class="badge badge-online">Free</span><br>
+          <button id="free-{{ app.id }}" class="btn btn-restart" onclick="toggleFree('{{ app.id }}', false)">Make Premium</button>
+          {% else %}
+          <span class="badge badge-pending">Premium</span><br>
+          <button id="free-{{ app.id }}" class="btn btn-install" onclick="toggleFree('{{ app.id }}', true)">Make Free</button>
+          {% endif %}
+        </td>
+        <td>
+          {% if app.disabled or app.get('published') == false %}
+          <span class="badge badge-offline">Unpublished</span><br>
+          <button id="dis-{{ app.id }}" class="btn btn-install" onclick="toggleDisabled('{{ app.id }}', false)">Publish</button>
+          {% else %}
+          <span class="badge badge-online">Published</span><br>
+          <button id="dis-{{ app.id }}" class="btn btn-restart" onclick="toggleDisabled('{{ app.id }}', true)">Unpublish</button>
+          {% endif %}
+        </td>
         <td><button class="btn btn-uninstall" onclick="removeApp('{{ app.id }}')">Remove</button></td>
       </tr>
       {% endfor %}
@@ -253,6 +279,42 @@ select, input { padding: 6px 10px; border-radius: 6px; border: 1px solid #334155
 </div>
 
 <div id="toast" class="toast"></div>
+
+<div id="tab-licenses" class="section">
+  <h3>🔑 Licenses</h3>
+  <div style="margin-bottom:14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+    <input id="licEmail" placeholder="customer@email.com" style="padding:8px 12px;border-radius:8px;border:1px solid #334155;background:#111827;color:#e2e8f0;width:220px;">
+    <select id="licTier" style="padding:8px 12px;border-radius:8px;border:1px solid #334155;background:#111827;color:#e2e8f0;">
+      <option value="personal">Personal</option>
+      <option value="pro">Small Business</option>
+      <option value="power">Managed</option>
+    </select>
+    <button class="btn btn-primary" onclick="createLicense()">+ Create License</button>
+    <span style="color:#94a3b8;font-size:12px;">({{ licenses|length }} licenses)</span>
+  </div>
+  <table>
+    <tr><th>License Key</th><th>Email</th><th>Tier</th><th>Status</th><th>Agents</th><th>Created</th><th></th></tr>
+    {% for l in licenses %}
+    <tr>
+      <td style="font-family:monospace;font-size:11px;">{{ l.key }}</td>
+      <td>{{ l.email }}</td>
+      <td>{{ l.tier }}</td>
+      <td><span style="color:{{ '#4ade80' if l.status == 'active' else '#f87171' }};font-weight:600;">{{ l.status }}</span></td>
+      <td>{{ l.agent_count }}</td>
+      <td style="font-size:11px;color:#94a3b8;">{{ l.created_at }}</td>
+      <td>
+        {% if l.status == 'active' %}
+        <button class="btn btn-uninstall" onclick="toggleLicense('{{ l.key }}','revoke')">⛔ Revoke</button>
+        {% else %}
+        <button class="btn btn-primary" onclick="toggleLicense('{{ l.key }}','activate')">✅ Activate</button>
+        {% endif %}
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7" style="color:#64748b;text-align:center;padding:20px;">No licenses yet — they appear automatically when customers pay (or create one manually).</td></tr>
+    {% endfor %}
+  </table>
+</div>
 
 <script>
 function switchTab(name) {
@@ -269,7 +331,40 @@ function showToast(msg, type) {
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// Push job
+// Toggle free-tier flag on an app (Free = all users can install; Premium = paid users only)
+async function toggleFree(appId, makeFree) {
+  try {
+    const r = await fetch('/admin/catalog/apps/' + appId + '/free', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({free: makeFree})
+    });
+    const d = await r.json();
+    if (d.status !== 'ok') { showToast('Error: ' + (d.detail || 'failed'), 'error'); return; }
+    showToast((makeFree ? '🆓 ' + appId + ' marked FREE - all users can install' : '💎 ' + appId + ' marked PREMIUM - paid users only') + ' (catalog v' + d.new_catalog_version + ')', 'success');
+    setTimeout(() => location.reload(), 1000);
+  } catch(err) {
+    showToast('Error: ' + err.message, 'error');
+  }
+}
+
+// Publish / unpublish an app (unpublished apps are NOT sent to any client)
+async function toggleDisabled(appId, makeDisabled) {
+  try {
+    const r = await fetch('/admin/catalog/apps/' + appId + '/disable', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({disabled: makeDisabled})
+    });
+    const d = await r.json();
+    if (d.status !== 'ok') { showToast('Error: ' + (d.detail || 'failed'), 'error'); return; }
+    showToast((makeDisabled ? '🚫 ' + appId + ' unpublished - hidden from all clients' : '📢 ' + appId + ' published - clients will see it') + ' (catalog v' + d.new_catalog_version + ')', 'success');
+    setTimeout(() => location.reload(), 1000);
+  } catch(err) {
+    showToast('Error: ' + err.message, 'error');
+  }
+}
+
 document.getElementById('pushJobForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const agentId = document.getElementById('jobAgent').value;
@@ -415,8 +510,10 @@ document.getElementById('addAppForm').addEventListener('submit', async (e) => {
     image: document.getElementById('appImage').value,
     description: document.getElementById('appDesc').value,
     container_port: parseInt(document.getElementById('appPort').value) || undefined,
+    extra_ports: document.getElementById('appExtraPorts').value.split(',').map(s=>s.trim()).filter(Boolean),
     category: document.getElementById('appCategory').value,
     min_ram_mb: 256,
+    free_tier: document.getElementById('appFree').value === 'true',
   };
   try {
     const r = await fetch('/admin/catalog/apps', {
@@ -600,6 +697,27 @@ async function publishCatalog() {
     showToast('❌ ' + err.message, 'error');
   }
 }
+
+async function createLicense() {
+  var email = document.getElementById('licEmail').value.trim();
+  var tier = document.getElementById('licTier').value;
+  if (!email || email.indexOf('@') < 0) { showToast('Enter a valid email', 'error'); return; }
+  try {
+    var r = await fetch('/admin/licenses', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email: email, tier: tier})});
+    var d = await r.json();
+    if (d.status === 'ok') { showToast('License created: ' + d.key, 'success'); setTimeout(function(){ location.reload(); }, 900); }
+    else showToast('Error: ' + (d.detail || 'failed'), 'error');
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+async function toggleLicense(key, action) {
+  try {
+    var r = await fetch('/admin/licenses/' + encodeURIComponent(key) + '/' + action, {method:'POST', headers:{'Content-Type':'application/json'}, body: '{}'});
+    var d = await r.json();
+    if (d.status === 'ok') { showToast(key.slice(0,16) + ' ' + (action === 'revoke' ? 'REVOKED' : 'ACTIVATED'), 'success'); setTimeout(function(){ location.reload(); }, 900); }
+    else showToast('Error: ' + (d.detail || 'failed'), 'error');
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
 </script>
 </body>
 </html>
