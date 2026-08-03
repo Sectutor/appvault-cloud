@@ -104,7 +104,41 @@
         ]
       },
       "free_tier": true
-    },
+    ,
+      "mcp": {
+        "credential": {
+          "type": "api_key",
+          "header": "X-N8N-API-KEY",
+          "via": "setup_wizard"
+        },
+        "tools": [
+          {
+            "name": "n8n_workflows_list",
+            "description": "List n8n workflows (needs API key in vault)",
+            "handler": "http",
+            "write": false,
+            "inputSchema": {
+              "type": "object",
+              "properties": {}
+            },
+            "method": "GET",
+            "path": "/api/v1/workflows?limit=50"
+          },
+          {
+            "name": "n8n_executions_list",
+            "description": "List recent n8n workflow executions",
+            "handler": "http",
+            "write": false,
+            "inputSchema": {
+              "type": "object",
+              "properties": {}
+            },
+            "method": "GET",
+            "path": "/api/v1/executions?limit=20"
+          }
+        ]
+      }
+},
     {
       "id": "pihole",
       "name": "Pi-hole",
@@ -293,7 +327,101 @@
         ]
       },
       "free_tier": false
-    },
+    ,
+      "mcp": {
+        "credential": {
+          "type": "api_key",
+          "header": "Authorization",
+          "via": "setup_wizard"
+        },
+        "tools": [
+          {
+            "name": "wordpress_site_status",
+            "description": "Check the WordPress site is up (home page HTML; public)",
+            "handler": "http",
+            "write": false,
+            "inputSchema": {
+              "type": "object",
+              "properties": {}
+            },
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "name": "wordpress_posts_list",
+            "description": "List published WordPress posts (title, link, date)",
+            "handler": "http",
+            "write": false,
+            "inputSchema": {
+              "type": "object",
+              "properties": {
+                "per_page": {
+                  "type": "integer",
+                  "description": "posts per page",
+                  "default": 10
+                }
+              }
+            },
+            "method": "GET",
+            "path": "/wp-json/wp/v2/posts?per_page={per_page}"
+          },
+          {
+            "name": "wordpress_search",
+            "description": "Search WordPress content by keyword",
+            "handler": "http",
+            "write": false,
+            "inputSchema": {
+              "type": "object",
+              "required": [
+                "q"
+              ],
+              "properties": {
+                "q": {
+                  "type": "string",
+                  "description": "search term"
+                }
+              }
+            },
+            "method": "GET",
+            "path": "/wp-json/wp/v2/search?search={q}"
+          },
+          {
+            "name": "wordpress_draft_post",
+            "description": "Create a WordPress post as DRAFT. Needs REST API app-password in the vault (Authorization header).",
+            "handler": "http",
+            "write": true,
+            "inputSchema": {
+              "type": "object",
+              "required": [
+                "title",
+                "content"
+              ],
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "description": "post title"
+                },
+                "content": {
+                  "type": "string",
+                  "description": "post HTML content"
+                },
+                "status": {
+                  "type": "string",
+                  "description": "draft or publish",
+                  "enum": [
+                    "draft",
+                    "publish"
+                  ],
+                  "default": "draft"
+                }
+              }
+            },
+            "method": "POST",
+            "path": "/wp-json/wp/v2/posts"
+          }
+        ]
+      }
+},
     {
       "id": "nextcloud",
       "name": "Nextcloud",
@@ -1814,6 +1942,155 @@
       },
       "free_tier": true,
       "github_url": "https://github.com/knadh/listmonk"
-    }
+    ,
+      "mcp": {
+        "credential": {
+          "type": "api_key",
+          "header": "Authorization",
+          "via": "setup_wizard"
+        },
+        "tools": [
+          {
+            "name": "listmonk_health",
+            "description": "Listmonk service health check",
+            "handler": "http",
+            "write": false,
+            "inputSchema": {
+              "type": "object",
+              "properties": {}
+            },
+            "method": "GET",
+            "path": "/api/health"
+          },
+          {
+            "name": "listmonk_lists",
+            "description": "List mailing lists / segments",
+            "handler": "http",
+            "write": false,
+            "inputSchema": {
+              "type": "object",
+              "properties": {}
+            },
+            "method": "GET",
+            "path": "/api/lists"
+          },
+          {
+            "name": "listmonk_subscribers",
+            "description": "List subscribers (paginated)",
+            "handler": "http",
+            "write": false,
+            "inputSchema": {
+              "type": "object",
+              "properties": {
+                "page": {
+                  "type": "integer",
+                  "description": "page number",
+                  "default": 1
+                }
+              }
+            },
+            "method": "GET",
+            "path": "/api/subscribers?page={page}"
+          },
+          {
+            "name": "listmonk_import_subscribers",
+            "description": "Import email addresses into a list (new subscribers added)",
+            "handler": "http",
+            "write": true,
+            "inputSchema": {
+              "type": "object",
+              "required": [
+                "list_ids",
+                "emails"
+              ],
+              "properties": {
+                "list_ids": {
+                  "type": "array",
+                  "description": "list ids to add to"
+                },
+                "emails": {
+                  "type": "array",
+                  "description": "email addresses"
+                }
+              }
+            },
+            "method": "POST",
+            "path": "/api/import/subscribers"
+          },
+          {
+            "name": "listmonk_create_campaign",
+            "description": "Create an email campaign (does NOT send; use listmonk_send_campaign)",
+            "handler": "http",
+            "write": true,
+            "inputSchema": {
+              "type": "object",
+              "required": [
+                "name",
+                "subject",
+                "list_ids",
+                "content"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "campaign name"
+                },
+                "subject": {
+                  "type": "string",
+                  "description": "email subject"
+                },
+                "list_ids": {
+                  "type": "array",
+                  "description": "target list ids"
+                },
+                "content": {
+                  "type": "string",
+                  "description": "email body"
+                },
+                "type": {
+                  "type": "string",
+                  "description": "campaign type",
+                  "enum": [
+                    "regular",
+                    "optin"
+                  ],
+                  "default": "regular"
+                }
+              }
+            },
+            "method": "POST",
+            "path": "/api/campaigns"
+          },
+          {
+            "name": "listmonk_send_campaign",
+            "description": "Send or schedule a campaign",
+            "handler": "http",
+            "write": true,
+            "inputSchema": {
+              "type": "object",
+              "required": [
+                "id"
+              ],
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "description": "campaign id"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "scheduled",
+                    "running"
+                  ],
+                  "default": "scheduled"
+                }
+              }
+            },
+            "method": "PUT",
+            "path": "/api/campaigns/{id}/status"
+          }
+        ]
+      }
+}
   ]
 }
