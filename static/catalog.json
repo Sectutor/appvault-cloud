@@ -2146,6 +2146,37 @@
           }
         ]
       }
+    },
+    {
+      "id": "affine",
+      "name": "AFFiNE",
+      "description": "Next-gen knowledge base - docs, whiteboards & kanban in one local-first workspace (Notion + Miro alternative). Privacy-first, self-hostable, open source (MIT core), 70k+ stars.",
+      "image": "",
+      "container_port": 3010,
+      "type": "stack",
+      "is_stack": true,
+      "compose_url": "https://raw.githubusercontent.com/Sectutor/affine-stack/main/docker-compose.yml",
+      "volumes": [],
+      "env": [],
+      "category": "productivity",
+      "min_ram_mb": 2048,
+      "education": {
+        "docs_url": "https://docs.affine.pro/self-host-affine",
+        "quick_start": "AFFiNE is a local-first Notion + Miro alternative: documents, edgeless whiteboards, kanban and databases in one workspace with optional AI. The stack starts the server (port 3010) plus its own PostgreSQL with pgvector and Redis; the predeploy migration job runs automatically on first start. After install, open the app and create your first workspace.",
+        "default_login": {
+          "username": "sign up on first launch (local account)",
+          "password": "set during signup",
+          "path": "/"
+        },
+        "setup_steps": [
+          "Open http://localhost:PORT/ in your browser",
+          "Create your first workspace - self-hosted/local account, no external signup",
+          "Optionally enable AFFiNE AI in admin settings (needs your own AI provider key)",
+          "Real-time collaboration: invite users via workspace settings"
+        ]
+      },
+      "free_tier": true,
+      "github_url": "https://github.com/toeverything/AFFiNE"
     }
   ]
 }
