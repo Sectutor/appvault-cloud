@@ -65,7 +65,7 @@
         },
         "setup_steps": [
           "Log in with admin / admin",
-          "Go to Settings \u2192 Admin \u2192 set a secure admin password",
+          "Go to Settings → Admin → set a secure admin password",
           "Configure email server for password resets",
           "Install desktop sync client from owncloud.com"
         ]
@@ -97,14 +97,13 @@
           "password": "set on first login"
         },
         "setup_steps": [
-          "Open the app URL \u2192 create your account (first user is owner)",
+          "Open the app URL → create your account (first user is owner)",
           "Explore the template library for ready-made workflows",
           "Connect your apps via the integrations panel",
           "Set up the n8n desktop app for local triggers"
         ]
       },
-      "free_tier": true
-    ,
+      "free_tier": true,
       "mcp": {
         "credential": {
           "type": "api_key",
@@ -138,7 +137,7 @@
           }
         ]
       }
-},
+    },
     {
       "id": "pihole",
       "name": "Pi-hole",
@@ -197,8 +196,8 @@
           "password": "set on first login"
         },
         "setup_steps": [
-          "Open the app \u2192 create your admin account",
-          "Go to Settings \u2192 Connections \u2192 add your Ollama endpoint",
+          "Open the app → create your admin account",
+          "Go to Settings → Connections → add your Ollama endpoint",
           "Browse and pull models from the model library",
           "Start chatting with your local AI"
         ]
@@ -228,7 +227,7 @@
           "password": "set on first login"
         },
         "setup_steps": [
-          "Open the app \u2192 create your account",
+          "Open the app → create your account",
           "Define your first AI agent (role, goal, backstory)",
           "Create a task for the agent",
           "Assemble a crew and run it"
@@ -258,7 +257,7 @@
         "docs_url": "https://github.com/NousResearch/hermes-agent",
         "quick_start": "Hermes Agent is an AI agent from Nous Research. Note: This is a very large download (several GB) that includes AI models.",
         "setup_steps": [
-          "The image is large (>5GB) \u2014 first pull may take 5-10 minutes",
+          "The image is large (>5GB) — first pull may take 5-10 minutes",
           "Once running, the agent provides an API for AI tasks",
           "Check the logs for access instructions: docker logs app-hermes-agent"
         ]
@@ -287,7 +286,7 @@
           "path": "/"
         },
         "setup_steps": [
-          "Open http://localhost:PORT/ \u2014 the setup wizard will appear",
+          "Open http://localhost:PORT/ — the setup wizard will appear",
           "Set up your admin credentials",
           "Configure upstream DNS (Cloudflare, Google, etc.)",
           "Point your router's DNS to this machine's IP"
@@ -314,20 +313,19 @@
       "min_ram_mb": 256,
       "education": {
         "docs_url": "https://wordpress.org/documentation/",
-        "quick_start": "WordPress is the world's most popular CMS. After install, the setup wizard will guide you through creating your site \u2014 choose a language, set up your database (already configured), and create your admin account.",
+        "quick_start": "WordPress is the world's most popular CMS. After install, the setup wizard will guide you through creating your site — choose a language, set up your database (already configured), and create your admin account.",
         "default_login": {
           "username": "set during setup",
           "password": "set during setup"
         },
         "setup_steps": [
-          "Open the app URL \u2192 WordPress setup wizard will appear",
+          "Open the app URL → WordPress setup wizard will appear",
           "Select your language and click Continue",
           "Enter a Site Title, Username, and Password",
           "Your site is ready! Visit /wp-admin to manage it"
         ]
       },
-      "free_tier": false
-    ,
+      "free_tier": false,
       "mcp": {
         "credential": {
           "type": "api_key",
@@ -421,7 +419,7 @@
           }
         ]
       }
-},
+    },
     {
       "id": "nextcloud",
       "name": "Nextcloud",
@@ -447,7 +445,7 @@
           "password": "set during setup"
         },
         "setup_steps": [
-          "Open the app URL \u2192 create your admin account",
+          "Open the app URL → create your admin account",
           "Choose 'Install Recommended Apps' for full functionality",
           "Install desktop/mobile sync clients from nextcloud.com",
           "Set up calendar & contacts sync"
@@ -475,7 +473,7 @@
         "docs_url": "https://helpcenter.onlyoffice.com/",
         "quick_start": "OnlyOffice Document Server provides online document editing (Word, Excel, PowerPoint) that integrates with Nextcloud, ownCloud, and other platforms.",
         "setup_steps": [
-          "This is a backend service \u2014 it works with Nextcloud/ownCloud apps",
+          "This is a backend service — it works with Nextcloud/ownCloud apps",
           "Install the ONLYOFFICE connector plugin in your cloud platform",
           "Configure the connector to point to http://app-onlyoffice:PORT/",
           "Test by creating/editing a document in your cloud"
@@ -512,10 +510,10 @@
           "password": "set on first login"
         },
         "setup_steps": [
-          "Open the app URL \u2192 set the root password",
+          "Open the app URL → set the root password",
           "Log in with root and your chosen password",
           "Create your first project",
-          "Add SSH keys in Preferences \u2192 SSH Keys"
+          "Add SSH keys in Preferences → SSH Keys"
         ]
       },
       "free_tier": false
@@ -544,7 +542,7 @@
       "main_port": 9087,
       "education": {
         "docs_url": "https://www.bookstackapp.com/docs/",
-        "quick_start": "BookStack is a self-hosted wiki/documentation platform. Organize content into Shelves \u2192 Books \u2192 Chapters \u2192 Pages hierarchy.",
+        "quick_start": "BookStack is a self-hosted wiki/documentation platform. Organize content into Shelves → Books → Chapters → Pages hierarchy.",
         "default_login": {
           "username": "admin@admin.com",
           "password": "password"
@@ -552,7 +550,7 @@
         "setup_steps": [
           "Log in with admin@admin.com / password",
           "Change the default credentials immediately",
-          "Create your first Shelf \u2192 Book \u2192 Page",
+          "Create your first Shelf → Book → Page",
           "Configure SMTP for email notifications"
         ]
       },
@@ -590,7 +588,7 @@
           "password": "set on first login"
         },
         "setup_steps": [
-          "Open the app \u2192 create your superuser account",
+          "Open the app → create your superuser account",
           "Configure the consumption folder for auto-importing",
           "Set up document types and correspondents",
           "Install the mobile app for scanning on the go"
@@ -624,7 +622,7 @@
           "password": "set during setup"
         },
         "setup_steps": [
-          "Open the app URL \u2192 complete the setup wizard",
+          "Open the app URL → complete the setup wizard",
           "Add your media folders (Movies, TV Shows, Music)",
           "Wait for the library scan to complete",
           "Install Jellyfin clients on your TV, phone, or tablet"
@@ -652,7 +650,7 @@
         "quick_start": "Navidrome is a personal music streaming server. Point it to your music folder and stream your collection from anywhere.",
         "setup_steps": [
           "Place your music files in the music volume",
-          "Open the app \u2014 Navidrome will scan automatically",
+          "Open the app — Navidrome will scan automatically",
           "Log in and start streaming",
           "Use Subsonic-compatible apps (Ultrasonic, DSub) for mobile access"
         ]
@@ -685,7 +683,7 @@
         },
         "setup_steps": [
           "Log in with admin / admin",
-          "Go to Settings \u2192 Libraries \u2192 Add your media folders",
+          "Go to Settings → Libraries → Add your media folders",
           "Set up the library scanner",
           "Start reading in your browser or mobile app"
         ]
@@ -721,7 +719,7 @@
           "password": "set on first login"
         },
         "setup_steps": [
-          "Open the app \u2192 set your admin password",
+          "Open the app → set your admin password",
           "Point PhotoPrism to your photo directory",
           "Let the indexing run (may take time for large libraries)",
           "Explore the map view, albums, and search"
@@ -758,7 +756,7 @@
           "password": "set during setup"
         },
         "setup_steps": [
-          "Open the app \u2192 create your admin account",
+          "Open the app → create your admin account",
           "Install the Immich mobile app from the app store",
           "Enable auto-backup on your phone",
           "Wait for ML-powered search indexing (face detection, object recognition)"
@@ -836,7 +834,7 @@
         "docs_url": "https://github.com/dani-garcia/vaultwarden/wiki",
         "quick_start": "Vaultwarden is a self-hosted Bitwarden-compatible password manager. Store, generate, and sync passwords across all devices.",
         "setup_steps": [
-          "Open the app \u2192 create your account",
+          "Open the app → create your account",
           "Install the Bitwarden browser extension",
           "Configure the extension to use your self-hosted server URL",
           "Install the Bitwarden mobile app and connect to your server"
@@ -872,7 +870,7 @@
         "setup_steps": [
           "Log in with admin@example.com / changeme",
           "Change the admin email and password immediately",
-          "Add your first Proxy Host (domain \u2192 internal service)",
+          "Add your first Proxy Host (domain → internal service)",
           "Request SSL certificates via Let's Encrypt"
         ]
       },
@@ -926,7 +924,7 @@
           "password": "set during setup"
         },
         "setup_steps": [
-          "Open the app \u2192 create your admin account",
+          "Open the app → create your admin account",
           "Click 'Add Monitor' to monitor your first service",
           "Configure notification methods (Email, Telegram, Slack, etc.)",
           "Set up the status page for public display"
@@ -960,9 +958,9 @@
           "password": "set on first login"
         },
         "setup_steps": [
-          "Open the app \u2192 set your admin password (min 8 chars)",
+          "Open the app → set your admin password (min 8 chars)",
           "Select your Docker environment (local socket)",
-          "Explore the dashboard \u2014 containers, images, volumes",
+          "Explore the dashboard — containers, images, volumes",
           "Use Portainer's App Templates to quickly deploy services"
         ]
       },
@@ -984,7 +982,7 @@
         "docs_url": "https://github.com/amir20/dozzle",
         "quick_start": "Dozzle is a real-time Docker log viewer. See logs from all your containers in one browser window with search and filtering.",
         "setup_steps": [
-          "Open the app \u2192 see live logs from all running containers",
+          "Open the app → see live logs from all running containers",
           "Click any container to see its logs",
           "Use the search bar to filter log entries",
           "Bookmark specific containers for quick access"
@@ -1017,7 +1015,7 @@
           "password": "set on first login (check logs)"
         },
         "setup_steps": [
-          "Open the app \u2192 enter the password shown in container logs",
+          "Open the app → enter the password shown in container logs",
           "Install extensions from the VS Code marketplace",
           "Open a terminal and start coding",
           "Configure settings sync across devices"
@@ -1045,13 +1043,13 @@
       "min_ram_mb": 256,
       "education": {
         "docs_url": "https://docs.gitea.com/",
-        "quick_start": "Gitea is a lightweight Git service. Create repositories, manage issues, and collaborate with pull requests \u2014 like GitHub but self-hosted.",
+        "quick_start": "Gitea is a lightweight Git service. Create repositories, manage issues, and collaborate with pull requests — like GitHub but self-hosted.",
         "default_login": {
           "username": "set during setup",
           "password": "set during setup"
         },
         "setup_steps": [
-          "Open the app \u2192 the setup page will appear",
+          "Open the app → the setup page will appear",
           "Configure your Gitea instance (DB is already set up)",
           "Create your admin account",
           "Create your first repository and push code"
@@ -1081,12 +1079,12 @@
       "min_ram_mb": 512,
       "education": {
         "docs_url": "https://www.stirlingpdf.com/",
-        "quick_start": "Stirling PDF is a tool for manipulating PDFs \u2014 merge, split, convert, compress, and more. All processing happens locally.",
+        "quick_start": "Stirling PDF is a tool for manipulating PDFs — merge, split, convert, compress, and more. All processing happens locally.",
         "setup_steps": [
-          "Open the app \u2192 see the full PDF toolset",
+          "Open the app → see the full PDF toolset",
           "Upload a PDF and choose an operation",
           "Download the result",
-          "No configuration needed \u2014 just use it"
+          "No configuration needed — just use it"
         ]
       },
       "free_tier": false
@@ -1105,7 +1103,7 @@
         "docs_url": "https://docs.excalidraw.com/",
         "quick_start": "Excalidraw is a whiteboard tool for sketching diagrams. Draw flowcharts, wireframes, and diagrams with a hand-drawn feel.",
         "setup_steps": [
-          "Open the app \u2192 start drawing immediately",
+          "Open the app → start drawing immediately",
           "Use the library for pre-made shapes and icons",
           "Collaborate in real-time by sharing the room link",
           "Export as PNG or SVG"
@@ -1129,7 +1127,7 @@
         "docs_url": "https://drawio-app.com/",
         "quick_start": "Draw.io is a diagramming tool for flowcharts, network diagrams, UML, and more. Integrates with Google Drive, OneDrive, and GitHub.",
         "setup_steps": [
-          "Open the app \u2192 choose where to save your diagrams",
+          "Open the app → choose where to save your diagrams",
           "Drag shapes from the left panel to create diagrams",
           "Export as PNG, SVG, or PDF",
           "Save to cloud storage or locally"
@@ -1915,7 +1913,7 @@
     {
       "id": "listmonk",
       "name": "Listmonk",
-      "description": "Self-hosted email newsletter & mailing-list manager \u2014 your private Mailchimp. Subscribers, segments, campaigns, templates, open/click tracking (GPL-3.0)",
+      "description": "Self-hosted email newsletter & mailing-list manager — your private Mailchimp. Subscribers, segments, campaigns, templates, open/click tracking (GPL-3.0)",
       "image": "",
       "container_port": 9000,
       "type": "stack",
@@ -1935,19 +1933,19 @@
         },
         "setup_steps": [
           "Open http://localhost:PORT/ in your browser",
-          "First run: run the one-time setup \u2014 inside the container execute: ./listmonk --install (this creates the DB schema and admin account)",
+          "First run: run the one-time setup — inside the container execute: ./listmonk --install (this creates the DB schema and admin account)",
           "Log in with the admin account you created",
           "Create a list, add subscribers (import or API), then send your first campaign"
         ]
       },
       "free_tier": true,
-      "github_url": "https://github.com/knadh/listmonk"
-    ,
+      "github_url": "https://github.com/knadh/listmonk",
       "mcp": {
         "credential": {
-          "type": "api_key",
+          "type": "api_token",
           "header": "Authorization",
-          "via": "setup_wizard"
+          "value_format": "token <username>:<token>",
+          "via": "Admin -> Settings -> Users -> create API user (token shown once)"
         },
         "tools": [
           {
@@ -1986,6 +1984,11 @@
                   "type": "integer",
                   "description": "page number",
                   "default": 1
+                },
+                "per_page": {
+                  "type": "integer",
+                  "description": "results per page",
+                  "default": 100
                 }
               }
             },
@@ -1993,29 +1996,49 @@
             "path": "/api/subscribers"
           },
           {
-            "name": "listmonk_import_subscribers",
-            "description": "Import email addresses into a list (new subscribers added)",
+            "name": "listmonk_add_subscriber",
+            "description": "Add ONE subscriber to list(s). Bulk CSV import is done in the Listmonk admin UI.",
             "handler": "http",
             "write": true,
             "inputSchema": {
               "type": "object",
               "required": [
-                "list_ids",
-                "emails"
+                "email",
+                "lists"
               ],
               "properties": {
-                "list_ids": {
-                  "type": "array",
-                  "description": "list ids to add to"
+                "email": {
+                  "type": "string",
+                  "description": "subscriber email address"
                 },
-                "emails": {
+                "lists": {
                   "type": "array",
-                  "description": "email addresses"
+                  "items": {
+                    "type": "integer"
+                  },
+                  "description": "list ids to subscribe to"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "subscriber display name"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "enabled",
+                    "blocklisted"
+                  ],
+                  "default": "enabled"
+                },
+                "preconfirm_subscriptions": {
+                  "type": "boolean",
+                  "default": true,
+                  "description": "true = skip double opt-in (subscriber confirmed immediately)"
                 }
               }
             },
             "method": "POST",
-            "path": "/api/import/subscribers"
+            "path": "/api/subscribers"
           },
           {
             "name": "listmonk_create_campaign",
@@ -2027,8 +2050,9 @@
               "required": [
                 "name",
                 "subject",
-                "list_ids",
-                "content"
+                "from_email",
+                "lists",
+                "body"
               ],
               "properties": {
                 "name": {
@@ -2039,22 +2063,50 @@
                   "type": "string",
                   "description": "email subject"
                 },
-                "list_ids": {
-                  "type": "array",
-                  "description": "target list ids"
-                },
-                "content": {
+                "from_email": {
                   "type": "string",
-                  "description": "email body"
+                  "description": "sender address, e.g. 'AppVault <noreply@example.com>'. Must match the configured FromEmail domain for delivery."
+                },
+                "lists": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  },
+                  "description": "target list ids (non-empty)"
+                },
+                "body": {
+                  "type": "string",
+                  "description": "email body (HTML for richtext/html, markdown for markdown)"
                 },
                 "type": {
                   "type": "string",
-                  "description": "campaign type",
                   "enum": [
                     "regular",
                     "optin"
                   ],
                   "default": "regular"
+                },
+                "content_type": {
+                  "type": "string",
+                  "enum": [
+                    "richtext",
+                    "markdown",
+                    "html",
+                    "plain"
+                  ],
+                  "default": "richtext",
+                  "description": "body format"
+                },
+                "template_id": {
+                  "type": "integer",
+                  "description": "template id (optional; default template used when omitted)"
+                },
+                "tags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "campaign tags"
                 }
               }
             },
@@ -2080,9 +2132,12 @@
                   "type": "string",
                   "enum": [
                     "scheduled",
-                    "running"
+                    "running",
+                    "paused",
+                    "cancelled"
                   ],
-                  "default": "scheduled"
+                  "default": "running",
+                  "description": "running = send now; scheduled = send at campaign send_at"
                 }
               }
             },
@@ -2091,6 +2146,6 @@
           }
         ]
       }
-}
+    }
   ]
 }
