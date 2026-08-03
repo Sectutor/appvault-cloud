@@ -1783,6 +1783,37 @@
       },
       "free_tier": true,
       "github_url": "https://github.com/outline/outline"
+    },
+    {
+      "id": "listmonk",
+      "name": "Listmonk",
+      "description": "Self-hosted email newsletter & mailing-list manager \u2014 your private Mailchimp. Subscribers, segments, campaigns, templates, open/click tracking (GPL-3.0)",
+      "image": "",
+      "container_port": 9000,
+      "type": "stack",
+      "is_stack": true,
+      "compose_url": "https://raw.githubusercontent.com/Sectutor/listmonk-stack/main/docker-compose.yml",
+      "volumes": [],
+      "env": [],
+      "category": "productivity",
+      "min_ram_mb": 1024,
+      "education": {
+        "docs_url": "https://listmonk.app/docs/",
+        "quick_start": "Listmonk is a self-hosted Mailchimp alternative: subscribers, segments, campaigns, templates, open/click tracking, REST API. After install, complete the one-time admin setup (schema install + admin account), then create your first campaign.",
+        "default_login": {
+          "username": "admin (created during setup)",
+          "password": "set during setup",
+          "path": "/"
+        },
+        "setup_steps": [
+          "Open http://localhost:PORT/ in your browser",
+          "First run: run the one-time setup \u2014 inside the container execute: ./listmonk --install (this creates the DB schema and admin account)",
+          "Log in with the admin account you created",
+          "Create a list, add subscribers (import or API), then send your first campaign"
+        ]
+      },
+      "free_tier": true,
+      "github_url": "https://github.com/knadh/listmonk"
     }
   ]
 }
