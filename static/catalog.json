@@ -1066,8 +1066,11 @@
         "DB_USER=documenso",
         "DB_PASS=documenso",
         "DATABASE_URL=postgresql://documenso:documenso@app-central-postgres:5432/documenso",
-        "NEXTAUTH_URL=http://localhost:3000",
-        "NEXT_PUBLIC_WEBAPP_URL=http://localhost:3000"
+        "NEXT_PRIVATE_DATABASE_URL=postgresql://documenso:documenso@app-central-postgres:5432/documenso",
+        "NEXT_PRIVATE_DIRECT_DATABASE_URL=postgresql://documenso:documenso@app-central-postgres:5432/documenso",
+        "NEXTAUTH_URL={PUBLIC_BASE}",
+        "NEXT_PUBLIC_WEBAPP_URL={PUBLIC_BASE}",
+        "NEXTAUTH_SECRET=__AUTO__"
       ],
       "category": "productivity",
       "min_ram_mb": 512
