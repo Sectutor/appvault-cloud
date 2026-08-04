@@ -143,6 +143,17 @@ def init_db():
         db.execute("ALTER TABLE agents ADD COLUMN plan TEXT DEFAULT 'free'")
     if "license_key" not in cols:
         db.execute("ALTER TABLE agents ADD COLUMN license_key TEXT DEFAULT ''")
+    # Migration: stripe customer/subscription ids on licenses + instances
+    lcols = [r[1] for r in db.execute("PRAGMA table_info(licenses)").fetchall()]
+    if "stripe_customer_id" not in lcols:
+        db.execute("ALTER TABLE licenses ADD COLUMN stripe_customer_id TEXT DEFAULT ''")
+    if "stripe_subscription_id" not in lcols:
+        db.execute("ALTER TABLE licenses ADD COLUMN stripe_subscription_id TEXT DEFAULT ''")
+    icols = [r[1] for r in db.execute("PRAGMA table_info(instances)").fetchall()]
+    if "stripe_customer_id" not in icols:
+        db.execute("ALTER TABLE instances ADD COLUMN stripe_customer_id TEXT DEFAULT ''")
+    if "stripe_subscription_id" not in icols:
+        db.execute("ALTER TABLE instances ADD COLUMN stripe_subscription_id TEXT DEFAULT ''")
     db.commit()
     db.close()
 
@@ -909,53 +920,174 @@ async def provision_coolify(instance_id: str, email: str, tier: str) -> Optional
             print(f"Provisioning error: {e}")
     return None
 
+# --- Stripe subscription lifecycle (added 2026-08-04) ---
+
+def _set_license_status(sub_id, status):
+    """Set license status by subscription id; downgrade agents when revoked."""
+    db = get_db()
+    rows = db.execute("SELECT key FROM licenses WHERE stripe_subscription_id = ?", (sub_id,)).fetchall()
+    keys = []
+    for r in rows:
+        keys.append(r["key"])
+        db.execute("UPDATE licenses SET status=? WHERE key=?", (status, r["key"]))
+        if status != "active":
+            db.execute("UPDATE agents SET plan='free' WHERE license_key=?", (r["key"],))
+    db.commit()
+    db.close()
+    return keys
+
+
+async def _handle_checkout_completed(session):
+    email = session.get("customer_email") or session.get("customer_details", {}).get("email")
+    metadata = session.get("metadata", {})
+    instance_id = metadata.get("instance_id")
+    tier = metadata.get("tier", "starter")
+    customer_id = session.get("customer", "") or ""
+    subscription_id = session.get("subscription", "") or ""
+
+    if email:
+        license_key = generate_license_key()
+        db = get_db()
+        try:
+            db.execute(
+                "INSERT OR REPLACE INTO licenses (key, email, tier, status, stripe_session_id, stripe_customer_id, stripe_subscription_id) "
+                "VALUES (?, ?, ?, 'active', ?, ?, ?)",
+                (license_key, email, tier, session.get("id", ""), customer_id, subscription_id),
+            )
+        except Exception:
+            pass
+        if instance_id:
+            db.execute(
+                "UPDATE instances SET status='paid', stripe_session_id=?, stripe_customer_id=?, stripe_subscription_id=?, updated_at=datetime('now') WHERE id=?",
+                (session.get("id", ""), customer_id, subscription_id, instance_id),
+            )
+        db.commit()
+        db.close()
+        _audit("license.issued", f"{tier} -> {email} key={license_key[:16]}...")
+
+        subject = "Your AppVault license is ready"
+        html = (
+            "<p>Hi,</p><p>Your AppVault <b>" + tier + "</b> plan is active. Here's your license key:</p>"
+            '<p style="font-family:monospace;font-size:18px;background:#f1f5f9;padding:12px;border-radius:8px;"><b>' + license_key + "</b></p>"
+            "<p>Deploy AppVault on your own VPS in one line:</p>"
+            "<p><code>curl -fsSL " + INSTALL_URL + " | sudo bash -s -- --license " + license_key + "</code></p>"
+            "<p>Then open the app's <b>Security</b> tab and join your Tailscale network.</p>"
+            '<p>Manage your subscription: <a href="https://' + DOMAIN + "/dashboard?k=" + license_key + '">https://' + DOMAIN + "/dashboard?k=" + license_key + "</a></p>"
+            "<p>Questions? Just reply to this email.</p>"
+        )
+        send_email(email, subject, html)
+
+
+async def _handle_subscription_updated(sub):
+    sub_id = sub.get("id", "")
+    status = sub.get("status", "")
+    if not sub_id:
+        return
+    if status in ("canceled", "unpaid", "past_due", "incomplete_expired"):
+        keys = _set_license_status(sub_id, "revoked")
+        if keys:
+            _audit("license.revoked", f"subscription {sub_id} ({status}) keys={[k[:16] for k in keys]}")
+    else:
+        keys = _set_license_status(sub_id, "active")
+        if keys:
+            _audit("license.activated", f"subscription {sub_id} ({status})")
+
+
+async def _handle_subscription_deleted(sub):
+    sub_id = sub.get("id", "")
+    if not sub_id:
+        return
+    keys = _set_license_status(sub_id, "revoked")
+    if keys:
+        _audit("license.revoked", f"subscription deleted {sub_id} keys={[k[:16] for k in keys]}")
+
+
+async def _handle_invoice_paid(inv):
+    sub_id = inv.get("subscription", "")
+    if sub_id:
+        _set_license_status(sub_id, "active")
+        _audit("license.renewed", f"invoice paid subscription={sub_id}")
+
+
+async def _handle_invoice_failed(inv):
+    sub_id = inv.get("subscription", "")
+    customer = inv.get("customer", "")
+    print(f"[stripe] invoice.payment_failed subscription={sub_id} customer={customer}", flush=True)
+    _audit("invoice.failed", f"subscription={sub_id} customer={customer}")
+    # Stripe retries automatically; customer.subscription.updated revokes on unpaid.
+
+
 @app.post("/api/webhook")
 async def stripe_webhook(request: Request):
-    """Handle Stripe payment completion."""
+    """Handle Stripe events: checkout, subscription lifecycle, invoices."""
     import json as json_lib
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature")
-    
+
     if STRIPE_WEBHOOK_SECRET:
         try:
             import stripe
             stripe.Webhook.construct_event(payload, sig_header, STRIPE_WEBHOOK_SECRET)
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
-    
+
     event = json_lib.loads(payload)
-    if event["type"] == "checkout.session.completed":
-        session = event["data"]["object"]
-        email = session.get("customer_email") or session.get("customer_details", {}).get("email")
-        metadata = session.get("metadata", {})
-        instance_id = metadata.get("instance_id")
-        tier = metadata.get("tier", "starter")
-        
-        if email:
-            license_key = generate_license_key()
-            db = get_db()
-            try:
-                db.execute("INSERT OR REPLACE INTO licenses (key, email, tier, status, stripe_session_id) VALUES (?, ?, ?, 'active', ?)",
-                           (license_key, email, tier, session.get("id", "")))
-            except Exception:
-                pass
-            if instance_id:
-                db.execute("UPDATE instances SET status='paid', stripe_session_id=?, updated_at=datetime('now') WHERE id=?",
-                           (session.get("id", ""), instance_id))
-            db.commit()
-            db.close()
-            _audit("license.issued", f"{tier} -> {email} key={license_key[:16]}...")
-            
-            subject = "Your AppVault license is ready"
-            html = f"""<p>Hi,</p><p>Your AppVault <b>{tier}</b> plan is active. Here's your license key:</p>
-<p style="font-family:monospace;font-size:18px;background:#f1f5f9;padding:12px;border-radius:8px;"><b>{license_key}</b></p>
-<p>Install AppVault on your server (or keep it on your desktop):</p>
-<p><code>curl -fsSL {INSTALL_URL} | sudo bash -s -- --license {license_key}</code></p>
-<p>Questions? Just reply to this email.</p>"""
-            send_email(email, subject, html)
-    
+    etype = event["type"]
+    obj = event["data"]["object"]
+
+    if etype == "checkout.session.completed":
+        await _handle_checkout_completed(obj)
+    elif etype == "customer.subscription.updated":
+        await _handle_subscription_updated(obj)
+    elif etype == "customer.subscription.deleted":
+        await _handle_subscription_deleted(obj)
+    elif etype == "invoice.payment_succeeded":
+        await _handle_invoice_paid(obj)
+    elif etype == "invoice.payment_failed":
+        await _handle_invoice_failed(obj)
+    else:
+        print(f"[stripe] Unhandled event type: {etype}", flush=True)
+
     return JSONResponse({"status": "ok"})
 
+
+@app.post("/api/billing-portal")
+async def billing_portal(request: Request):
+    """Create a Stripe Customer Portal session (requires a valid license key)."""
+    import stripe
+    stripe.api_key = STRIPE_SECRET_KEY
+    body = await request.json()
+    key = (body.get("license_key") or "").strip()
+    if not key:
+        raise HTTPException(status_code=400, detail="license_key is required")
+
+    db = get_db()
+    lic = db.execute("SELECT * FROM licenses WHERE key = ?", (key,)).fetchone()
+    db.close()
+    if not lic or lic["status"] != "active":
+        raise HTTPException(status_code=403, detail="Invalid or inactive license")
+
+    customer_id = (lic["stripe_customer_id"] or "").strip()
+    if not customer_id:
+        try:
+            customers = stripe.Customer.list(email=lic["email"], limit=1)
+            if customers.data:
+                customer_id = customers.data[0].id
+        except Exception:
+            customer_id = ""
+    if not customer_id:
+        raise HTTPException(status_code=404, detail="No Stripe customer found for this license")
+
+    try:
+        portal = stripe.billing_portal.Session.create(
+            customer=customer_id,
+            return_url=f"https://{DOMAIN}/dashboard?k={key}",
+        )
+        _audit("portal.created", lic["email"])
+        return JSONResponse({"url": portal.url})
+    except Exception as e:
+        print(f"[stripe] Portal creation failed: {e}", flush=True)
+        raise HTTPException(status_code=500, detail=f"Portal session creation failed: {str(e)}")
 @app.get("/")
 async def landing(request: Request):
     return templates.TemplateResponse("landing.html", {"request": request})
@@ -965,13 +1097,22 @@ async def pricing_page(request: Request):
     return templates.TemplateResponse("landing.html", {"request": request})
 
 @app.get("/dashboard")
-async def dashboard(request: Request, email: str = None):
-    if not email:
-        return templates.TemplateResponse("dashboard.html", {"request": request, "instances": []})
+async def dashboard(request: Request, k: str = None):
+    """License-key authenticated dashboard: subscription status + billing portal."""
+    ctx = {"request": request, "license": None, "instances": [], "error": None}
+    if not k:
+        return templates.TemplateResponse("dashboard.html", ctx)
     db = get_db()
-    instances = db.execute("SELECT * FROM instances WHERE email = ?", (email,)).fetchall()
+    lic = db.execute("SELECT * FROM licenses WHERE key = ?", (k,)).fetchone()
+    if not lic or lic["status"] != "active":
+        db.close()
+        ctx["error"] = "Invalid or inactive license key."
+        return templates.TemplateResponse("dashboard.html", ctx)
+    instances = db.execute("SELECT * FROM instances WHERE email = ?", (lic["email"],)).fetchall()
     db.close()
-    return templates.TemplateResponse("dashboard.html", {"request": request, "instances": instances})
+    ctx["license"] = lic
+    ctx["instances"] = instances
+    return templates.TemplateResponse("dashboard.html", ctx)
 
 @app.post("/api/checkout")
 async def create_checkout(request: Request):
@@ -994,15 +1135,19 @@ async def create_checkout(request: Request):
     db.commit()
     db.close()
     
-    session = stripe.checkout.Session.create(
-        payment_method_types=["card"],
-        line_items=[{"price": prices[tier], "quantity": 1}],
-        mode="subscription",
-        success_url=f"https://{DOMAIN}/dashboard?email={email}",
-        cancel_url=f"https://{DOMAIN}",
-        customer_email=email,
-        metadata={"instance_id": instance_id, "tier": tier, "email": email},
-    )
+    try:
+        session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=[{"price": prices[tier], "quantity": 1}],
+            mode="subscription",
+            success_url=f"https://{DOMAIN}/dashboard",
+            cancel_url=f"https://{DOMAIN}",
+            customer_email=email,
+            metadata={"instance_id": instance_id, "tier": tier, "email": email},
+        )
+    except Exception as e:
+        print(f"[stripe] Checkout session creation failed: {e}", flush=True)
+        raise HTTPException(status_code=500, detail=f"Checkout session creation failed: {str(e)}")
     _audit("checkout.created", f"{tier} {email}")
     return JSONResponse({"url": session.url})
 
