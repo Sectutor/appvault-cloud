@@ -65,7 +65,7 @@ def bind_license_to_agent(license_key, agent_id):
     if not row:
         db.close()
         return "free", "unknown license"
-    if row["status"] != "active":
+    if row["status"] not in ("active", "grace_period"):
         db.close()
         return "free", "license not active"
     if not row["bound_agent_id"]:
@@ -203,6 +203,10 @@ def init_db():
         db.execute("ALTER TABLE licenses ADD COLUMN bound_agent_id TEXT DEFAULT ''")
     if "activated_at" not in lcols:
         db.execute("ALTER TABLE licenses ADD COLUMN activated_at TEXT DEFAULT ''")
+    if "canceled_at" not in lcols:
+        db.execute("ALTER TABLE licenses ADD COLUMN canceled_at TEXT DEFAULT ''")
+    if "grace_ends_at" not in lcols:
+        db.execute("ALTER TABLE licenses ADD COLUMN grace_ends_at TEXT DEFAULT ''")
     icols = [r[1] for r in db.execute("PRAGMA table_info(instances)").fetchall()]
     if "stripe_customer_id" not in icols:
         db.execute("ALTER TABLE instances ADD COLUMN stripe_customer_id TEXT DEFAULT ''")
@@ -304,10 +308,55 @@ def require_admin(request: Request):
 
 
 def get_agent_plan(agent_id):
+    """Get agent's plan, respecting grace period.
+
+    Grace period: when a subscription is canceled, the agent keeps 'paid' for
+    14 days (grace_ends_at), then drops to 'free'. Running containers are never
+    touched — enforcement is at the install/update layer only.
+    """
     db = get_db()
-    row = db.execute("SELECT plan FROM agents WHERE id = ?", (agent_id,)).fetchone()
+    row = db.execute("SELECT plan, license_key FROM agents WHERE id = ?", (agent_id,)).fetchone()
+    if not row or not row["plan"]:
+        db.close()
+        return "free"
+    if row["plan"] == "free":
+        db.close()
+        return "free"
+    # Agent is 'paid' — check if the license is still active or in grace period
+    if row["license_key"]:
+        lic = db.execute("SELECT status, grace_ends_at FROM licenses WHERE key = ?", (row["license_key"],)).fetchone()
+        if not lic:
+            db.close()
+            return "free"
+        if lic["status"] == "active":
+            db.close()
+            return "paid"
+        if lic["status"] == "grace_period" and lic["grace_ends_at"]:
+            # Check if grace period has expired
+            try:
+                from datetime import datetime
+                grace_end = datetime.fromisoformat(lic["grace_ends_at"])
+                if datetime.utcnow() < grace_end:
+                    db.close()
+                    return "paid"
+                else:
+                    # Grace period expired — downgrade now
+                    db.execute("UPDATE agents SET plan='free' WHERE id=?", (agent_id,))
+                    db.commit()
+                    db.close()
+                    _audit("agent.grace_expired", f"agent {agent_id[:8]} -> free")
+                    return "free"
+            except Exception:
+                db.close()
+                return "paid"
+        # License revoked or other status
+        if lic["status"] != "active":
+            db.execute("UPDATE agents SET plan='free' WHERE id=?", (agent_id,))
+            db.commit()
+            db.close()
+            return "free"
     db.close()
-    return row["plan"] if row and row["plan"] else "free"
+    return row["plan"] if row["plan"] else "free"
 
 def set_agent_plan(agent_id, plan):
     db = get_db()
@@ -361,7 +410,7 @@ async def agent_register(data: AgentRegister, request: Request):
 
 @app.post("/api/agent/heartbeat")
 async def agent_heartbeat(request: Request):
-    """Agent sends heartbeat to show it's alive."""
+    """Agent sends heartbeat to show it's alive. Also refreshes plan (grace period check)."""
     body = await request.json()
     agent_id = body.get("agent_id")
     api_key = body.get("api_key")
@@ -369,11 +418,14 @@ async def agent_heartbeat(request: Request):
     if not verify_agent(agent_id, api_key):
         raise HTTPException(status_code=401, detail="Invalid auth")
     
+    # Refresh plan — handles grace period expiration on the agent record
+    current_plan = get_agent_plan(agent_id)
+    
     db = get_db()
     db.execute("UPDATE agents SET status='online', last_seen=datetime('now') WHERE id=?", (agent_id,))
     db.commit()
     db.close()
-    return {"status": "ok", "server_time": datetime.utcnow().isoformat()}
+    return {"status": "ok", "server_time": datetime.utcnow().isoformat(), "plan": current_plan}
 
 @app.get("/api/agent/jobs")
 async def agent_get_jobs(agent_id: str = Query(...), api_key: str = Query(...)):
@@ -847,6 +899,45 @@ async def admin_set_agent_plan(agent_id: str, request: Request):
     set_agent_plan(agent_id, plan)
     return {"status": "ok", "agent_id": agent_id, "plan": plan}
 
+@app.post("/api/agent/subscription")
+async def agent_subscription_status(request: Request):
+    """Agent checks its subscription status — shows plan, grace period, license info."""
+    body = await request.json()
+    agent_id = body.get("agent_id")
+    api_key = body.get("api_key")
+
+    if not verify_agent(agent_id, api_key):
+        raise HTTPException(status_code=401, detail="Invalid auth")
+
+    db = get_db()
+    agent = db.execute("SELECT plan, license_key FROM agents WHERE id=?", (agent_id,)).fetchone()
+    if not agent:
+        db.close()
+        raise HTTPException(status_code=404, detail="Agent not found")
+
+    result = {
+        "agent_id": agent_id,
+        "plan": agent["plan"] or "free",
+        "license_key": agent["license_key"] or "",
+    }
+
+    if agent["license_key"]:
+        lic = db.execute("SELECT status, grace_ends_at, email FROM licenses WHERE key=?", (agent["license_key"],)).fetchone()
+        if lic:
+            result["license_status"] = lic["status"]
+            result["grace_ends_at"] = lic["grace_ends_at"] or ""
+            result["email"] = lic["email"] or ""
+            if lic["status"] == "grace_period" and lic["grace_ends_at"]:
+                from datetime import datetime
+                try:
+                    grace_end = datetime.fromisoformat(lic["grace_ends_at"])
+                    remaining = (grace_end - datetime.utcnow()).days
+                    result["grace_days_remaining"] = max(0, remaining)
+                except Exception:
+                    result["grace_days_remaining"] = 0
+    db.close()
+    return JSONResponse(result)
+
 @app.post("/api/agent/ping")
 async def agent_ping(request: Request):
     """Simple ping endpoint for agent connectivity test."""
@@ -991,6 +1082,7 @@ async def _handle_checkout_completed(session):
     email = session.get("customer_email") or session.get("customer_details", {}).get("email")
     metadata = session.get("metadata", {})
     instance_id = metadata.get("instance_id")
+    agent_id = metadata.get("agent_id")
     tier = metadata.get("tier", "starter")
     customer_id = session.get("customer", "") or ""
     subscription_id = session.get("subscription", "") or ""
@@ -1006,6 +1098,11 @@ async def _handle_checkout_completed(session):
             )
         except Exception:
             pass
+        # Auto-bind license to agent (agent-initiated checkout)
+        if agent_id:
+            db.execute("UPDATE licenses SET bound_agent_id=?, activated_at=datetime('now') WHERE key=?", (agent_id, license_key))
+            db.execute("UPDATE agents SET plan='paid', license_key=? WHERE id=?", (license_key, agent_id))
+            _audit("agent.upgraded", f"agent {agent_id[:8]} -> paid key={license_key[:16]}")
         if instance_id:
             db.execute(
                 "UPDATE instances SET status='paid', stripe_session_id=?, stripe_customer_id=?, stripe_subscription_id=?, updated_at=datetime('now') WHERE id=?",
@@ -1031,11 +1128,22 @@ async def _handle_checkout_completed(session):
 
 
 async def _handle_subscription_updated(sub):
+    from datetime import datetime, timedelta
     sub_id = sub.get("id", "")
     status = sub.get("status", "")
     if not sub_id:
         return
-    if status in ("canceled", "unpaid", "past_due", "incomplete_expired"):
+    if status == "canceled":
+        # Start 14-day grace period (same logic as subscription_deleted)
+        grace_end = (datetime.utcnow() + timedelta(days=14)).isoformat()
+        db = get_db()
+        rows = db.execute("SELECT key FROM licenses WHERE stripe_subscription_id=? AND status='active'", (sub_id,)).fetchall()
+        for r in rows:
+            db.execute("UPDATE licenses SET status='grace_period', canceled_at=datetime('now'), grace_ends_at=? WHERE key=?", (grace_end, r["key"]))
+        db.commit()
+        db.close()
+        _audit("license.grace_period", f"subscription updated {sub_id} grace_until={grace_end}")
+    if status in ("unpaid", "past_due", "incomplete_expired"):
         keys = _set_license_status(sub_id, "revoked")
         if keys:
             _audit("license.revoked", f"subscription {sub_id} ({status}) keys={[k[:16] for k in keys]}")
@@ -1046,12 +1154,32 @@ async def _handle_subscription_updated(sub):
 
 
 async def _handle_subscription_deleted(sub):
+    """Subscription canceled — start 14-day grace period instead of immediate revoke.
+
+    During grace period:
+    - License status = 'grace_period', grace_ends_at = now + 14 days
+    - Agent plan stays 'paid' (get_agent_plan checks grace_ends_at)
+    - Agent keeps getting premium updates
+    After grace period:
+    - Next agent sync/catalog check sees grace_ends_at passed
+    - get_agent_plan downgrades agent to 'free'
+    - Premium installs/updates blocked, running containers untouched
+    """
+    from datetime import datetime, timedelta
     sub_id = sub.get("id", "")
     if not sub_id:
         return
-    keys = _set_license_status(sub_id, "revoked")
+    grace_end = (datetime.utcnow() + timedelta(days=14)).isoformat()
+    db = get_db()
+    rows = db.execute("SELECT key FROM licenses WHERE stripe_subscription_id=? AND status='active'", (sub_id,)).fetchall()
+    keys = []
+    for r in rows:
+        keys.append(r["key"])
+        db.execute("UPDATE licenses SET status='grace_period', canceled_at=datetime('now'), grace_ends_at=? WHERE key=?", (grace_end, r["key"]))
+    db.commit()
+    db.close()
     if keys:
-        _audit("license.revoked", f"subscription deleted {sub_id} keys={[k[:16] for k in keys]}")
+        _audit("license.grace_period", f"subscription {sub_id} grace_until={grace_end} keys={[k[:16] for k in keys]}")
 
 
 async def _handle_invoice_paid(inv):
@@ -1102,6 +1230,40 @@ async def stripe_webhook(request: Request):
 
     return JSONResponse({"status": "ok"})
 
+
+@app.post("/api/agent/billing-portal")
+async def agent_billing_portal(request: Request):
+    """Agent creates a Stripe Customer Portal session to manage its subscription."""
+    import stripe
+    stripe.api_key = STRIPE_SECRET_KEY
+    body = await request.json()
+    agent_id = body.get("agent_id")
+    api_key = body.get("api_key")
+
+    if not verify_agent(agent_id, api_key):
+        raise HTTPException(status_code=401, detail="Invalid auth")
+
+    # Get the Stripe customer ID from the agent's license
+    db = get_db()
+    agent = db.execute("SELECT license_key FROM agents WHERE id=?", (agent_id,)).fetchone()
+    if not agent or not agent["license_key"]:
+        db.close()
+        raise HTTPException(status_code=400, detail="No license found")
+
+    lic = db.execute("SELECT stripe_customer_id FROM licenses WHERE key=?", (agent["license_key"],)).fetchone()
+    db.close()
+
+    if not lic or not lic["stripe_customer_id"]:
+        raise HTTPException(status_code=400, detail="No subscription found for this license")
+
+    try:
+        session = stripe.billing_portal.Session.create(
+            customer=lic["stripe_customer_id"],
+            return_url=f"https://{DOMAIN}/dashboard",
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Billing portal creation failed: {str(e)}")
+    return JSONResponse({"url": session.url})
 
 @app.post("/api/billing-portal")
 async def billing_portal(request: Request):
@@ -1254,6 +1416,58 @@ async def create_checkout(request: Request):
         print(f"[stripe] Checkout session creation failed: {e}", flush=True)
         raise HTTPException(status_code=500, detail=f"Checkout session creation failed: {str(e)}")
     _audit("checkout.created", f"{tier}-{billing} {email}")
+    return JSONResponse({"url": session.url})
+
+@app.post("/api/agent/checkout")
+async def agent_checkout(request: Request):
+    """Agent-initiated checkout — agent pays to upgrade itself to Pro.
+
+    The agent's agent_id is passed through Stripe metadata so the webhook
+    can auto-bind the license to the specific agent after payment.
+    """
+    import stripe
+    stripe.api_key = STRIPE_SECRET_KEY
+    body = await request.json()
+    agent_id = body.get("agent_id")
+    api_key = body.get("api_key")
+    billing = body.get("billing", "monthly")  # monthly | yearly
+
+    if not verify_agent(agent_id, api_key):
+        raise HTTPException(status_code=401, detail="Invalid auth")
+
+    # Get agent's existing email (from license or agent record)
+    db = get_db()
+    agent = db.execute("SELECT license_key FROM agents WHERE id=?", (agent_id,)).fetchone()
+    email = ""
+    if agent and agent["license_key"]:
+        lic = db.execute("SELECT email FROM licenses WHERE key=?", (agent["license_key"],)).fetchone()
+        if lic:
+            email = lic["email"]
+    db.close()
+
+    # Resolve price
+    if billing == "yearly":
+        price_id = STRIPE_PRICE_PRO_YEARLY
+    else:
+        price_id = STRIPE_PRICE_PRO
+
+    if not price_id or price_id.startswith("price_xxx"):
+        raise HTTPException(status_code=503, detail="Checkout not configured yet (missing Stripe price)")
+
+    try:
+        session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=[{"price": price_id, "quantity": 1}],
+            mode="subscription",
+            success_url=f"https://{DOMAIN}/dashboard",
+            cancel_url=f"https://{DOMAIN}",
+            customer_email=email,
+            metadata={"agent_id": agent_id, "tier": "pro", "billing": billing, "email": email},
+        )
+    except Exception as e:
+        print(f"[stripe] Agent checkout session creation failed: {e}", flush=True)
+        raise HTTPException(status_code=500, detail=f"Checkout session creation failed: {str(e)}")
+    _audit("agent.checkout", f"agent {agent_id[:8]} billing={billing}")
     return JSONResponse({"url": session.url})
 
 @app.get("/api/status/{instance_id}")
