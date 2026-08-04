@@ -899,26 +899,7 @@ async def admin_set_agent_plan(agent_id: str, request: Request):
     set_agent_plan(agent_id, plan)
     return {"status": "ok", "agent_id": agent_id, "plan": plan}
 
-@app.post("/admin/debug/expire-grace/{license_key}")
-async def admin_debug_expire_grace(license_key: str, request: Request):
-    """Debug: set license grace_ends_at to the past to test expiration."""
-    require_admin(request)
-    db = get_db()
-    db.execute("UPDATE licenses SET status='grace_period', grace_ends_at=datetime('now', '-1 day'), canceled_at=datetime('now', '-15 days') WHERE key=?", (license_key,))
-    db.commit()
-    db.close()
-    return JSONResponse({"status": "ok", "message": "Grace period expired for testing"})
 
-@app.get("/admin/debug/license/{license_key}")
-async def admin_debug_license(license_key: str, request: Request):
-    """Debug: show license record including subscription ID."""
-    require_admin(request)
-    db = get_db()
-    row = db.execute("SELECT * FROM licenses WHERE key=?", (license_key,)).fetchone()
-    db.close()
-    if not row:
-        raise HTTPException(status_code=404, detail="License not found")
-    return JSONResponse(dict(row))
 
 @app.post("/api/agent/subscription")
 async def agent_subscription_status(request: Request):
@@ -1486,10 +1467,8 @@ async def agent_checkout(request: Request):
             metadata={"agent_id": agent_id, "tier": "pro", "billing": billing, "email": email or ""},
         )
     except Exception as e:
-        err_msg = str(e)
-        print(f"[stripe] Agent checkout session creation failed: {err_msg}", flush=True)
-        _audit("agent.checkout.error", f"agent {agent_id[:8]} error={err_msg[:200]}")
-        return JSONResponse({"error": err_msg, "price_id": price_id, "stripe_key_set": bool(STRIPE_SECRET_KEY)}, status_code=500)
+        print(f"[stripe] Agent checkout session creation failed: {e}", flush=True)
+        raise HTTPException(status_code=500, detail=f"Checkout session creation failed: {str(e)}")
     _audit("agent.checkout", f"agent {agent_id[:8]} billing={billing}")
     return JSONResponse({"url": session.url})
 
