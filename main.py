@@ -899,6 +899,16 @@ async def admin_set_agent_plan(agent_id: str, request: Request):
     set_agent_plan(agent_id, plan)
     return {"status": "ok", "agent_id": agent_id, "plan": plan}
 
+@app.post("/admin/debug/expire-grace/{license_key}")
+async def admin_debug_expire_grace(license_key: str, request: Request):
+    """Debug: set license grace_ends_at to the past to test expiration."""
+    require_admin(request)
+    db = get_db()
+    db.execute("UPDATE licenses SET status='grace_period', grace_ends_at=datetime('now', '-1 day'), canceled_at=datetime('now', '-15 days') WHERE key=?", (license_key,))
+    db.commit()
+    db.close()
+    return JSONResponse({"status": "ok", "message": "Grace period expired for testing"})
+
 @app.get("/admin/debug/license/{license_key}")
 async def admin_debug_license(license_key: str, request: Request):
     """Debug: show license record including subscription ID."""
