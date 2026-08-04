@@ -1461,8 +1461,8 @@ async def agent_checkout(request: Request):
             payment_method_types=["card"],
             line_items=[{"price": price_id, "quantity": 1}],
             mode="subscription",
-            success_url=f"https://{DOMAIN}/dashboard",
-            cancel_url=f"https://{DOMAIN}",
+            success_url=body.get("return_url") or f"https://{DOMAIN}/dashboard",
+            cancel_url=body.get("cancel_url") or f"https://{DOMAIN}",
             customer_email=email or None,
             metadata={"agent_id": agent_id, "tier": "pro", "billing": billing, "email": email or ""},
         )
