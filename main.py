@@ -49,6 +49,39 @@ def generate_license_key() -> str:
     grp = lambda: "".join(random.choices("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", k=4))
     return "APPVAULT-" + "-".join(grp() for _ in range(4))
 
+
+def bind_license_to_agent(license_key, agent_id):
+    """Bind a license key to exactly one server (agent). Returns (plan, note).
+
+    Rules: a license is valid for the agent it is bound to; the first agent to
+    activate it claims it; any other agent using the same key is treated as free.
+    """
+    if not license_key:
+        return "free", "no license"
+    if license_key in PAID_LICENSE_KEYS:
+        return "paid", "env license"
+    db = get_db()
+    row = db.execute("SELECT status, bound_agent_id FROM licenses WHERE key = ?", (license_key,)).fetchone()
+    if not row:
+        db.close()
+        return "free", "unknown license"
+    if row["status"] != "active":
+        db.close()
+        return "free", "license not active"
+    if not row["bound_agent_id"]:
+        db.execute("UPDATE licenses SET bound_agent_id=?, activated_at=datetime('now') WHERE key=?",
+                   (agent_id, license_key))
+        db.commit()
+        db.close()
+        _audit("license.bound", f"{license_key[:16]} -> agent {agent_id[:8]}")
+        return "paid", "bound"
+    if row["bound_agent_id"] == agent_id:
+        db.close()
+        return "paid", "same agent"
+    db.close()
+    _audit("license.overuse", f"{license_key[:16]} agent {agent_id[:8]} vs bound {row['bound_agent_id'][:8]}")
+    return "free", "license bound to another server"
+
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # APP
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -145,6 +178,8 @@ def init_db():
             tier TEXT NOT NULL,
             status TEXT DEFAULT 'active',
             stripe_session_id TEXT,
+            bound_agent_id TEXT DEFAULT '',
+            activated_at TEXT DEFAULT '',
             created_at TEXT DEFAULT (datetime('now'))
         );
     """)
@@ -164,6 +199,10 @@ def init_db():
         db.execute("ALTER TABLE licenses ADD COLUMN stripe_customer_id TEXT DEFAULT ''")
     if "stripe_subscription_id" not in lcols:
         db.execute("ALTER TABLE licenses ADD COLUMN stripe_subscription_id TEXT DEFAULT ''")
+    if "bound_agent_id" not in lcols:
+        db.execute("ALTER TABLE licenses ADD COLUMN bound_agent_id TEXT DEFAULT ''")
+    if "activated_at" not in lcols:
+        db.execute("ALTER TABLE licenses ADD COLUMN activated_at TEXT DEFAULT ''")
     icols = [r[1] for r in db.execute("PRAGMA table_info(instances)").fetchall()]
     if "stripe_customer_id" not in icols:
         db.execute("ALTER TABLE instances ADD COLUMN stripe_customer_id TEXT DEFAULT ''")
@@ -301,22 +340,16 @@ async def agent_register(data: AgentRegister, request: Request):
     existing = db.execute("SELECT id FROM agents WHERE id = ?", (agent_id,)).fetchone()
     
     if existing:
-        # Re-register: update info, keep API key and plan
+        # Re-register: update info, keep API key; plan follows license binding
         current_key = db.execute("SELECT api_key FROM agents WHERE id = ?", (agent_id,)).fetchone()["api_key"]
-        current_plan = db.execute("SELECT plan FROM agents WHERE id = ?", (agent_id,)).fetchone()["plan"]
-        if data.license_key:
-            # Valid license -> paid; invalid/revoked -> downgrade to free
-            plan = "paid" if license_is_valid(data.license_key) else "free"
-        else:
-            # License removed/cleared -> downgrade to free (premium apps hidden)
-            plan = "free"
+        plan, _ = bind_license_to_agent(data.license_key or "", agent_id)
         db.execute("""
             UPDATE agents SET name=?, os=?, docker_version=?, app_version=?, ip_address=?, plan=?, license_key=?, status='online', last_seen=datetime('now')
             WHERE id=?
         """, (data.name, data.os, data.docker_version, data.app_version, ip, plan, data.license_key or "", agent_id))
         api_key = current_key
     else:
-        plan = "paid" if license_is_valid(data.license_key or "") else "free"
+        plan, _ = bind_license_to_agent(data.license_key or "", agent_id)
         db.execute("""
             INSERT INTO agents (id, name, os, docker_version, app_version, ip_address, api_key, plan, license_key, status, last_seen)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'online', datetime('now'))
@@ -989,6 +1022,7 @@ async def _handle_checkout_completed(session):
             "<p><code>curl -fsSL " + INSTALL_URL + " | sudo bash -s -- --license " + license_key + "</code></p>"
             "<p>Then open the app's <b>Security</b> tab and join your Tailscale network.</p>"
             '<p>Manage your subscription: <a href="' + dash_link + '">' + dash_link + "</a></p>"
+            '<p>Need more servers? Each server needs its own license — buy another at <a href="https://' + DOMAIN + '/#pricing">' + DOMAIN + "/#pricing</a></p>"
             "<p>Questions? Just reply to this email.</p>"
         )
         send_email(email, subject, html)
@@ -1147,10 +1181,13 @@ async def dashboard(request: Request, k: str = None, t: str = None):
         ctx["error"] = "Invalid or inactive license key."
         return templates.TemplateResponse("dashboard.html", ctx)
     request.session["license_key"] = key
+    licenses = db.execute("SELECT * FROM licenses WHERE email = ? ORDER BY created_at DESC", (lic["email"],)).fetchall()
     instances = db.execute("SELECT * FROM instances WHERE email = ?", (lic["email"],)).fetchall()
     db.close()
     ctx["license"] = lic
+    ctx["licenses"] = licenses
     ctx["instances"] = instances
+    ctx["install_url"] = INSTALL_URL
     return templates.TemplateResponse("dashboard.html", ctx)
 
 
