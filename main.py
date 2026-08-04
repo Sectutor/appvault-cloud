@@ -1461,12 +1461,14 @@ async def agent_checkout(request: Request):
             mode="subscription",
             success_url=f"https://{DOMAIN}/dashboard",
             cancel_url=f"https://{DOMAIN}",
-            customer_email=email,
-            metadata={"agent_id": agent_id, "tier": "pro", "billing": billing, "email": email},
+            customer_email=email or None,
+            metadata={"agent_id": agent_id, "tier": "pro", "billing": billing, "email": email or ""},
         )
     except Exception as e:
-        print(f"[stripe] Agent checkout session creation failed: {e}", flush=True)
-        raise HTTPException(status_code=500, detail=f"Checkout session creation failed: {str(e)}")
+        err_msg = str(e)
+        print(f"[stripe] Agent checkout session creation failed: {err_msg}", flush=True)
+        _audit("agent.checkout.error", f"agent {agent_id[:8]} error={err_msg[:200]}")
+        return JSONResponse({"error": err_msg, "price_id": price_id, "stripe_key_set": bool(STRIPE_SECRET_KEY)}, status_code=500)
     _audit("agent.checkout", f"agent {agent_id[:8]} billing={billing}")
     return JSONResponse({"url": session.url})
 
