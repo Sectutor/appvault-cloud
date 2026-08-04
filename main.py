@@ -547,7 +547,7 @@ async def login_page(request: Request, next: str = "/admin"):
     """Admin login page."""
     if request.session.get("admin"):
         return RedirectResponse(next, status_code=303)
-    return templates.TemplateResponse("login.html", {"request": request, "next": next, "error": None})
+    return templates.TemplateResponse(request, "login.html", {"request": request, "next": next, "error": None})
 
 @app.post("/login")
 async def login_submit(request: Request):
@@ -564,7 +564,7 @@ async def login_submit(request: Request):
         client_ip = request.client.host if request.client else "unknown"
     if not _check_login_rate(client_ip):
         _audit("login", f"RATE-LIMITED ip={client_ip}")
-        return templates.TemplateResponse("login.html", {
+        return templates.TemplateResponse(request, "login.html", {
             "request": request, "next": next_url,
             "error": "Too many login attempts — try again in a few minutes"
         })
@@ -573,7 +573,7 @@ async def login_submit(request: Request):
         request.session["admin"] = True
         return RedirectResponse(next_url, status_code=303)
     _record_login(client_ip, False)
-    return templates.TemplateResponse("login.html", {
+    return templates.TemplateResponse(request, "login.html", {
         "request": request, "next": next_url, "error": "Invalid credentials"
     })
 
@@ -600,7 +600,7 @@ async def admin_panel(request: Request):
     """).fetchall()
     db.close()
     
-    return templates.TemplateResponse("admin.html", {
+    return templates.TemplateResponse(request, "admin.html", {
         "request": request,
         "agents": [dict(a) for a in agents],
         "jobs": [dict(j) for j in jobs],
@@ -659,7 +659,7 @@ async def admin_agent_detail(agent_id: str, request: Request):
     ).fetchall()
     db.close()
     
-    return templates.TemplateResponse("admin_agent.html", {
+    return templates.TemplateResponse(request, "admin_agent.html", {
         "request": request,
         "agent": dict(agent),
         "catalog": GLOBAL_CATALOG,
@@ -1306,11 +1306,11 @@ async def billing_portal(request: Request):
         raise HTTPException(status_code=500, detail=f"Portal session creation failed: {str(e)}")
 @app.get("/")
 async def landing(request: Request):
-    return templates.TemplateResponse("landing.html", {"request": request})
+    return templates.TemplateResponse(request, "landing.html", {"request": request})
 
 @app.get("/pricing", response_class=HTMLResponse)
 async def pricing_page(request: Request):
-    return templates.TemplateResponse("landing.html", {"request": request})
+    return templates.TemplateResponse(request, "landing.html", {"request": request})
 
 @app.get("/dashboard")
 async def dashboard(request: Request, k: str = None, t: str = None):
@@ -1326,18 +1326,18 @@ async def dashboard(request: Request, k: str = None, t: str = None):
             request.session["license_key"] = k
             return RedirectResponse("/dashboard", status_code=302)
         ctx["error"] = "Invalid or inactive license key."
-        return templates.TemplateResponse("dashboard.html", ctx)
+        return templates.TemplateResponse(request, "dashboard.html", ctx)
 
     if t:
         key = _read_dashboard_token(t)
         if not key:
             ctx["error"] = "This link has expired. Enter your license key below."
-            return templates.TemplateResponse("dashboard.html", ctx)
+            return templates.TemplateResponse(request, "dashboard.html", ctx)
     else:
         key = request.session.get("license_key", "")
 
     if not key:
-        return templates.TemplateResponse("dashboard.html", ctx)
+        return templates.TemplateResponse(request, "dashboard.html", ctx)
 
     db = get_db()
     lic = db.execute("SELECT * FROM licenses WHERE key = ?", (key,)).fetchone()
@@ -1345,7 +1345,7 @@ async def dashboard(request: Request, k: str = None, t: str = None):
         db.close()
         request.session.pop("license_key", None)
         ctx["error"] = "Invalid or inactive license key."
-        return templates.TemplateResponse("dashboard.html", ctx)
+        return templates.TemplateResponse(request, "dashboard.html", ctx)
     request.session["license_key"] = key
     licenses = db.execute("SELECT * FROM licenses WHERE email = ? ORDER BY created_at DESC", (lic["email"],)).fetchall()
     instances = db.execute("SELECT * FROM instances WHERE email = ?", (lic["email"],)).fetchall()
@@ -1354,7 +1354,7 @@ async def dashboard(request: Request, k: str = None, t: str = None):
     ctx["licenses"] = licenses
     ctx["instances"] = instances
     ctx["install_url"] = INSTALL_URL
-    return templates.TemplateResponse("dashboard.html", ctx)
+    return templates.TemplateResponse(request, "dashboard.html", ctx)
 
 
 @app.post("/api/dashboard/login")
