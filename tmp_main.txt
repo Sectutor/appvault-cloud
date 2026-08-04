@@ -1,4 +1,4 @@
-"""
+﻿"""
 AppVault Cloud â€” Central Admin Server
 Handles: agent registration, job queue, catalog management, admin panel, Stripe
 """
@@ -207,15 +207,11 @@ def init_db():
         db.execute("ALTER TABLE licenses ADD COLUMN canceled_at TEXT DEFAULT ''")
     if "grace_ends_at" not in lcols:
         db.execute("ALTER TABLE licenses ADD COLUMN grace_ends_at TEXT DEFAULT ''")
-    if "instance_id" not in lcols:
-        db.execute("ALTER TABLE licenses ADD COLUMN instance_id TEXT DEFAULT ''")
     icols = [r[1] for r in db.execute("PRAGMA table_info(instances)").fetchall()]
     if "stripe_customer_id" not in icols:
         db.execute("ALTER TABLE instances ADD COLUMN stripe_customer_id TEXT DEFAULT ''")
     if "stripe_subscription_id" not in icols:
         db.execute("ALTER TABLE instances ADD COLUMN stripe_subscription_id TEXT DEFAULT ''")
-    if "license_key" not in icols:
-        db.execute("ALTER TABLE instances ADD COLUMN license_key TEXT DEFAULT ''")
     db.commit()
     db.close()
 
@@ -1093,19 +1089,9 @@ async def _handle_checkout_completed(session):
     customer_id = session.get("customer", "") or ""
     subscription_id = session.get("subscription", "") or ""
 
-    # License key was pre-generated at checkout creation (status='pending').
-    # Look it up by instance_id first; fall back to agent binding, then generate a fresh one.
-    license_key = metadata.get("license_key", "")
-    db = get_db()
-    lic = None
-    if not license_key and instance_id:
-        inst = db.execute("SELECT license_key FROM instances WHERE id = ?", (instance_id,)).fetchone()
-        if inst and inst["license_key"]:
-            license_key = inst["license_key"]
-    if license_key:
-        lic = db.execute("SELECT * FROM licenses WHERE key = ?", (license_key,)).fetchone()
-    if not lic:
+    if email:
         license_key = generate_license_key()
+        db = get_db()
         try:
             db.execute(
                 "INSERT OR REPLACE INTO licenses (key, email, tier, status, stripe_session_id, stripe_customer_id, stripe_subscription_id) "
@@ -1114,22 +1100,15 @@ async def _handle_checkout_completed(session):
             )
         except Exception:
             pass
-
-    if email:
-        # Activate the pre-generated pending license
-        db.execute(
-            "UPDATE licenses SET email=?, tier=?, status='active', stripe_session_id=?, stripe_customer_id=?, stripe_subscription_id=?, activated_at=datetime('now') WHERE key=?",
-            (email, tier, session.get("id", ""), customer_id, subscription_id, license_key),
-        )
         # Auto-bind license to agent (agent-initiated checkout)
         if agent_id:
-            db.execute("UPDATE licenses SET bound_agent_id=? WHERE key=?", (agent_id, license_key))
+            db.execute("UPDATE licenses SET bound_agent_id=?, activated_at=datetime('now') WHERE key=?", (agent_id, license_key))
             db.execute("UPDATE agents SET plan='paid', license_key=? WHERE id=?", (license_key, agent_id))
             _audit("agent.upgraded", f"agent {agent_id[:8]} -> paid key={license_key[:16]}")
         if instance_id:
             db.execute(
-                "UPDATE instances SET status='paid', license_key=?, stripe_session_id=?, stripe_customer_id=?, stripe_subscription_id=?, updated_at=datetime('now') WHERE id=?",
-                (license_key, session.get("id", ""), customer_id, subscription_id, instance_id),
+                "UPDATE instances SET status='paid', stripe_session_id=?, stripe_customer_id=?, stripe_subscription_id=?, updated_at=datetime('now') WHERE id=?",
+                (session.get("id", ""), customer_id, subscription_id, instance_id),
             )
         db.commit()
         db.close()
@@ -1407,17 +1386,15 @@ async def dashboard_login(request: Request):
 
 @app.post("/api/checkout")
 async def create_checkout(request: Request):
-    """Create Stripe Checkout session. Tiers: pro (monthly/yearly).
-    Generates the license key UP FRONT (status=pending) so the post-payment
-    /acknowledge page can display it immediately. The webhook activates it
-    and emails it after payment lands.
-    """
+    """Create Stripe Checkout session. Tiers: pro (monthly/yearly)."""
     import stripe
     stripe.api_key = STRIPE_SECRET_KEY
     body = await request.json()
     tier = body.get("tier", "pro")
     billing = body.get("billing", "monthly")  # monthly | yearly
-    email = body.get("email", "")  # optional - Stripe collects it on their page
+    email = body.get("email")
+    if not email:
+        raise HTTPException(status_code=400, detail="email is required")
 
     # Resolve price: only "pro" tier is purchasable; yearly uses annual price
     if tier == "pro" and billing == "yearly":
@@ -1425,21 +1402,16 @@ async def create_checkout(request: Request):
     elif tier == "pro":
         price_id = STRIPE_PRICE_PRO
     else:
+        # Legacy tiers (starter/power) are deprecated — route to pro monthly
         price_id = STRIPE_PRICE_PRO
 
     if not price_id or price_id.startswith("price_xxx"):
         raise HTTPException(status_code=503, detail="Checkout not configured yet (missing Stripe price)")
 
     instance_id = str(uuid.uuid4())
-    license_key = generate_license_key()
     db = get_db()
-    # Pending license + instance row created BEFORE payment so the ack page can show the key
-    db.execute(
-        "INSERT OR REPLACE INTO licenses (key, email, tier, status, instance_id) VALUES (?, ?, ?, 'pending', ?)",
-        (license_key, email, tier, instance_id),
-    )
-    db.execute("INSERT INTO instances (id, email, tier, status, license_key) VALUES (?, ?, ?, 'pending', ?)",
-               (instance_id, email, f"{tier}-{billing}", license_key))
+    db.execute("INSERT INTO instances (id, email, tier, status) VALUES (?, ?, ?, 'pending')",
+               (instance_id, email, f"{tier}-{billing}"))
     db.commit()
     db.close()
 
@@ -1448,26 +1420,23 @@ async def create_checkout(request: Request):
             payment_method_types=["card"],
             line_items=[{"price": price_id, "quantity": 1}],
             mode="subscription",
-            success_url=f"http://{DOMAIN}/acknowledge?instance={instance_id}&src=web",
-            cancel_url=f"http://{DOMAIN}",
-            customer_email=email or None,
-            metadata={"instance_id": instance_id, "tier": tier, "billing": billing, "license_key": license_key, "email": email},
+            success_url=f"https://{DOMAIN}/dashboard",
+            cancel_url=f"https://{DOMAIN}",
+            customer_email=email,
+            metadata={"instance_id": instance_id, "tier": tier, "billing": billing, "email": email},
         )
     except Exception as e:
         print(f"[stripe] Checkout session creation failed: {e}", flush=True)
         raise HTTPException(status_code=500, detail=f"Checkout session creation failed: {str(e)}")
-    _audit("checkout.created", f"{tier}-{billing}")
+    _audit("checkout.created", f"{tier}-{billing} {email}")
     return JSONResponse({"url": session.url})
 
 @app.post("/api/agent/checkout")
 async def agent_checkout(request: Request):
-    """Agent-initiated checkout - agent pays to upgrade itself to Pro.
+    """Agent-initiated checkout — agent pays to upgrade itself to Pro.
 
     The agent's agent_id is passed through Stripe metadata so the webhook
     can auto-bind the license to the specific agent after payment.
-    Generates the license key UP FRONT (status=pending) so the post-payment
-    /acknowledge page can display it immediately with an "Activate on my
-    device" button that returns the user to the client with the key.
     """
     import stripe
     stripe.api_key = STRIPE_SECRET_KEY
@@ -1475,8 +1444,6 @@ async def agent_checkout(request: Request):
     agent_id = body.get("agent_id")
     api_key = body.get("api_key")
     billing = body.get("billing", "monthly")  # monthly | yearly
-    return_url = body.get("return_url") or f"http://{DOMAIN}"
-    cancel_url = body.get("cancel_url") or f"http://{DOMAIN}"
 
     if not verify_agent(agent_id, api_key):
         raise HTTPException(status_code=401, detail="Invalid auth")
@@ -1500,83 +1467,21 @@ async def agent_checkout(request: Request):
     if not price_id or price_id.startswith("price_xxx"):
         raise HTTPException(status_code=503, detail="Checkout not configured yet (missing Stripe price)")
 
-    instance_id = str(uuid.uuid4())
-    license_key = generate_license_key()
-    db = get_db()
-    # Pending license created upfront, bound to the agent, instance tracked
-    db.execute(
-        "INSERT OR REPLACE INTO licenses (key, email, tier, status, bound_agent_id, instance_id) VALUES (?, ?, 'pro', 'pending', ?, ?)",
-        (license_key, email, agent_id, instance_id),
-    )
-    db.execute("INSERT INTO instances (id, email, tier, status, license_key) VALUES (?, ?, 'pro', 'pending', ?)",
-               (instance_id, email, license_key))
-    db.commit()
-    db.close()
-
     try:
         session = stripe.checkout.Session.create(
             payment_method_types=["card"],
             line_items=[{"price": price_id, "quantity": 1}],
             mode="subscription",
-            success_url=f"http://{DOMAIN}/acknowledge?instance={instance_id}&src=client&agent={agent_id}",
-            cancel_url=cancel_url,
+            success_url=body.get("return_url") or f"https://{DOMAIN}/dashboard",
+            cancel_url=body.get("cancel_url") or f"https://{DOMAIN}",
             customer_email=email or None,
-            metadata={"agent_id": agent_id, "instance_id": instance_id, "tier": "pro", "billing": billing, "license_key": license_key, "email": email, "return_url": return_url},
+            metadata={"agent_id": agent_id, "tier": "pro", "billing": billing, "email": email or ""},
         )
     except Exception as e:
         print(f"[stripe] Agent checkout session creation failed: {e}", flush=True)
         raise HTTPException(status_code=500, detail=f"Checkout session creation failed: {str(e)}")
     _audit("agent.checkout", f"agent {agent_id[:8]} billing={billing}")
     return JSONResponse({"url": session.url})
-
-@app.get("/acknowledge")
-async def acknowledge(request: Request, instance: str = "", src: str = "web", agent: str = ""):
-    """Post-payment acknowledgment page.
-
-    Workflow 1 (src=web, buy from website): shows the license key and the
-    user copies it to activate themselves. STOP - no auto-activation.
-
-    Workflow 2 (src=client, buy from the client app): shows payment details,
-    the key, instructions, and an "Activate on my device" button that opens
-    the client settings page (http://localhost:8085) with the key so it
-    auto-activates that client copy.
-    """
-    ctx = {
-        "request": request,
-        "license_key": "",
-        "email": "",
-        "tier": "pro",
-        "billing": "monthly",
-        "src": src,
-        "agent": agent,
-        "client_url": f"http://localhost:8085",
-        "error": "",
-        "paid": False,
-    }
-
-    if not instance:
-        ctx["error"] = "Missing checkout reference."
-        return templates.TemplateResponse(request, "acknowledge.html", ctx)
-
-    db = get_db()
-    lic = None
-    inst = db.execute("SELECT * FROM instances WHERE id = ?", (instance,)).fetchone()
-    if inst and inst["license_key"]:
-        lic = db.execute("SELECT * FROM licenses WHERE key = ?", (inst["license_key"],)).fetchone()
-    db.close()
-
-    if not lic:
-        ctx["error"] = "License not found. If you just paid, it may take a moment - check your email."
-        return templates.TemplateResponse(request, "acknowledge.html", ctx)
-
-    ctx["license_key"] = lic["key"]
-    ctx["email"] = lic["email"] or ""
-    ctx["tier"] = lic["tier"] or "pro"
-    ctx["billing"] = (inst["tier"] or "").split("-")[-1] if inst else "monthly"
-    ctx["paid"] = lic["status"] == "active"
-
-    return templates.TemplateResponse(request, "acknowledge.html", ctx)
-
 
 @app.get("/api/status/{instance_id}")
 async def check_status(instance_id: str):
@@ -1879,4 +1784,3 @@ async def health():
     online = db.execute("SELECT COUNT(*) as cnt FROM agents WHERE status='online'").fetchone()["cnt"]
     db.close()
     return {"status": "ok", "agents_online": online, "catalog_version": get_catalog_version(), "catalog_apps": len(GLOBAL_CATALOG.get("apps", []))}
-

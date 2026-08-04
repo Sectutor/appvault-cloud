@@ -1,0 +1,559 @@
+{
+  "owncloud": {
+    "tagline": "Self-hosted file sync, share & collaborate",
+    "long_description": "ownCloud is a self-hosted file sync and share server. It provides access to your data through a web interface, sync clients or WebDAV while providing a platform to view, sync and share across devices easily — all under your control. Features include file sync & share, collaborative editing with Collabora/OnlyOffice, calendar & contacts, sharing permissions, and a rich app ecosystem.",
+    "version": "10.14.0",
+    "author": "ownCloud GmbH",
+    "tags": [
+      "file-sync",
+      "collaboration",
+      "webdav",
+      "cloud"
+    ],
+    "website": "https://owncloud.com",
+    "docs_url": "https://doc.owncloud.com",
+    "forum_url": "https://central.owncloud.org",
+    "repository_url": "https://github.com/owncloud/core",
+    "changelog": "Current stable release with sync, share and collaboration features.",
+    "screenshots": []
+  },
+  "n8n": {
+    "tagline": "Fair-code workflow automation for technical teams",
+    "long_description": "n8n is a free and source-available workflow automation tool. It allows you to connect anything to everything via its open, fair-code model. With n8n, you can build complex automations visually, across 300+ integrations, or write custom JavaScript/Python when you need more power. Features include a visual workflow editor, native AI/LangChain support, self-hosting for data privacy, error handling, scheduled triggers, and a community library of 900+ templates.",
+    "version": "1.54.0",
+    "author": "n8n GmbH",
+    "tags": [
+      "automation",
+      "workflow",
+      "integration",
+      "api",
+      "ai"
+    ],
+    "website": "https://n8n.io",
+    "docs_url": "https://docs.n8n.io",
+    "forum_url": "https://community.n8n.io",
+    "repository_url": "https://github.com/n8n-io/n8n",
+    "changelog": "AppVault catalog release — n8n latest stable with visual editor and 300+ integrations.",
+    "screenshots": []
+  },
+  "pihole": {
+    "tagline": "Network-wide ad blocking at the DNS level",
+    "long_description": "Pi-hole is a network-wide ad blocker that acts as a DNS sinkhole. By blocking ads at the DNS level before they even reach your devices, Pi-hole reduces bandwidth, speeds up browsing, and protects your privacy across every device on your network. Features include a web dashboard, blocklist management, query logging, DNS-over-HTTPS support, and per-client controls.",
+    "version": "5.18.0",
+    "author": "Pi-hole LLC",
+    "tags": [
+      "dns",
+      "ad-blocking",
+      "networking",
+      "privacy"
+    ],
+    "website": "https://pi-hole.net",
+    "docs_url": "https://docs.pi-hole.net",
+    "forum_url": "https://discourse.pi-hole.net",
+    "repository_url": "https://github.com/pi-hole/pi-hole",
+    "changelog": "Latest Pi-hole core with FTL DNS and AdminLTE dashboard.",
+    "screenshots": []
+  },
+  "openwebui": {
+    "tagline": "Self-hosted AI chat interface for any LLM",
+    "long_description": "Open WebUI is a self-hosted web interface for interacting with large language models. It supports Ollama, OpenAI-compatible APIs, and many other backends — all from a single, polished chat UI. Features include multi-model chat, conversation history, document RAG (upload PDFs/docs and chat with them), prompt library, role-based access control, and full mobile responsiveness.",
+    "version": "0.3.29",
+    "author": "Open WebUI",
+    "tags": [
+      "ai",
+      "llm",
+      "chat",
+      "ollama",
+      "rag"
+    ],
+    "website": "https://openwebui.com",
+    "docs_url": "https://docs.openwebui.com",
+    "forum_url": "https://github.com/open-webui/open-webui/discussions",
+    "repository_url": "https://github.com/open-webui/open-webui",
+    "changelog": "Latest Open WebUI with Ollama, OpenAI, RAG, and multi-model support.",
+    "screenshots": []
+  },
+  "crewai-studio": {
+    "tagline": "Visual multi-agent AI — no code required",
+    "long_description": "CrewAI Studio provides a Streamlit-based visual interface to build and orchestrate multi-agent crews without writing code. Define agents, tasks, and tools through a point-and-click UI, then run autonomous agent teams that collaborate on complex workflows. Features include a visual crew builder, pre-built agent templates, tool integrations, execution monitoring, and export to code.",
+    "version": "0.1.0",
+    "author": "AppVault / CrewAI",
+    "tags": [
+      "ai",
+      "agents",
+      "multi-agent",
+      "visual",
+      "automation"
+    ],
+    "website": "https://crewai.com",
+    "docs_url": "https://docs.crewai.com",
+    "forum_url": "https://community.crewai.com",
+    "repository_url": "https://github.com/crewAIInc/crewAI",
+    "changelog": "Initial AppVault release of CrewAI Studio visual interface.",
+    "screenshots": []
+  },
+  "hermes-agent": {
+    "tagline": "Persistent, self-improving autonomous AI agent",
+    "long_description": "Hermes Agent is an open-source, persistent, self-improving autonomous AI agent developed by Nous Research. It can browse the web, write and execute code, manage files, and learn from its interactions over time. Features include persistent memory across sessions, tool use (web search, code execution, file management), self-improvement capabilities, and local or remote LLM backend support.",
+    "version": "0.1.0",
+    "author": "Nous Research",
+    "tags": [
+      "ai",
+      "agent",
+      "autonomous",
+      "self-improving",
+      "nous"
+    ],
+    "website": "https://nousresearch.com",
+    "docs_url": "https://hermes-agent-docs.nousresearch.com",
+    "forum_url": "https://discord.gg/nousresearch",
+    "repository_url": "https://github.com/NousResearch/hermes-agent",
+    "changelog": "Initial AppVault release of Hermes Agent.",
+    "screenshots": []
+  },
+  "adguard": {
+    "tagline": "Network-wide ad & tracker blocking with a sleek UI",
+    "long_description": "AdGuard Home is a network-wide software for blocking ads & tracking. After setting it up, it covers ALL your home devices, and you don't need any client-side software for that. It operates as a DNS server that re-routes tracking domains to a black hole. Features include a web dashboard, parental controls, safe search enforcement, query log, custom filtering rules, and DNS-over-HTTPS/TLS support.",
+    "version": "0.107.52",
+    "author": "AdGuard",
+    "tags": [
+      "dns",
+      "ad-blocking",
+      "networking",
+      "privacy",
+      "parental-controls"
+    ],
+    "website": "https://adguard.com/adguard-home.html",
+    "docs_url": "https://kb.adguard.com/en/general",
+    "forum_url": "https://forum.adguard.com",
+    "repository_url": "https://github.com/AdguardTeam/AdGuardHome",
+    "changelog": "Latest AdGuard Home stable with DNS-over-HTTPS, parental controls, and query log.",
+    "screenshots": []
+  },
+  "wordpress": {
+    "tagline": "The world's most popular CMS, self-hosted",
+    "long_description": "WordPress is the world's most popular content management system, powering over 40% of the web. Self-hosting WordPress gives you complete control over your site, data, and customization. Features include a block editor (Gutenberg), thousands of themes and plugins, user roles & management, REST API, multilingual support, and a massive community.",
+    "version": "6.6.1",
+    "author": "WordPress.org",
+    "tags": [
+      "cms",
+      "blog",
+      "website",
+      "php",
+      "mysql"
+    ],
+    "website": "https://wordpress.org",
+    "docs_url": "https://wordpress.org/documentation",
+    "forum_url": "https://wordpress.org/support/forums",
+    "repository_url": "https://github.com/WordPress/WordPress",
+    "changelog": "Latest WordPress with block editor and plugin ecosystem.",
+    "screenshots": []
+  },
+  "nextcloud": {
+    "tagline": "Your self-hosted productivity platform",
+    "long_description": "Nextcloud is a self-hosted file sync and share server with powerful collaboration capabilities. Beyond file storage, it includes calendar, contacts, mail, office (Collabora/OnlyOffice), Talk (video calls), Deck (project management), and over 200 community apps. Features include file sync & share, collaborative editing, Talk video conferencing, end-to-end encryption, and a rich app store.",
+    "version": "29.0.4",
+    "author": "Nextcloud GmbH",
+    "tags": [
+      "file-sync",
+      "collaboration",
+      "productivity",
+      "video-calls",
+      "calendar"
+    ],
+    "website": "https://nextcloud.com",
+    "docs_url": "https://docs.nextcloud.com",
+    "forum_url": "https://help.nextcloud.com",
+    "repository_url": "https://github.com/nextcloud/server",
+    "changelog": "Nextcloud Hub 8 with Files, Talk, Groupware, and Office.",
+    "screenshots": []
+  },
+  "onlyoffice": {
+    "tagline": "Self-hosted office suite — docs, sheets & slides",
+    "long_description": "OnlyOffice Docs is a self-hosted online office suite that enables you to create and edit documents, spreadsheets, and presentations directly in your browser. It offers the best compatibility with Microsoft Office formats and supports real-time collaborative editing. Features include document/spreadsheet/presentation editors, collaborative editing, version history, PDF support, and integration connectors for Nextcloud/ownCloud.",
+    "version": "8.1.0",
+    "author": "Ascensio System",
+    "tags": [
+      "office",
+      "documents",
+      "collaboration",
+      "spreadsheets",
+      "presentations"
+    ],
+    "website": "https://www.onlyoffice.com",
+    "docs_url": "https://api.onlyoffice.com",
+    "forum_url": "https://forum.onlyoffice.com",
+    "repository_url": "https://github.com/ONLYOFFICE/DocumentServer",
+    "changelog": "OnlyOffice Docs latest with editors, collaboration and connectors.",
+    "screenshots": []
+  },
+  "gitlab": {
+    "tagline": "Complete DevOps platform, self-hosted",
+    "long_description": "GitLab is a complete DevOps platform, delivered as a single application. It provides Git repository management, CI/CD pipelines, container registry, security scanning, package registry, monitoring, and project management — all in one self-hosted package. Features include Git repos, CI/CD with Auto DevOps, issue tracking, code review, container registry, security scanning, and Kubernetes integration.",
+    "version": "17.2.0",
+    "author": "GitLab Inc.",
+    "tags": [
+      "devops",
+      "git",
+      "ci-cd",
+      "development",
+      "containers"
+    ],
+    "website": "https://about.gitlab.com",
+    "docs_url": "https://docs.gitlab.com",
+    "forum_url": "https://forum.gitlab.com",
+    "repository_url": "https://gitlab.com/gitlab-org/gitlab",
+    "changelog": "GitLab latest with CI/CD, security scanning, and Kubernetes integration.",
+    "screenshots": []
+  },
+  "bookstack": {
+    "tagline": "Simple, beautiful self-hosted documentation wiki",
+    "long_description": "BookStack is a free and open-source wiki-style documentation platform that provides a pleasant and simple way to store and organize information. It uses a book/chapter/page hierarchy that mirrors physical books, making it intuitive to organize knowledge. Features include WYSIWYG and Markdown editing, full-text search, image management, role-based access control, and multi-language support.",
+    "version": "24.05.3",
+    "author": "Dan Brown / BookStackApp",
+    "tags": [
+      "documentation",
+      "wiki",
+      "knowledge-base",
+      "markdown"
+    ],
+    "website": "https://www.bookstackapp.com",
+    "docs_url": "https://www.bookstackapp.com/docs",
+    "forum_url": "https://github.com/BookStackApp/BookStack/discussions",
+    "repository_url": "https://github.com/BookStackApp/BookStack",
+    "changelog": "Latest BookStack with bookshelf/chapter/page hierarchy and WYSIWYG editor.",
+    "screenshots": []
+  },
+  "paperless": {
+    "tagline": "Self-hosted document management with OCR",
+    "long_description": "Paperless-ngx is a self-hosted document management system that transforms your physical documents into a searchable online archive. It uses OCR to extract text from scanned documents, automatically tags and classifies files, and provides powerful search. Features include OCR, automatic tagging, document types, correspondents, storage paths, full-text search, and a beautiful web UI.",
+    "version": "2.11.3",
+    "author": "Paperless-ngx",
+    "tags": [
+      "documents",
+      "ocr",
+      "document-management",
+      "archiving",
+      "search"
+    ],
+    "website": "https://paperless-ngx.com",
+    "docs_url": "https://docs.paperless-ngx.com",
+    "forum_url": "https://github.com/paperless-ngx/paperless-ngx/discussions",
+    "repository_url": "https://github.com/paperless-ngx/paperless-ngx",
+    "changelog": "Paperless-ngx latest with OCR, tagging, and full-text search.",
+    "screenshots": []
+  },
+  "jellyfin": {
+    "tagline": "Free media system — stream anything, anywhere",
+    "long_description": "Jellyfin is a free, open-source media system that lets you stream your movies, TV shows, music, and photos to any device. It's a community-driven alternative to Plex and Emby with no premium features locked behind a paywall — everything is free. Features include movie/TV/music libraries, live TV & DVR, hardware transcoding, multi-user support, plugins, and apps for every platform.",
+    "version": "10.9.7",
+    "author": "Jellyfin",
+    "tags": [
+      "media",
+      "streaming",
+      "movies",
+      "music",
+      "tv"
+    ],
+    "website": "https://jellyfin.org",
+    "docs_url": "https://jellyfin.org/docs",
+    "forum_url": "https://forum.jellyfin.org",
+    "repository_url": "https://github.com/jellyfin/jellyfin",
+    "changelog": "Jellyfin latest with hardware transcoding, DVR, and full client ecosystem.",
+    "screenshots": []
+  },
+  "navidrome": {
+    "tagline": "Self-hosted music streaming server",
+    "long_description": "Navidrome is a self-hosted music streaming server that makes your music collection available from anywhere via a web UI or any Subsonic-compatible client. It handles large libraries efficiently and supports multiple users with individual playlists and favorites. Features include web player, Subsonic API, transcoding, album art, scrobbling to Last.fm, and a clean mobile-friendly UI.",
+    "version": "0.52.5",
+    "author": "Navidrome",
+    "tags": [
+      "music",
+      "streaming",
+      "subsonic",
+      "media"
+    ],
+    "website": "https://www.navidrome.org",
+    "docs_url": "https://www.navidrome.org/docs",
+    "forum_url": "https://github.com/navidrome/navidrome/discussions",
+    "repository_url": "https://github.com/navidrome/navidrome",
+    "changelog": "Navidrome latest with Subsonic API, transcoding, and multi-user support.",
+    "screenshots": []
+  },
+  "kavita": {
+    "tagline": "Self-hosted e-book & comic reader",
+    "long_description": "Kavita is a self-hosted digital library for e-books, comics, and manga. It provides a fast, modern web reader with support for dozens of formats and automatic reading progress tracking. Features include e-book/comic/manga reader, reading progress sync, OPDS support, full-text search, user management, and a beautiful dark-themed UI.",
+    "version": "0.8.3",
+    "author": "Kareadita",
+    "tags": [
+      "ebook",
+      "comics",
+      "manga",
+      "reading",
+      "media"
+    ],
+    "website": "https://www.kavitareader.com",
+    "docs_url": "https://wiki.kavitareader.com",
+    "forum_url": "https://github.com/Kareadita/Kavita/discussions",
+    "repository_url": "https://github.com/Kareadita/Kavita",
+    "changelog": "Kavita latest with e-book, comic, and manga reading with OPDS support.",
+    "screenshots": []
+  },
+  "photoprism": {
+    "tagline": "AI-powered photo management for your archive",
+    "long_description": "PhotoPrism is a self-hosted application for browsing, organizing and sharing your photo collection. It uses state-of-the-art technologies to automatically tag and find pictures without getting in your way. Features include AI-powered face recognition, location clustering, automatic tagging, advanced search, albums, and a PWA for mobile access.",
+    "version": "240714",
+    "author": "PhotoPrism",
+    "tags": [
+      "photos",
+      "ai",
+      "face-recognition",
+      "media",
+      "management"
+    ],
+    "website": "https://photoprism.app",
+    "docs_url": "https://docs.photoprism.app",
+    "forum_url": "https://gitter.im/photoprism/community",
+    "repository_url": "https://github.com/photoprism/photoprism",
+    "changelog": "PhotoPrism latest with AI face recognition, location clustering, and auto-tagging.",
+    "screenshots": []
+  },
+  "immich": {
+    "tagline": "Self-hosted Google Photos alternative",
+    "long_description": "Immich is a self-hosted photo and video backup solution that replicates the features of Google Photos. It provides automatic backup from mobile devices, album sharing, facial recognition, object/scene detection, map view, and a familiar timeline UI. Features include mobile auto-backup, facial recognition, albums, shared libraries, timeline view, map view, and machine learning-powered search.",
+    "version": "1.111.0",
+    "author": "Immich",
+    "tags": [
+      "photos",
+      "backup",
+      "ai",
+      "mobile",
+      "media"
+    ],
+    "website": "https://immich.app",
+    "docs_url": "https://immich.app/docs",
+    "forum_url": "https://github.com/immich-app/immich/discussions",
+    "repository_url": "https://github.com/immich-app/immich",
+    "changelog": "Immich latest with mobile backup, facial recognition, and timeline UI.",
+    "screenshots": []
+  },
+  "wireguard": {
+    "tagline": "Fast, modern VPN server",
+    "long_description": "WireGuard is a next-generation VPN protocol that aims to be simpler, faster, and more secure than IPsec and OpenVPN. This AppVault package provides a WireGuard VPN server with a web UI for managing peers and configurations. Features include a web-based peer manager, QR code config generation, multiple peers, and minimal resource usage.",
+    "version": "1.0.20210914",
+    "author": "WireGuard / linuxserver.io",
+    "tags": [
+      "vpn",
+      "networking",
+      "security",
+      "privacy"
+    ],
+    "website": "https://www.wireguard.com",
+    "docs_url": "https://www.wireguard.com/quickstart",
+    "forum_url": "https://lists.zx2c4.com/pipermail/wireguard",
+    "repository_url": "https://github.com/WireGuard/wireguard-go",
+    "changelog": "WireGuard VPN with web UI for peer management.",
+    "screenshots": []
+  },
+  "vaultwarden": {
+    "tagline": "Self-hosted password manager (Bitwarden-compatible)",
+    "long_description": "Vaultwarden is an alternative server implementation of the Bitwarden clients, written in Rust and compatible with the official Bitwarden clients. It lets you self-host your passwords with zero lock-in. Features include full Bitwarden API compatibility, web vault, password generator, attachments, TOTP, emergency access, and a tiny resource footprint.",
+    "version": "1.31.0",
+    "author": "Daniel García / dani-garcia",
+    "tags": [
+      "passwords",
+      "security",
+      "bitwarden",
+      "privacy"
+    ],
+    "website": "https://github.com/dani-garcia/vaultwarden",
+    "docs_url": "https://github.com/dani-garcia/vaultwarden/wiki",
+    "forum_url": "https://github.com/dani-garcia/vaultwarden/discussions",
+    "repository_url": "https://github.com/dani-garcia/vaultwarden",
+    "changelog": "Vaultwarden latest with full Bitwarden API compatibility.",
+    "screenshots": []
+  },
+  "nginx-proxy-manager": {
+    "tagline": "Reverse proxy with a beautiful UI & free SSL",
+    "long_description": "Nginx Proxy Manager is a simple, powerful tool for managing reverse proxies with a web UI. It makes it easy to expose services on your domain with automatic Let's Encrypt SSL certificates. Features include a web UI for proxy hosts, automatic SSL via Let's Encrypt, access lists, custom NGINX config, streams for TCP/UDP, and a clean dashboard.",
+    "version": "2.11.3",
+    "author": "jc21",
+    "tags": [
+      "reverse-proxy",
+      "ssl",
+      "networking",
+      "nginx"
+    ],
+    "website": "https://nginxproxymanager.com",
+    "docs_url": "https://nginxproxymanager.com/guide",
+    "forum_url": "https://github.com/NginxProxyManager/nginx-proxy-manager/discussions",
+    "repository_url": "https://github.com/NginxProxyManager/nginx-proxy-manager",
+    "changelog": "Nginx Proxy Manager with automatic Let's Encrypt SSL and web UI.",
+    "screenshots": []
+  },
+  "traefik": {
+    "tagline": "Cloud-native reverse proxy & load balancer",
+    "long_description": "Traefik is a modern, cloud-native reverse proxy and load balancer that makes deploying microservices easy. It automatically discovers your services, handles SSL termination, and routes traffic based on rules. Features include automatic service discovery, Let's Encrypt integration, middleware (auth, rate limiting, circuit breakers), load balancing, and a real-time dashboard.",
+    "version": "3.1.0",
+    "author": "Traefik Labs",
+    "tags": [
+      "reverse-proxy",
+      "load-balancer",
+      "networking",
+      "ssl",
+      "cloud-native"
+    ],
+    "website": "https://traefik.io",
+    "docs_url": "https://doc.traefik.io/traefik",
+    "forum_url": "https://community.traefik.io",
+    "repository_url": "https://github.com/traefik/traefik",
+    "changelog": "Traefik latest with auto-discovery, Let's Encrypt, and middleware.",
+    "screenshots": []
+  },
+  "uptime-kuma": {
+    "tagline": "Self-hosted uptime monitoring with alerts",
+    "long_description": "Uptime Kuma is a self-hosted monitoring tool like Uptime Robot. It monitors HTTP(S), TCP, HTTP keywords, Ping, DNS records, push, steam game servers, and Docker containers with a beautiful status page and multi-channel alerting. Features include a beautiful status page, multi-channel notifications (Telegram, Discord, email, Slack, etc.), multi-user, certificate info, 2FA, and a powerful monitoring engine.",
+    "version": "1.23.13",
+    "author": "Louis Lam / louislam",
+    "tags": [
+      "monitoring",
+      "uptime",
+      "alerts",
+      "networking",
+      "status-page"
+    ],
+    "website": "https://uptime.kuma.pet",
+    "docs_url": "https://github.com/louislam/uptime-kuma/wiki",
+    "forum_url": "https://github.com/louislam/uptime-kuma/discussions",
+    "repository_url": "https://github.com/louislam/uptime-kuma",
+    "changelog": "Uptime Kuma latest with multi-channel alerts and beautiful status pages.",
+    "screenshots": []
+  },
+  "portainer": {
+    "tagline": "Docker management UI for your containers",
+    "long_description": "Portainer is a lightweight management UI that lets you easily manage your Docker environments — containers, images, volumes, networks, and stacks. It supports Docker standalone, Docker Swarm, and Kubernetes. Features include container/image/volume/network management, stack deployment, a web terminal, role-based access control, and templates for common apps.",
+    "version": "2.20.3",
+    "author": "Portainer.io",
+    "tags": [
+      "docker",
+      "management",
+      "containers",
+      "development"
+    ],
+    "website": "https://www.portainer.io",
+    "docs_url": "https://docs.portainer.io",
+    "forum_url": "https://github.com/portainer/portainer/discussions",
+    "repository_url": "https://github.com/portainer/portainer",
+    "changelog": "Portainer Business Edition features with Docker/K8s management.",
+    "screenshots": []
+  },
+  "dozzle": {
+    "tagline": "Real-time Docker log viewer",
+    "long_description": "Dozzle is a small, lightweight application that provides you a web-based interface to monitor your Docker container logs in real-time. It's perfect for development and debugging — no need to SSH into your server or use the Docker CLI to view logs. Features include real-time log streaming, a simple web UI, container search, regex filtering, and minimal resource usage.",
+    "version": "8.3.0",
+    "author": "Amir Raminfar",
+    "tags": [
+      "docker",
+      "logs",
+      "monitoring",
+      "development"
+    ],
+    "website": "https://dozzle.dev",
+    "docs_url": "https://dozzle.dev/guide",
+    "forum_url": "https://github.com/amir20/dozzle/discussions",
+    "repository_url": "https://github.com/amir20/dozzle",
+    "changelog": "Dozzle latest with real-time log streaming and regex filtering.",
+    "screenshots": []
+  },
+  "code-server": {
+    "tagline": "VS Code in the browser, self-hosted",
+    "long_description": "Code Server (code-server) lets you run VS Code on any machine and access it in the browser. It provides the full VS Code experience — extensions, terminal, debugging, IntelliSense — from any device with a browser. Features include full VS Code compatibility, extension marketplace access, integrated terminal, Git support, multi-language support, and persistent workspaces.",
+    "version": "4.92.2",
+    "author": "Coder Technologies",
+    "tags": [
+      "development",
+      "ide",
+      "vscode",
+      "browser",
+      "code"
+    ],
+    "website": "https://coder.com",
+    "docs_url": "https://coder.com/docs/code-server",
+    "forum_url": "https://github.com/coder/code-server/discussions",
+    "repository_url": "https://github.com/coder/code-server",
+    "changelog": "code-server latest with full VS Code in the browser.",
+    "screenshots": []
+  },
+  "gitea": {
+    "tagline": "Lightweight self-hosted Git service",
+    "long_description": "Gitea is a community-managed lightweight code hosting solution written in Go. It's easy to install, low on resources, and provides all the essential Git hosting features. Features include Git repository management, issue tracking & pull requests, web hooks, a web UI, user/organization management, and low resource consumption.",
+    "version": "1.22.1",
+    "author": "Gitea",
+    "tags": [
+      "git",
+      "development",
+      "code-hosting",
+      "lightweight"
+    ],
+    "website": "https://gitea.io",
+    "docs_url": "https://docs.gitea.com",
+    "forum_url": "https://discourse.gitea.io",
+    "repository_url": "https://github.com/go-gitea/gitea",
+    "changelog": "Gitea latest with Git hosting, issues, and pull requests.",
+    "screenshots": []
+  },
+  "stirling-pdf": {
+    "tagline": "All-in-one PDF toolkit, self-hosted",
+    "long_description": "Stirling-PDF is a robust, locally-hosted web application that lets you perform a wide variety of PDF operations. Merge, split, rotate, compress, convert, add/remove pages, extract text, add watermarks, and more — all from your browser without uploading files to third-party services. Features include merge/split/rotate/compress, PDF to/from images, OCR, add watermarks, and a clean UI.",
+    "version": "0.27.0",
+    "author": "Frooodle / Stirling-Tools",
+    "tags": [
+      "pdf",
+      "documents",
+      "productivity",
+      "toolkit"
+    ],
+    "website": "https://www.stirlingpdf.com",
+    "docs_url": "https://github.com/Stirling-Tools/Stirling-PDF/wiki",
+    "forum_url": "https://github.com/Stirling-Tools/Stirling-PDF/discussions",
+    "repository_url": "https://github.com/Stirling-Tools/Stirling-PDF",
+    "changelog": "Stirling-PDF latest with merge, split, OCR, and full PDF toolkit.",
+    "screenshots": []
+  },
+  "excalidraw": {
+    "tagline": "Collaborative whiteboard for sketching diagrams",
+    "long_description": "Excalidraw is a virtual whiteboard for sketching hand-drawn like diagrams. It's simple, fast, and perfect for brainstorming, wireframing, and visual thinking. Features include a hand-drawn style, real-time collaboration, shapes library, export to PNG/SVG, and an end-to-end encrypted sharing option.",
+    "version": "0.17.6",
+    "author": "Excalidraw",
+    "tags": [
+      "whiteboard",
+      "diagrams",
+      "collaboration",
+      "drawing"
+    ],
+    "website": "https://excalidraw.com",
+    "docs_url": "https://docs.excalidraw.com",
+    "forum_url": "https://github.com/excalidraw/excalidraw/discussions",
+    "repository_url": "https://github.com/excalidraw/excalidraw",
+    "changelog": "Excalidraw latest with hand-drawn style and real-time collaboration.",
+    "screenshots": []
+  },
+  "drawio": {
+    "tagline": "Online diagramming & whiteboarding tool",
+    "long_description": "Draw.io (now diagrams.net) is a free, open-source online diagramming tool. Create flowcharts, org charts, UML diagrams, network diagrams, wireframes, and more with a drag-and-drop interface. Features include a large shape library, drag-and-drop diagramming, export to PNG/SVG/PDF, real-time collaboration, and integration with cloud storage.",
+    "version": "24.7.5",
+    "author": "draw.io / JGraph",
+    "tags": [
+      "diagrams",
+      "flowcharts",
+      "whiteboarding",
+      "design"
+    ],
+    "website": "https://www.drawio.com",
+    "docs_url": "https://www.drawio.com/doc",
+    "forum_url": "https://github.com/jgraph/drawio/discussions",
+    "repository_url": "https://github.com/jgraph/drawio",
+    "changelog": "draw.io latest with drag-and-drop diagramming and shape library.",
+    "screenshots": []
+  }
+}
