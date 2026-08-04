@@ -93,10 +93,11 @@
             <div class="card">
                 <h3>Find your account</h3>
                 <p>Enter the license key you received by email to see your plan and manage your subscription.</p>
-                <form class="key-form" method="get" action="/dashboard">
-                    <input type="text" name="k" placeholder="APPVAULT-XXXX-XXXX-XXXX-XXXX" required>
-                    <button class="btn btn-primary" type="submit">View account</button>
-                </form>
+                <div class="key-form">
+                    <input id="license-key-input" type="text" placeholder="APPVAULT-XXXX-XXXX-XXXX-XXXX"
+                           onkeydown="if(event.key==='Enter')loginWithKey()" autocomplete="off">
+                    <button class="btn btn-primary" id="license-key-btn" onclick="loginWithKey()">View account</button>
+                </div>
             </div>
         {% endif %}
 
@@ -124,6 +125,36 @@
         {% endif %}
     </div>
 
+    <script>
+        async function loginWithKey() {
+            const input = document.getElementById('license-key-input');
+            const btn = document.getElementById('license-key-btn');
+            const key = (input.value || '').trim();
+            if (!key) { input.focus(); return; }
+            btn.textContent = 'Checking...';
+            btn.disabled = true;
+            try {
+                const r = await fetch('/api/dashboard/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({license_key: key})
+                });
+                if (r.ok) {
+                    window.location.href = '/dashboard';
+                } else {
+                    const d = await r.json();
+                    alert('Error: ' + (d.detail || 'Invalid license key'));
+                    btn.textContent = 'View account';
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+                btn.textContent = 'View account';
+                btn.disabled = false;
+            }
+        }
+    </script>
+
     {% if license %}
     <script>
         async function openPortal() {
@@ -134,7 +165,7 @@
                 const r = await fetch('/api/billing-portal', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({license_key: {{ license.key | tojson }}})
+                    body: JSON.stringify({})
                 });
                 const data = await r.json();
                 if (r.ok && data.url) {

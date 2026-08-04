@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 from pydantic import BaseModel
+from itsdangerous import URLSafeTimedSerializer
 
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 # CONFIG
@@ -57,7 +58,21 @@ templates = Jinja2Templates(directory="templates")
 
 # Session-based admin login (signed cookie)
 SESSION_SECRET = os.getenv("SESSION_SECRET", ADMIN_PASSWORD + "-appvault-session")
-app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET, max_age=86400, same_site="lax")
+app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET, max_age=60*60*24*30, same_site="lax")
+
+# Short-lived signed tokens for dashboard links (license key never sits in a URL)
+_dash_serializer = URLSafeTimedSerializer(SESSION_SECRET)
+
+def _make_dashboard_token(license_key: str) -> str:
+    """Sign a license key for a dashboard link (expires via max_age on load)."""
+    return _dash_serializer.dumps(license_key)
+
+def _read_dashboard_token(token: str, max_age: int = 7 * 24 * 3600) -> str:
+    """Resolve a signed dashboard token back to the license key, or '' if invalid/expired."""
+    try:
+        return _dash_serializer.loads(token, max_age=max_age) or ""
+    except Exception:
+        return ""
 
 # Check Docker CLI availability (optional â€” used only for auto-import)
 try:
@@ -966,13 +981,14 @@ async def _handle_checkout_completed(session):
         _audit("license.issued", f"{tier} -> {email} key={license_key[:16]}...")
 
         subject = "Your AppVault license is ready"
+        dash_link = "https://" + DOMAIN + "/dashboard?t=" + _make_dashboard_token(license_key)
         html = (
             "<p>Hi,</p><p>Your AppVault <b>" + tier + "</b> plan is active. Here's your license key:</p>"
             '<p style="font-family:monospace;font-size:18px;background:#f1f5f9;padding:12px;border-radius:8px;"><b>' + license_key + "</b></p>"
             "<p>Deploy AppVault on your own VPS in one line:</p>"
             "<p><code>curl -fsSL " + INSTALL_URL + " | sudo bash -s -- --license " + license_key + "</code></p>"
             "<p>Then open the app's <b>Security</b> tab and join your Tailscale network.</p>"
-            '<p>Manage your subscription: <a href="https://' + DOMAIN + "/dashboard?k=" + license_key + '">https://' + DOMAIN + "/dashboard?k=" + license_key + "</a></p>"
+            '<p>Manage your subscription: <a href="' + dash_link + '">' + dash_link + "</a></p>"
             "<p>Questions? Just reply to this email.</p>"
         )
         send_email(email, subject, html)
@@ -1057,7 +1073,7 @@ async def billing_portal(request: Request):
     import stripe
     stripe.api_key = STRIPE_SECRET_KEY
     body = await request.json()
-    key = (body.get("license_key") or "").strip()
+    key = (body.get("license_key") or "").strip() or request.session.get("license_key", "")
     if not key:
         raise HTTPException(status_code=400, detail="license_key is required")
 
@@ -1097,22 +1113,62 @@ async def pricing_page(request: Request):
     return templates.TemplateResponse("landing.html", {"request": request})
 
 @app.get("/dashboard")
-async def dashboard(request: Request, k: str = None):
-    """License-key authenticated dashboard: subscription status + billing portal."""
+async def dashboard(request: Request, k: str = None, t: str = None):
+    """License-key authenticated dashboard: session cookie + short-lived signed link."""
     ctx = {"request": request, "license": None, "instances": [], "error": None}
-    if not k:
-        return templates.TemplateResponse("dashboard.html", ctx)
-    db = get_db()
-    lic = db.execute("SELECT * FROM licenses WHERE key = ?", (k,)).fetchone()
-    if not lic or lic["status"] != "active":
+
+    # Legacy raw-key links: validate, set session, redirect to a clean URL.
+    if k:
+        db = get_db()
+        lic = db.execute("SELECT * FROM licenses WHERE key = ?", (k,)).fetchone()
         db.close()
+        if lic and lic["status"] == "active":
+            request.session["license_key"] = k
+            return RedirectResponse("/dashboard", status_code=302)
         ctx["error"] = "Invalid or inactive license key."
         return templates.TemplateResponse("dashboard.html", ctx)
+
+    if t:
+        key = _read_dashboard_token(t)
+        if not key:
+            ctx["error"] = "This link has expired. Enter your license key below."
+            return templates.TemplateResponse("dashboard.html", ctx)
+    else:
+        key = request.session.get("license_key", "")
+
+    if not key:
+        return templates.TemplateResponse("dashboard.html", ctx)
+
+    db = get_db()
+    lic = db.execute("SELECT * FROM licenses WHERE key = ?", (key,)).fetchone()
+    if not lic or lic["status"] != "active":
+        db.close()
+        request.session.pop("license_key", None)
+        ctx["error"] = "Invalid or inactive license key."
+        return templates.TemplateResponse("dashboard.html", ctx)
+    request.session["license_key"] = key
     instances = db.execute("SELECT * FROM instances WHERE email = ?", (lic["email"],)).fetchall()
     db.close()
     ctx["license"] = lic
     ctx["instances"] = instances
     return templates.TemplateResponse("dashboard.html", ctx)
+
+
+@app.post("/api/dashboard/login")
+async def dashboard_login(request: Request):
+    """Exchange a license key for a session (key entry form)."""
+    body = await request.json()
+    key = (body.get("license_key") or "").strip()
+    if not key:
+        raise HTTPException(status_code=400, detail="license_key is required")
+    db = get_db()
+    lic = db.execute("SELECT * FROM licenses WHERE key = ?", (key,)).fetchone()
+    db.close()
+    if not lic or lic["status"] != "active":
+        raise HTTPException(status_code=403, detail="Invalid or inactive license key")
+    request.session["license_key"] = key
+    _audit("dashboard.login", lic["email"])
+    return JSONResponse({"ok": True})
 
 @app.post("/api/checkout")
 async def create_checkout(request: Request):
