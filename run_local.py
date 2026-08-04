@@ -11,6 +11,10 @@ os.environ.setdefault("DOMAIN", "localhost:8000")
 os.environ.setdefault("AGENT_POLL_SECONDS", "30")
 os.environ.setdefault("AGENT_TIMEOUT_SECONDS", "300")
 
+# Stripe test prices (created in Stripe test mode)
+os.environ.setdefault("STRIPE_PRICE_PRO", "price_1U0dv108dNwwNbqfJUCnTreQ")
+os.environ.setdefault("STRIPE_PRICE_PRO_YEARLY", "price_1U0dv108dNwwNbqfyZCap4JZ")
+
 # Load Stripe test key
 key_path = r"C:\Users\emman\stripe-test.key"
 if not os.environ.get("STRIPE_SECRET_KEY") and os.path.exists(key_path):
