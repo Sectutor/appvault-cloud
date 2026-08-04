@@ -1,3 +1,5 @@
+# AppVault Cloud — Central Admin Server
+# Build context: canonical source of truth = ~/appvault-cloud-prod
 FROM python:3.11-slim
 
 WORKDIR /app
