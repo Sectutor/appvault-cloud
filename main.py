@@ -1234,7 +1234,10 @@ async def stripe_webhook(request: Request):
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
 
-    event = json_lib.loads(payload)
+    try:
+        event = json_lib.loads(payload)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid payload: {str(e)}")
     etype = event["type"]
     obj = event["data"]["object"]
 
