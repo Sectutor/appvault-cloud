@@ -899,6 +899,17 @@ async def admin_set_agent_plan(agent_id: str, request: Request):
     set_agent_plan(agent_id, plan)
     return {"status": "ok", "agent_id": agent_id, "plan": plan}
 
+@app.get("/admin/debug/license/{license_key}")
+async def admin_debug_license(license_key: str, request: Request):
+    """Debug: show license record including subscription ID."""
+    require_admin(request)
+    db = get_db()
+    row = db.execute("SELECT * FROM licenses WHERE key=?", (license_key,)).fetchone()
+    db.close()
+    if not row:
+        raise HTTPException(status_code=404, detail="License not found")
+    return JSONResponse(dict(row))
+
 @app.post("/api/agent/subscription")
 async def agent_subscription_status(request: Request):
     """Agent checks its subscription status — shows plan, grace period, license info."""
