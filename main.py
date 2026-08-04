@@ -885,8 +885,10 @@ COOLIFY_TOKEN = os.getenv("COOLIFY_TOKEN", "")
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 DOMAIN = os.getenv("DOMAIN", "appvault.airepoindex.com")
-STRIPE_PRICE_STARTER = os.getenv("STRIPE_PRICE_STARTER", "price_xxx_starter")
 STRIPE_PRICE_PRO = os.getenv("STRIPE_PRICE_PRO", "price_xxx_pro")
+STRIPE_PRICE_PRO_YEARLY = os.getenv("STRIPE_PRICE_PRO_YEARLY", "price_xxx_pro_yearly")
+# Starter/Power tiers deprecated — kept for backward compat (not in checkout)
+STRIPE_PRICE_STARTER = os.getenv("STRIPE_PRICE_STARTER", "price_xxx_starter")
 STRIPE_PRICE_POWER = os.getenv("STRIPE_PRICE_POWER", "price_xxx_power")
 SMTP_HOST = os.getenv("SMTP_HOST", "")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
@@ -1209,39 +1211,49 @@ async def dashboard_login(request: Request):
 
 @app.post("/api/checkout")
 async def create_checkout(request: Request):
-    """Create Stripe Checkout session."""
+    """Create Stripe Checkout session. Tiers: pro (monthly/yearly)."""
     import stripe
     stripe.api_key = STRIPE_SECRET_KEY
     body = await request.json()
-    tier = body.get("tier", "starter")
+    tier = body.get("tier", "pro")
+    billing = body.get("billing", "monthly")  # monthly | yearly
     email = body.get("email")
     if not email:
         raise HTTPException(status_code=400, detail="email is required")
-    prices = {"starter": STRIPE_PRICE_STARTER, "pro": STRIPE_PRICE_PRO, "power": STRIPE_PRICE_POWER}
-    price_id = prices.get(tier, prices["starter"])
+
+    # Resolve price: only "pro" tier is purchasable; yearly uses annual price
+    if tier == "pro" and billing == "yearly":
+        price_id = STRIPE_PRICE_PRO_YEARLY
+    elif tier == "pro":
+        price_id = STRIPE_PRICE_PRO
+    else:
+        # Legacy tiers (starter/power) are deprecated — route to pro monthly
+        price_id = STRIPE_PRICE_PRO
+
     if not price_id or price_id.startswith("price_xxx"):
         raise HTTPException(status_code=503, detail="Checkout not configured yet (missing Stripe price)")
-    
+
     instance_id = str(uuid.uuid4())
     db = get_db()
-    db.execute("INSERT INTO instances (id, email, tier, status) VALUES (?, ?, ?, 'pending')", (instance_id, email, tier))
+    db.execute("INSERT INTO instances (id, email, tier, status) VALUES (?, ?, ?, 'pending')",
+               (instance_id, email, f"{tier}-{billing}"))
     db.commit()
     db.close()
-    
+
     try:
         session = stripe.checkout.Session.create(
             payment_method_types=["card"],
-            line_items=[{"price": prices[tier], "quantity": 1}],
+            line_items=[{"price": price_id, "quantity": 1}],
             mode="subscription",
             success_url=f"https://{DOMAIN}/dashboard",
             cancel_url=f"https://{DOMAIN}",
             customer_email=email,
-            metadata={"instance_id": instance_id, "tier": tier, "email": email},
+            metadata={"instance_id": instance_id, "tier": tier, "billing": billing, "email": email},
         )
     except Exception as e:
         print(f"[stripe] Checkout session creation failed: {e}", flush=True)
         raise HTTPException(status_code=500, detail=f"Checkout session creation failed: {str(e)}")
-    _audit("checkout.created", f"{tier} {email}")
+    _audit("checkout.created", f"{tier}-{billing} {email}")
     return JSONResponse({"url": session.url})
 
 @app.get("/api/status/{instance_id}")

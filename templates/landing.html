@@ -96,7 +96,7 @@
         .app-tag .pro-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; background: linear-gradient(135deg, #38bdf8, #818cf8); color: #fff; font-size: 0.6rem; font-weight: 700; margin-top: 4px; }
 
         /* Pricing Tables */
-        .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; max-width: 750px; margin: 0 auto; }
+        .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; max-width: 900px; margin: 0 auto; }
         .plan { background: #111827; border: 1px solid #1e293b; border-radius: 16px; padding: 36px; text-align: left; }
         .plan.featured { border-color: #38bdf8; box-shadow: 0 0 30px rgba(56,189,248,0.1); position: relative; }
         .plan.featured .badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #38bdf8, #818cf8); padding: 4px 16px; border-radius: 20px; font-size: 11px; font-weight: 700; color: #fff; }
@@ -110,6 +110,17 @@
         .plan ul li.disabled { color: #475569; }
         .plan ul li.disabled:before { content: '✗ '; color: #ef4444; }
         .plan .btn { width: 100%; text-align: center; margin-top: 16px; }
+
+        /* Billing toggle */
+        .billing-toggle { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 30px; font-size: 0.95rem; color: #94a3b8; }
+        .billing-toggle .switch { position: relative; width: 44px; height: 24px; background: #334155; border-radius: 12px; cursor: pointer; transition: background 0.2s; }
+        .billing-toggle .switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; background: #e2e8f0; border-radius: 50%; transition: transform 0.2s; }
+        .billing-toggle .switch.active { background: #38bdf8; }
+        .billing-toggle .switch.active::after { transform: translateX(20px); }
+        .billing-toggle .save { color: #22c55e; font-weight: 600; font-size: 0.85rem; }
+        .price-monthly, .price-yearly { transition: opacity 0.2s; }
+        .hidden { display: none !important; }
+        .billing-label.active-label { color: #38bdf8; font-weight: 600; }
 
         /* Testimonials */
         .testimonials { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
@@ -183,7 +194,7 @@
       <strong>Windows (PowerShell):</strong> PS&gt; irm https://raw.githubusercontent.com/Sectutor/appvault-agent/main/install.ps1 | iex<br>
       <strong>macOS / Linux:</strong> $ bash -c "$(curl -fsSL https://raw.githubusercontent.com/Sectutor/appvault-agent/main/install.sh)"
     </div>
-    <p style="font-size:13px;color:#64748b;margin-bottom:20px;">Installs Docker automatically (~600 MB first run). Works on Windows, Mac & Linux. Everything stays up to date. After installing, apply your license key (Settings &rarr; License) to unlock the full catalog.</p>
+    <p style="font-size:13px;color:#64748b;margin-bottom:20px;">Installs Docker automatically (~600 MB first run). Works on Windows, Mac & Linux. Everything stays up to date. After installing, apply your license key (Settings &rarr; License) to unlock unlimited installs.</p>
     <div class="stats">
         <span>⭐ <strong>4.9/5</strong> rating</span>
         <span>👥 <strong>2,400+</strong> installs</span>
@@ -249,7 +260,7 @@
             <div class="step">
                 <div class="num">3</div>
                 <h3>Browse the app store</h3>
-                <p>Open AppVault and browse 40+ AI tools. Free users get 10. Upgrade to Pro to unlock all.</p>
+                <p>Open AppVault and browse 40+ apps. Free users see the full catalog. Upgrade to Pro for unlimited installs.</p>
             </div>
             <div class="step">
                 <div class="num">4</div>
@@ -264,17 +275,17 @@
     <div class="container">
         <div class="pro-banner">
             <h2>🔓 Unlock Everything with Pro</h2>
-            <p class="section-sub">AppVault Self-Host Pro — On your own machine, full catalog. Simple $9/month subscription.</p>
-            <div class="price">$9<span>/month (or $79/yr)</span></div>
+            <p class="section-sub">AppVault Self-Host Pro — On your own machine, full catalog. Per-server subscription.</p>
+            <div class="price">$19<span>/month</span> <span style="font-size:0.9rem;color:#94a3b8;">or $149/year</span></div>
             <ul class="features-list">
-                <li>Unlimited apps (40+)</li>
+                <li>Unlimited installs (40+ apps)</li>
                 <li>Import any GitHub repo</li>
                 <li>AI-powered app importer</li>
                 <li>Priority updates</li>
                 <li>Premium AI apps unlocked</li>
                 <li>Email support</li>
             </ul>
-            <a href="#pricing" class="btn-primary">🚀 Buy Self-Host Pro — $9/mo</a>
+            <a href="#pricing" class="btn-primary">🚀 Buy Self-Host Pro — $19/mo</a>
             <p class="fineprint">🔒 Secure checkout · 30-day money-back guarantee · <a href="#" style="color:#64748b;">Terms apply</a></p>
         </div>
     </div>
@@ -282,8 +293,8 @@
 
 <section id="apps" style="background:#0f172a;">
     <div class="container">
-        <h2>📦 App Catalog</h2>
-        <p class="section-sub">40+ apps, ready to install. Free users get 10. Pro unlocks the full catalog — plus every new app we add.</p>
+        <h2>📦 Full App Catalog</h2>
+        <p class="section-sub">40+ apps, ready to install. Free users see the full catalog — install limit set by admin. Pro unlocks unlimited installs + every new app we add.</p>
         <div class="apps-grid">
             <div class="app-tag"><div class="emoji">💬</div><div class="name">Open WebUI</div><div class="cat">AI · Chat</div></div>
             <div class="app-tag"><div class="emoji">🦙</div><div class="name">Ollama</div><div class="cat">AI · LLM runner</div></div>
@@ -306,93 +317,74 @@
             <div class="app-tag"><div class="emoji">🔐</div><div class="name">Vaultwarden</div><div class="cat">Password manager</div><div class="pro-badge">PRO</div></div>
             <div class="app-tag"><div class="emoji">📊</div><div class="name">Grafana</div><div class="cat">Monitoring</div><div class="pro-badge">PRO</div></div>
         </div>
-        <p style="text-align:center;margin-top:20px;color:#64748b;font-size:14px;">+ 20 more apps unlocked with Pro</p>
-        <p style="text-align:center;margin-top:8px;"><a href="#pricing" style="color:#38bdf8;">🔓 Unlock all apps — $9/mo</a></p>
+        <p style="text-align:center;margin-top:20px;color:#64748b;font-size:14px;">+ 20 more apps — full catalog for all users</p>
+        <p style="text-align:center;margin-top:8px;"><a href="#pricing" style="color:#38bdf8;">🔓 Unlock unlimited installs — $19/mo</a></p>
     </div>
 </section>
 
 <section id="pricing">
     <div class="container">
         <h2>💰 Simple, honest pricing</h2>
-        <p class="section-sub">Simple monthly pricing. Free to start, Pro to unlock, Managed for your team.</p>
+        <p class="section-sub">Free to start. Pro unlocks everything on your own server. Managed coming soon.</p>
+        <div class="billing-toggle">
+            <span class="billing-label monthly active-label">Monthly</span>
+            <div class="switch" id="billingSwitch" onclick="toggleBilling()"></div>
+            <span class="billing-label yearly">Yearly</span>
+            <span class="save hidden" id="saveBadge" style="color:#22c55e;font-weight:600;font-size:0.8rem;">Save 35%</span>
+        </div>
         <div class="pricing-grid">
             <div class="plan">
                 <h3>Free</h3>
                 <div class="price">$0</div>
                 <div class="subprice">Self-hosted, forever</div>
-                <p style="font-size:0.88rem;color:#94a3b8;margin-bottom:16px;">Run AppVault on your own machine and install your first self-hosted apps.</p>
+                <p style="font-size:0.88rem;color:#94a3b8;margin-bottom:16px;">Run AppVault on your own machine. Full catalog visible — install limit set by admin.</p>
                 <ul>
-                    <li>3 curated apps included</li>
-                    <li>All core features</li>
+                    <li>Full app catalog (40+ apps)</li>
+                    <li>Admin-regulated install limit</li>
                     <li>Auto Docker setup</li>
                     <li>Community support</li>
-                    <li class="disabled">Full catalog</li>
-                    <li class="disabled">Security + Tailscale</li>
+                    <li class="disabled">Unlimited installs</li>
+                    <li class="disabled">Priority support</li>
                 </ul>
-                <a href="#install" class="btn-primary btn" style="display:inline-block;text-align:center;">Download Free</a>
+                <a href="#install" class="btn-outline btn" style="display:inline-block;text-align:center;border-color:#334155;">Download Free</a>
             </div>
             <div class="plan featured">
                 <div class="badge">BEST VALUE</div>
                 <h3>Self-Host Pro</h3>
-                <div class="price">$9</div>
-                <div class="subprice">per month (or $79/yr)</div>
-                <p style="font-size:0.88rem;color:#94a3b8;margin-bottom:16px;">Unlock the full catalog on your own machine. Best for individuals and power users.</p>
+                <div class="price">
+                    <span class="price-monthly">$19</span><span class="price-yearly hidden">$149</span>
+                </div>
+                <div class="subprice">
+                    <span class="price-monthly">per month</span><span class="price-yearly hidden">per year</span>
+                </div>
+                <p style="font-size:0.88rem;color:#94a3b8;margin-bottom:16px;">Unlimited installs on your own server. One license per server.</p>
                 <ul>
-                    <li>Full catalog (40+ apps)</li>
+                    <li>Unlimited installs</li>
                     <li>Import any GitHub repo</li>
                     <li>AI-powered app importer</li>
                     <li>Security tab + Tailscale</li>
-                    <li>Premium AI apps unlocked</li>
-                    <li>Priority support</li>
+                    <li>Auto-updates</li>
+                    <li>Priority email support</li>
                 </ul>
-                <a href="#pricing-cta" class="btn-primary btn" style="display:inline-block;text-align:center;">Upgrade - $9/mo</a>
+                <button class="btn-primary btn" style="display:inline-block;text-align:center;cursor:pointer;" onclick="startCheckout('pro')">🚀 Buy Pro — <span class="btn-price">$19/mo</span></button>
             </div>
-            <div class="plan">
-                <h3>Managed Starter</h3>
-                <div class="price">$79</div>
-                <div class="subprice">per month</div>
-                <p style="font-size:0.88rem;color:#94a3b8;margin-bottom:16px;">We host and secure AppVault for you on a private tailnet VPS. Up to 3 users, 5 concurrent apps.</p>
+            <div class="plan" style="opacity:0.7;">
+                <h3>Managed</h3>
+                <div class="price">—</div>
+                <div class="subprice">Coming soon</div>
+                <p style="font-size:0.88rem;color:#94a3b8;margin-bottom:16px;">We host and manage AppVault for you on a private VPS. Join the waitlist.</p>
                 <ul>
-                    <li>Hosted on a private VPS</li>
-                    <li>Up to 3 users</li>
-                    <li>5 concurrent apps</li>
-                    <li>Security hardening + Tailscale</li>
-                    <li>Backups</li>
+                    <li>Hosted on private VPS</li>
+                    <li>Tailnet-secured</li>
+                    <li>Backups + monitoring</li>
                     <li>Setup + support</li>
+                    <li class="disabled">Available Q4 2026</li>
                 </ul>
-                <a href="#pricing-cta" class="btn-primary btn" style="display:inline-block;text-align:center;">Get Started</a>
+                <a href="#faq" class="btn-outline btn" style="display:inline-block;text-align:center;border-color:#334155;">Join Waitlist</a>
             </div>
-            <div class="plan">
-                <h3>Managed Business</h3>
-                <div class="price">$149</div>
-                <div class="subprice">per month</div>
-                <p style="font-size:0.88rem;color:#94a3b8;margin-bottom:16px;">For small teams. Up to 10 users, 15 concurrent apps, priority support.</p>
-                <ul>
-                    <li>Hosted on a private VPS</li>
-                    <li>Up to 10 users</li>
-                    <li>15 concurrent apps</li>
-                    <li>Security hardening + Tailscale</li>
-                    <li>Backups + monitoring</li>
-                    <li>Priority support</li>
-                </ul>
-                <a href="#pricing-cta" class="btn-primary btn" style="display:inline-block;text-align:center;">Get Started</a>
-            </div>
-            <div class="plan">
-                <h3>Managed Power</h3>
-                <div class="price">$299</div>
-                <div class="subprice">per month</div>
-                <p style="font-size:0.88rem;color:#94a3b8;margin-bottom:16px;">10-50 users, unlimited concurrent apps, white-glove onboarding.</p>
-                <ul>
-                    <li>Hosted on a private VPS</li>
-                    <li>10-50 users</li>
-                    <li>Unlimited concurrent apps</li>
-                    <li>Security hardening + Tailscale</li>
-                    <li>Backups + monitoring</li>
-                    <li>White-glove onboarding + SLA</li>
-                </ul>
-                <a href="#pricing-cta" class="btn-primary btn" style="display:inline-block;text-align:center;">Contact Sales</a>
-            </div>
-        </div></section>
+        </div>
+    </div>
+</section>
 
 <section style="background:#0f172a;">
     <div class="container">
@@ -406,7 +398,7 @@
             </div>
             <div class="testimonial">
                 <div class="stars">★★★★★</div>
-                <blockquote>"At $9/mo it's a steal. I've got Stable Diffusion, Open WebUI, and n8n all running. <em>No cloud costs whatsoever.</em>"</blockquote>
+                <blockquote>"At $19/mo it's a steal. I've got Stable Diffusion, Open WebUI, and n8n all running on my own server. <em>No cloud costs whatsoever.</em>"</blockquote>
                 <div class="author"><strong>Sara L.</strong><br>Freelance Designer, Berlin</div>
             </div>
             <div class="testimonial">
@@ -441,7 +433,11 @@
             </div>
             <div class="faq-item">
                 <div class="q">How does the Pro license work?</div>
-                <div class="a">You'll receive a license key via email instantly. Enter it in AppVault and all 40+ apps unlock immediately. Every new app we add in the future is included — no extra charge, ever.</div>
+                <div class="a">After purchase you get a license key via email instantly. One license = one server. Enter it in AppVault and all 40+ apps unlock with unlimited installs. Need more servers? Buy another license — each one binds to a different machine.</div>
+            </div>
+            <div class="faq-item">
+                <div class="q">What does the Free tier include?</div>
+                <div class="a">Free users see the full 40+ app catalog (same as Pro). The install limit is set by the admin — you can browse everything and install up to the admin-defined cap. Upgrade to Pro to remove the cap and get unlimited installs.</div>
             </div>
             <div class="faq-item">
                 <div class="q">Can I get a refund?</div>
@@ -449,7 +445,7 @@
             </div>
             <div class="faq-item">
                 <div class="q">Can I use it on multiple machines?</div>
-                <div class="a">Self-Host Pro covers one user on your own machine. Need multi-user or hosted? Our Managed tiers (Business/Power) cover up to 50 users on a private, tailnet-secured VPS.</div>
+                <div class="a">Self-Host Pro covers one server per license. Buy a license for each machine you want to run AppVault on. Each license key binds to the first server that activates it. Managed (hosted) is coming Q4 2026.</div>
             </div>
         </div>
     </div>
@@ -478,6 +474,38 @@
     <p>AppVault · Your one-click AI app store · Windows · Mac · Linux</p>
     <p style="margin-top:6px;">© 2026 · Built with ♥ for the open-source AI community</p>
 </footer>
+
+<script>
+function toggleBilling() {
+    var sw = document.getElementById('billingSwitch');
+    var isYearly = sw.classList.toggle('active');
+    document.getElementById('saveBadge').classList.toggle('hidden', !isYearly);
+    var monthlyEls = document.querySelectorAll('.price-monthly');
+    var yearlyEls = document.querySelectorAll('.price-yearly');
+    monthlyEls.forEach(function(el) { el.classList.toggle('hidden', isYearly); });
+    yearlyEls.forEach(function(el) { el.classList.toggle('hidden', !isYearly); });
+    var btnLabel = document.querySelector('.btn-price');
+    if (btnLabel) btnLabel.textContent = isYearly ? '$149/yr' : '$19/mo';
+    document.querySelectorAll('.billing-label').forEach(function(el) {
+        el.classList.toggle('active-label', (isYearly && el.classList.contains('yearly')) || (!isYearly && el.classList.contains('monthly')));
+    });
+}
+function startCheckout(tier) {
+    var yearly = document.getElementById('billingSwitch').classList.contains('active');
+    var billing = yearly ? 'yearly' : 'monthly';
+    var email = prompt('Your email for the license key:');
+    if (!email || !email.includes('@')) { alert('Please enter a valid email.'); return; }
+    fetch('/api/checkout', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({tier: tier, billing: billing, email: email})
+    }).then(function(r){return r.json()}).then(function(d){
+        if (d.url) window.location = d.url;
+        else if (d.detail) alert('Checkout error: ' + d.detail);
+        else alert('Unexpected error starting checkout.');
+    }).catch(function(e){ alert('Network error: ' + e); });
+}
+</script>
 
 </body>
 </html>
