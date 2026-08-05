@@ -717,7 +717,7 @@ async def admin_edit_app(app_id: str, request: Request):
     if not changes:
         raise HTTPException(status_code=400, detail="No editable fields provided")
     with open(CATALOG_PATH, "w", encoding="utf-8") as f:
-        json.dump(GLOBAL_CATALOG, f, indent=2)
+        json.dump(GLOBAL_CATALOG, f, indent=2, ensure_ascii=False)
     _audit("catalog.edit", f"{app_id}: {changes}")
     new_version = increment_catalog_version()
     return {"status": "updated", "app_id": app_id, "changes": changes, "new_catalog_version": new_version}
@@ -781,7 +781,7 @@ async def admin_add_app(request: Request):
     
     # Persist to disk
     with open(CATALOG_PATH, "w", encoding="utf-8") as f:
-        json.dump(GLOBAL_CATALOG, f, indent=2)
+        json.dump(GLOBAL_CATALOG, f, indent=2, ensure_ascii=False)
     
     new_version = increment_catalog_version()
     _audit("catalog.add", app_entry["id"])
@@ -800,7 +800,7 @@ async def admin_remove_app(app_id: str, request: Request):
         raise HTTPException(status_code=404, detail=f"App '{app_id}' not found")
     
     with open(CATALOG_PATH, "w", encoding="utf-8") as f:
-        json.dump(GLOBAL_CATALOG, f, indent=2)
+        json.dump(GLOBAL_CATALOG, f, indent=2, ensure_ascii=False)
     
     new_version = increment_catalog_version()
     _audit("catalog.remove", app_id)
@@ -817,7 +817,7 @@ async def admin_toggle_free(app_id: str, request: Request):
         raise HTTPException(status_code=404, detail="App not found")
     app["free_tier"] = is_free
     with open(CATALOG_PATH, "w", encoding="utf-8") as f:
-        json.dump(GLOBAL_CATALOG, f, indent=2)
+        json.dump(GLOBAL_CATALOG, f, indent=2, ensure_ascii=False)
     _audit("catalog.free", f"{app_id} -> {'free' if is_free else 'paid-only'}")
     new_version = increment_catalog_version()
     free_count = sum(1 for a in GLOBAL_CATALOG.get("apps", []) if a.get("free_tier"))
@@ -879,7 +879,7 @@ async def admin_toggle_disabled(app_id: str, request: Request):
     app["disabled"] = disabled
     app["published"] = not disabled
     with open(CATALOG_PATH, "w", encoding="utf-8") as f:
-        json.dump(GLOBAL_CATALOG, f, indent=2)
+        json.dump(GLOBAL_CATALOG, f, indent=2, ensure_ascii=False)
     _audit("catalog.disable", f"{app_id} -> {'disabled' if disabled else 'enabled'}")
     new_version = increment_catalog_version()
     return {"status": "ok", "app_id": app_id, "disabled": disabled,
@@ -900,7 +900,7 @@ async def admin_toggle_published(app_id: str, request: Request):
     app["published"] = published
     app["disabled"] = not published
     with open(CATALOG_PATH, "w", encoding="utf-8") as f:
-        json.dump(GLOBAL_CATALOG, f, indent=2)
+        json.dump(GLOBAL_CATALOG, f, indent=2, ensure_ascii=False)
     _audit("catalog.publish", f"{app_id} -> {'published' if published else 'unpublished'}")
     new_version = increment_catalog_version()
     return {"status": "ok", "app_id": app_id, "published": published,
@@ -921,7 +921,7 @@ async def admin_update_education(app_id: str, request: Request):
                 a["education"][key] = val
             # Persist to disk (same pattern as admin_add_app)
             with open(CATALOG_PATH, "w", encoding="utf-8") as f:
-                json.dump(GLOBAL_CATALOG, f, indent=2)
+                json.dump(GLOBAL_CATALOG, f, indent=2, ensure_ascii=False)
             new_version = increment_catalog_version()
             return {"status": "updated", "app_id": app_id, "new_catalog_version": new_version}
     
