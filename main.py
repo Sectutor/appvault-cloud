@@ -23,6 +23,9 @@ CENTRAL_PORT = int(os.getenv("CENTRAL_PORT", "8000"))
 CENTRAL_URL = os.getenv("CENTRAL_URL", f"http://central:{CENTRAL_PORT}")
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "appvault-admin")
+# Client installs (install.sh) set DISABLE_ADMIN=true — the admin panel + admin
+# API exist ONLY on the operator's catalog central, never on client boxes.
+DISABLE_ADMIN = os.getenv("DISABLE_ADMIN", "false").strip().lower() == "true"
 DB_PATH = os.getenv("DB_PATH", "/data/appvault.db")
 CATALOG_PATH = os.getenv("CATALOG_PATH", "/app/static/catalog.json")
 
@@ -102,6 +105,20 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def admin_gate(request: Request, call_next):
+    """Client installs have NO admin surface — /admin, /login and the admin API
+    return 404 unless this is the operator's central (DISABLE_ADMIN unset)."""
+    if DISABLE_ADMIN:
+        p = request.url.path
+        if p.startswith("/admin") or p in ("/login", "/logout"):
+            return JSONResponse(
+                {"status": "error", "message": "Admin is only available on the AppVault catalog system"},
+                status_code=404,
+            )
+    return await call_next(request)
 templates = Jinja2Templates(directory="templates")
 
 # Session-based admin login (signed cookie)
