@@ -150,3 +150,23 @@ no manual Caddyfile edits).
 **An app is "in the catalog" only when: validator passes → local verified install
 → reinstall verified → shipped to both centrals → VPS verified.** Anything less
 and clients get the old failure modes.
+
+---
+
+## Updating apps for all clients (the update channel)
+
+**The catalog IS the update channel.** To ship a new version of an app to every client:
+
+1. **Bump the image tag** in `catalog.json` (e.g. `"n8nio/n8n:latest"` → a new pinned tag, or move the pin forward for versioned tags).
+2. Commit + push, then sync BOTH centrals (local bind-mount + VPS `/data/catalog.json`) and bump the version on both — agents auto-sync within ~60s.
+3. **Clients see "🔄 Update"** on the app's card (`update_available` = installed image ≠ catalog image).
+4. Client clicks Update → the engine:
+   - pulls the new image
+   - recreates the container from the **spec** — same volumes (named + unified data dir), same stable host port (recorded in agent state), same deps (DBs untouched)
+   - **waits for the healthcheck** before reporting success
+   - **on failure: rolls back to the previous image** (still local) and reports the reason
+5. Stacks (`compose_url`) update by re-running the verified stack installer (compose volumes persist).
+
+**Data preservation is by construction:** the engine never touches volumes, never recreates dependency containers, and the container name/port never change (ports are recorded in `agent_state.json`). Data safety was proven with n8n across three consecutive updates (image changed nightly → latest, volume mount identical, port unchanged).
+
+**Admin API:** `POST /api/update/<app_id>` (status via `/api/install/<app_id>/status`).
