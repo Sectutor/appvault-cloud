@@ -242,7 +242,14 @@ select, input { padding: 6px 10px; border-radius: 6px; border: 1px solid #334155
       <tr>
         <td><code style="color:#38bdf8;">{{ app.id }}</code></td>
         <td>{{ app.name }}{% if app.extra_ports %}<span style="color:#fbbf24;font-size:11px;margin-left:6px;">+{{ app.extra_ports|join(',') }} ports</span>{% endif %}</td>
-        <td style="color:#94a3b8;font-size:12px;">{{ app.image }}</td>
+        <td>
+          <form onsubmit="saveImage(event, '{{ app.id }}')" style="display:flex;gap:4px;">
+            <input id="img-{{ app.id }}" type="text" value="{{ app.image }}"
+                   style="padding:4px 8px;border-radius:4px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:11px;width:220px;font-family:monospace;"
+                   placeholder="image:tag">
+            <button type="submit" class="btn btn-install" style="padding:4px 10px;font-size:11px;">💾 Ship</button>
+          </form>
+        </td>
         <td><span class="badge badge-online">{{ app.category }}</span></td>
         <td>{{ app.min_ram_mb }}MB</td>
         <td>
@@ -332,7 +339,25 @@ function showToast(msg, type) {
 }
 
 // Toggle free-tier flag on an app (Free = all users can install; Premium = paid users only)
-async function toggleFree(appId, makeFree) {
+// Ship an image-tag bump (the update channel) — persists, bumps catalog version
+async function saveImage(ev, appId) {
+  ev.preventDefault();
+  const img = document.getElementById('img-' + appId).value.trim();
+  if (!img) { showToast('Image cannot be empty', 'error'); return; }
+  const r = await fetch('/admin/catalog/apps/' + appId, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image: img })
+  });
+  const d = await r.json().catch(() => ({}));
+  if (d.status === 'updated') {
+    showToast('💾 ' + appId + ' shipped — catalog v' + d.new_catalog_version + '. Clients will see Update.', 'success');
+    setTimeout(() => location.reload(), 900);
+  } else {
+    showToast('✗ Ship failed: ' + (d.detail || 'error'), 'error');
+  }
+}
+function toggleFree(appId, makeFree) {
   try {
     const r = await fetch('/admin/catalog/apps/' + appId + '/free', {
       method: 'POST',
