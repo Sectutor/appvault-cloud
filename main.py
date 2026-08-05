@@ -604,7 +604,9 @@ async def logout(request: Request):
 
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_panel(request: Request):
-    """Admin dashboard — list agents, jobs, catalog."""
+    """Admin dashboard — list agents, jobs, catalog. Redirects to login when unauthenticated."""
+    if not request.session.get("admin"):
+        return RedirectResponse("/login?next=/admin", status_code=302)
     require_admin(request)
     db = get_db()
     agents = db.execute("SELECT * FROM agents ORDER BY last_seen DESC").fetchall()
@@ -662,6 +664,9 @@ async def admin_push_job(agent_id: str, request: Request):
 @app.get("/admin/agents/{agent_id}", response_class=HTMLResponse)
 async def admin_agent_detail(agent_id: str, request: Request):
     """Admin views agent details and job history."""
+    if not request.session.get("admin"):
+        return RedirectResponse(f"/login?next=/admin/agents/{agent_id}", status_code=302)
+    require_admin(request)
     db = get_db()
     agent = db.execute("SELECT * FROM agents WHERE id=?", (agent_id,)).fetchone()
     if not agent:
