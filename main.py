@@ -240,8 +240,22 @@ init_db()
 # GLOBAL CATALOG
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-with open(CATALOG_PATH, encoding="utf-8") as f:
-    GLOBAL_CATALOG = json.load(f)
+try:
+    with open(CATALOG_PATH, encoding="utf-8") as f:
+        GLOBAL_CATALOG = json.load(f)
+except FileNotFoundError:
+    # First run on a fresh volume — seed from the image's bundled catalog
+    # (prevents crash-loop on brand-new deployments with an empty /data)
+    import shutil as _shutil
+    _seed = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "catalog.json")
+    try:
+        os.makedirs(os.path.dirname(CATALOG_PATH), exist_ok=True)
+        _shutil.copyfile(_seed, CATALOG_PATH)
+        with open(CATALOG_PATH, encoding="utf-8") as f:
+            GLOBAL_CATALOG = json.load(f)
+        print(f"[central] seeded catalog from image default -> {CATALOG_PATH} ({len(GLOBAL_CATALOG.get('apps', []))} apps)")
+    except Exception as _seed_err:
+        raise RuntimeError(f"Cannot load catalog from {CATALOG_PATH} nor seed from {_seed}: {_seed_err}")
 
 def get_catalog_version() -> int:
     db = get_db()
