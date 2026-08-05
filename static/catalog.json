@@ -901,8 +901,9 @@
       "image": "gitlab/gitlab-ce:latest",
       "container_port": 80,
       "extra_ports": {
-        "443": "${GITLAB_HTTPS_PORT:-8443}",
-        "22": "${GITLAB_SSH_PORT:-8022}"
+        "80": "8083",
+        "443": "8443",
+        "22": "8022"
       },
       "volumes": [
         "gitlab-config:/etc/gitlab",
@@ -1645,8 +1646,9 @@
       "image": "jc21/nginx-proxy-manager:latest",
       "container_port": 81,
       "extra_ports": {
-        "80": "${NPM_HTTP_PORT:-8087}",
-        "443": "${NPM_HTTPS_PORT:-8444}"
+        "80": "8087",
+        "443": "8444",
+        "81": "8089"
       },
       "volumes": [
         "npm-data:/data",
@@ -1842,8 +1844,8 @@
       "image": "portainer/portainer-ce:latest",
       "container_port": 9000,
       "extra_ports": {
-        "8000": "${PORTAINER_EDGE_PORT:-8000}",
-        "9443": "${PORTAINER_HTTPS_PORT:-9443}"
+        "8000": "8000",
+        "9443": "9443"
       },
       "volumes": [
         "/var/run/docker.sock:/var/run/docker.sock",
@@ -2041,7 +2043,7 @@
       "image": "gitea/gitea:latest",
       "container_port": 3000,
       "extra_ports": {
-        "22": "${GITEA_SSH_PORT:-2222}"
+        "22": "2222"
       },
       "volumes": [
         "gitea-data:/data"
@@ -2444,7 +2446,8 @@
       },
       "boot_timeout": 180,
       "min_mem_mb": 1024,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "free_tier": false
     },
     {
       "id": "appflowy",
@@ -2476,7 +2479,8 @@
       },
       "boot_timeout": 180,
       "min_mem_mb": 1024,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "free_tier": false
     },
     {
       "id": "central-redis",
@@ -3162,7 +3166,8 @@
       "image": "ghcr.io/wg-easy/wg-easy:latest",
       "container_port": 51821,
       "extra_ports": {
-        "51820": "auto"
+        "51820": "51820",
+        "51821": "8082"
       },
       "volumes": [
         "wg-easy-data:/etc/wireguard"
