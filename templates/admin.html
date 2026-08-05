@@ -357,7 +357,7 @@ async function saveImage(ev, appId) {
     showToast('✗ Ship failed: ' + (d.detail || 'error'), 'error');
   }
 }
-function toggleFree(appId, makeFree) {
+async function toggleFree(appId, makeFree) {
   try {
     const r = await fetch('/admin/catalog/apps/' + appId + '/free', {
       method: 'POST',
