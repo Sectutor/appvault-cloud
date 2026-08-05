@@ -25,6 +25,13 @@ ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "appvault-admin")
 DB_PATH = os.getenv("DB_PATH", "/data/appvault.db")
 CATALOG_PATH = os.getenv("CATALOG_PATH", "/app/static/catalog.json")
+
+# Fields the admin catalog editor may change (image bump = the update channel)
+EDITABLE_CATALOG_FIELDS = {
+    "image", "name", "description", "category", "container_port", "web_path",
+    "boot_timeout", "min_mem_mb", "min_disk_gb", "free_tier",
+    "disable_proxy", "publish_host_port",
+}
 COMPOSE_DIR = os.getenv("COMPOSE_DIR", os.path.join(os.path.dirname(DB_PATH), "compose"))
 AGENT_POLL_SECONDS = int(os.getenv("AGENT_POLL_SECONDS", "30"))
 AGENT_TIMEOUT_SECONDS = int(os.getenv("AGENT_TIMEOUT_SECONDS", "300"))
@@ -87,6 +94,14 @@ def bind_license_to_agent(license_key, agent_id):
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 app = FastAPI(title="AppVault Cloud")
+# CORS: the dashboard admin UI edits the catalog directly (Basic auth headers)
+from starlette.middleware.cors import CORSMiddleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 templates = Jinja2Templates(directory="templates")
 
 # Session-based admin login (signed cookie)
@@ -670,6 +685,37 @@ async def admin_agent_detail(agent_id: str, request: Request):
         "jobs": [dict(j) for j in jobs],
         "installed": [dict(i) for i in installed],
     })
+
+@app.patch("/admin/catalog/apps/{app_id}")
+async def admin_edit_app(app_id: str, request: Request):
+    """Admin edits catalog app fields (image bump etc.). Persists + version bump + audit."""
+    require_admin(request)
+    body = await request.json()
+    app = next((a for a in GLOBAL_CATALOG.get("apps", []) if a.get("id") == app_id), None)
+    if not app:
+        raise HTTPException(status_code=404, detail="App not found")
+    changes = {}
+    for field, value in body.items():
+        if field not in EDITABLE_CATALOG_FIELDS:
+            continue
+        if field == "image" and value is not None and not isinstance(value, str):
+            raise HTTPException(status_code=400, detail="image must be a string")
+        if field in ("boot_timeout", "min_mem_mb", "min_disk_gb", "container_port") and value is not None:
+            try:
+                value = int(value)
+            except (TypeError, ValueError):
+                raise HTTPException(status_code=400, detail=f"{field} must be an integer")
+        if field in ("free_tier", "disable_proxy", "publish_host_port"):
+            value = bool(value)
+        app[field] = value
+        changes[field] = value
+    if not changes:
+        raise HTTPException(status_code=400, detail="No editable fields provided")
+    with open(CATALOG_PATH, "w", encoding="utf-8") as f:
+        json.dump(GLOBAL_CATALOG, f, indent=2)
+    _audit("catalog.edit", f"{app_id}: {changes}")
+    new_version = increment_catalog_version()
+    return {"status": "updated", "app_id": app_id, "changes": changes, "new_catalog_version": new_version}
 
 @app.post("/admin/catalog/apps")
 async def admin_add_app(request: Request):
