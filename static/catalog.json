@@ -4248,6 +4248,65 @@
       "boot_timeout": 180,
       "min_mem_mb": 1024,
       "min_disk_gb": 2
+    },
+    {
+      "id": "odoo",
+      "name": "Odoo",
+      "description": "Open-source ERP & CRM — sales, inventory, accounting, HR, project management and e-commerce in one platform",
+      "image": "odoo:19.0",
+      "container_port": 8069,
+      "volumes": [
+        "odoo-data:/var/lib/odoo"
+      ],
+      "env": [
+        "HOST=app-odoo-db",
+        "PORT=5432",
+        "USER=odoo",
+        "PASSWORD=odoo"
+      ],
+      "deps": [
+        {
+          "name": "app-odoo-db",
+          "image": "postgres:15-alpine",
+          "env": [
+            "POSTGRES_DB=postgres",
+            "POSTGRES_USER=odoo",
+            "POSTGRES_PASSWORD=odoo"
+          ],
+          "volumes": [
+            "odoo-db-data:/var/lib/postgresql/data"
+          ]
+        }
+      ],
+      "healthcheck": {
+        "port": 8069,
+        "path": "/web/login",
+        "expect": [
+          200,
+          301,
+          302,
+          303
+        ]
+      },
+      "boot_timeout": 240,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 3,
+      "category": "productivity",
+      "free_tier": false,
+      "education": {
+        "docs_url": "https://www.odoo.com/documentation/19.0/",
+        "quick_start": "Odoo is a complete ERP/CRM suite. On first open, the Database Manager lets you create your database — the master password and admin account are set there. Then install apps (Sales, Inventory, Accounting, CRM, HR) from the Apps menu.",
+        "default_login": {
+          "username": "admin",
+          "password": "set when creating the database"
+        },
+        "setup_steps": [
+          "Open the app URL → create your database (set the master password + admin password)",
+          "Log in with the admin account you just created",
+          "Install the apps you need from the Apps menu (CRM, Sales, Inventory, Accounting...)",
+          "Set up your company details under Settings"
+        ]
+      }
     }
   ]
 }
