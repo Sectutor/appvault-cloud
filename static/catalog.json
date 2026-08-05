@@ -1720,7 +1720,10 @@
       "volumes": [
         "/var/run/docker.sock:/var/run/docker.sock:ro"
       ],
-      "env": [],
+      "env": [
+        "TRAEFIK_API_INSECURE=true",
+        "TRAEFIK_API_DASHBOARD=true"
+      ],
       "category": "networking",
       "min_ram_mb": 256,
       "education": {

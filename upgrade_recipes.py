@@ -67,6 +67,8 @@ OVERRIDES = {
         # Literal deterministic ports — the ${VAR:-default} indirection produced
         # malformed bindings ("invalid IP 8088") on some hosts.
         "extra_ports": {"80": "8088", "443": "8445"},
+        # Enable the web dashboard on :8080 (static config via env, no args needed)
+        "env": ["TRAEFIK_API_INSECURE=true", "TRAEFIK_API_DASHBOARD=true"],
         "healthcheck": {"port": 8080, "path": "/", "expect": [200, 302, 401, 404]},
         "boot_timeout": 60,
         "min_mem_mb": 256,
