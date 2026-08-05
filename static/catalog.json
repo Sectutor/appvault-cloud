@@ -345,7 +345,7 @@
           "Start chatting with your local AI"
         ]
       },
-      "free_tier": true,
+      "free_tier": false,
       "tagline": "Self-hosted AI chat interface for any LLM",
       "long_description": "Open WebUI is a self-hosted web interface for interacting with large language models. It supports Ollama, OpenAI-compatible APIs, and many other backends — all from a single, polished chat UI. Features include multi-model chat, conversation history, document RAG (upload PDFs/docs and chat with them), prompt library, role-based access control, and full mobile responsiveness.",
       "version": "0.3.29",
@@ -616,7 +616,7 @@
           "Your site is ready! Visit /wp-admin to manage it"
         ]
       },
-      "free_tier": false,
+      "free_tier": true,
       "mcp": {
         "credential": {
           "type": "api_key",
@@ -854,7 +854,7 @@
           "Test by creating/editing a document in your cloud"
         ]
       },
-      "free_tier": true,
+      "free_tier": false,
       "container_port": 80,
       "tagline": "Self-hosted office suite — docs, sheets & slides",
       "long_description": "OnlyOffice Docs is a self-hosted online office suite that enables you to create and edit documents, spreadsheets, and presentations directly in your browser. It offers the best compatibility with Microsoft Office formats and supports real-time collaborative editing. Features include document/spreadsheet/presentation editors, collaborative editing, version history, PDF support, and integration connectors for Nextcloud/ownCloud.",
@@ -2548,7 +2548,7 @@
           "Configure integrations in Settings"
         ]
       },
-      "free_tier": true,
+      "free_tier": false,
       "tagline": "Open-source CRM - modern alternative to Salesforce",
       "long_description": "Twenty is an open-source CRM designed to be a modern, community-driven alternative to Salesforce. It provides contact and company management, pipeline tracking, email integration, and customizable views - all in a clean, fast interface. Features include a flexible data model, global search, keyboard-first navigation, and full self-hosting.",
       "version": "0.30.0",
@@ -2604,7 +2604,7 @@
       "type": "stack",
       "is_stack": true,
       "compose_url": "https://raw.githubusercontent.com/KatalystDigital/shieldsign-core/main/docker-compose.yml",
-      "free_tier": true,
+      "free_tier": false,
       "github_url": "https://github.com/KatalystDigital/shieldsign-core",
       "tagline": "Secure document signing core",
       "long_description": "ShieldSign Core is a security-focused document signing service that manages signature workflows with end-to-end encryption. It provides digital signatures, document integrity verification, and signing audit trails. Features include cryptographic signing, tamper-evident logs, and integration-ready APIs for your document pipeline.",
@@ -2672,7 +2672,7 @@
           "Create a workspace and upload documents to chat over them"
         ]
       },
-      "free_tier": true,
+      "free_tier": false,
       "github_url": "https://github.com/Mintplex-Labs/anything-llm",
       "tagline": "All-in-one AI workspace with RAG",
       "long_description": "AnythingLLM is an all-in-one AI workspace that combines documents, AI agents, and chat into a single interface. It turns any document, web page, or text into context for your LLM with built-in RAG. Features include multi-user workspaces, document ingestion (PDF, DOCX, URLs), agent skills, whisper transcription, and support for any LLM - local or cloud.",
@@ -2739,7 +2739,7 @@
           "Pair with Open WebUI for private AI chat + web search"
         ]
       },
-      "free_tier": true,
+      "free_tier": false,
       "github_url": "https://github.com/searxng/searxng",
       "tagline": "Privacy-first metasearch engine",
       "long_description": "SearXNG is a privacy-respecting, hackable metasearch engine that queries 70+ search engines and aggregates results without tracking you. It removes the need to use commercial search engines directly - no profiling, no cookies, no ads. Features include result aggregation, search categories (web, images, videos, news), instant answers, and complete self-hosting.",
@@ -2842,7 +2842,7 @@
           "Build a workflow or chat-over-documents app"
         ]
       },
-      "free_tier": true,
+      "free_tier": false,
       "github_url": "https://github.com/langgenius/dify",
       "tagline": "LLMOps platform to build AI apps visually",
       "long_description": "Dify is an open-source LLMOps platform that lets you build AI applications visually - from RAG pipelines to agentic workflows. It includes a visual workflow builder, prompt management, model marketplace, RAG engine with document ingestion, observability, and a complete API for integrating AI into your products. Built for developers and non-developers alike.",
@@ -2920,7 +2920,7 @@
           "Start chatting with any model"
         ]
       },
-      "free_tier": true,
+      "free_tier": false,
       "github_url": "https://github.com/danny-avila/LibreChat",
       "tagline": "Open-source ChatGPT-style interface for any model",
       "long_description": "LibreChat is an open-source, self-hosted AI chat platform that unifies multiple AI providers into one interface. Use ChatGPT, Claude, Gemini, or local models side-by-side with shared conversation history. Features include multi-model chats, custom agents, file uploads with vision, code interpreter, plugins, and a polished UI inspired by ChatGPT.",
@@ -2987,7 +2987,7 @@
           "Queue a prompt to generate"
         ]
       },
-      "free_tier": true,
+      "free_tier": false,
       "github_url": "https://github.com/comfyanonymous/ComfyUI",
       "tagline": "Node-based AI image generation",
       "long_description": "ComfyUI is a powerful node-based interface for Stable Diffusion and other image generation models. Design complex workflows visually - connect models, samplers, and controls with a modular graph editor. Features include full control over the generation pipeline, custom nodes, workflow sharing, video generation support, and GPU acceleration.",
@@ -3053,7 +3053,7 @@
           "Give it a task and review its work"
         ]
       },
-      "free_tier": true,
+      "free_tier": false,
       "github_url": "https://github.com/All-Hands-AI/OpenHands",
       "tagline": "AI software engineering agents",
       "long_description": "OpenHands (formerly OpenDevin) is a platform for AI software engineers that can write code, run commands, browse the web, and collaborate with you on real projects. Delegate complex coding tasks to autonomous agents that operate in a sandboxed environment. Features include terminal access, file editing, web browsing, and integration with your repositories.",
@@ -3119,7 +3119,7 @@
           "Ask questions across your knowledge base"
         ]
       },
-      "free_tier": true,
+      "free_tier": false,
       "github_url": "https://github.com/khoj-ai/khoj",
       "tagline": "AI second brain for your notes and documents",
       "long_description": "Khoj is a self-hosted AI assistant that creates a searchable second brain from your notes, documents, and knowledge base. It indexes Markdown, PDFs, and web content, then lets you chat with your data using your preferred LLM. Features include semantic search, daily summaries, scheduled research, and integration with Obsidian and Emacs.",
@@ -3193,7 +3193,7 @@
           "Set WG_HOST to your public IP/domain for remote use"
         ]
       },
-      "free_tier": true,
+      "free_tier": false,
       "github_url": "https://github.com/wg-easy/wg-easy",
       "tagline": "WireGuard VPN with a simple web UI",
       "long_description": "WG-Easy is the easiest way to run a WireGuard VPN - a web UI where you create and manage VPN clients with one click. Generate configs, QR codes, and manage access without touching the command line. Features include a responsive dashboard, client management with QR codes, traffic stats, and automatic restart policies.",
@@ -3270,7 +3270,7 @@
           "Install desktop/mobile apps and point them at this server"
         ]
       },
-      "free_tier": true,
+      "free_tier": false,
       "github_url": "https://github.com/mattermost/mattermost",
       "tagline": "Self-hosted team communication",
       "long_description": "Mattermost is a self-hosted Slack alternative for secure team collaboration. Keep conversations, files, and integrations on your own infrastructure with complete control. Features include channels and direct messages, voice calls, file sharing, playbooks for incident response, integrations with 1000+ tools, and compliance-ready enterprise features.",
@@ -3349,7 +3349,7 @@
           "Share grids with your team"
         ]
       },
-      "free_tier": true,
+      "free_tier": false,
       "github_url": "https://github.com/bram2w/baserow",
       "tagline": "Open-source no-code database",
       "long_description": "Baserow is an open-source no-code database and app builder - think Airtable that you fully own. Create tables, link records, build views (grid, gallery, kanban, calendar), and share them with your team. Features include a drag-and-drop UI, API access, formulas, permissions, and a plugin ecosystem.",
@@ -3492,7 +3492,7 @@
           "Set up members and newsletter in Settings"
         ]
       },
-      "free_tier": true,
+      "free_tier": false,
       "github_url": "https://github.com/TryGhost/Ghost",
       "tagline": "Modern publishing platform for creators",
       "long_description": "Ghost is a powerful, modern publishing platform for creators - blogs, newsletters, and membership sites. Built for speed and SEO with a distraction-free editor. Features include memberships and subscriptions, email newsletters, scheduled posts, analytics, themes, and a clean API for integrations.",
@@ -3570,7 +3570,7 @@
           "Use the REST/GraphQL API for your frontend"
         ]
       },
-      "free_tier": true,
+      "free_tier": false,
       "github_url": "https://github.com/directus/directus",
       "tagline": "Headless CMS with a data-first approach",
       "long_description": "Directus is an open-source headless CMS that wraps any SQL database with a REST and GraphQL API plus a no-code admin app. Manage content, media, and users visually while exposing everything through APIs. Features include role-based permissions, custom workflows, file management, and instant REST/GraphQL endpoints.",
@@ -3637,7 +3637,7 @@
           "Watch responses roll in"
         ]
       },
-      "free_tier": true,
+      "free_tier": false,
       "github_url": "https://github.com/formbricks/formbricks",
       "tagline": "Open-source experience management",
       "long_description": "Formbricks is an open-source platform for surveys, feedback, and in-product experiences - a privacy-friendly alternative to Typeform and Qualtrics. Build beautiful surveys, deploy them in-product or on your site, and analyze responses. Features include in-app surveys, link surveys, user targeting, and a powerful analytics dashboard.",
@@ -3708,7 +3708,7 @@
           "Invite agents and reply from one place"
         ]
       },
-      "free_tier": true,
+      "free_tier": false,
       "github_url": "https://github.com/chatwoot/chatwoot",
       "tagline": "Open-source customer support platform",
       "long_description": "Chatwoot is an open-source customer engagement and support platform - a self-hosted alternative to Intercom and Zendesk. Manage conversations from web chat, email, and social channels in one inbox. Features include live chat widgets, shared inbox, helpdesk with agent assignment, automation, canned responses, and analytics.",
@@ -3779,7 +3779,7 @@
           "Set up cycles and views for your team"
         ]
       },
-      "free_tier": true,
+      "free_tier": false,
       "github_url": "https://github.com/makeplane/plane",
       "tagline": "Open-source project management",
       "long_description": "Plane is an open-source project management tool - a Jira alternative for planning, tracking, and launching software. Use issues, cycles, and modules to organize work with a clean, fast interface. Features include project views (list, board, calendar), issue tracking, sprint planning, page docs, and real-time collaboration.",
@@ -3859,7 +3859,7 @@
           "Invite your team"
         ]
       },
-      "free_tier": true,
+      "free_tier": false,
       "github_url": "https://github.com/outline/outline",
       "tagline": "Team knowledge base and wiki",
       "long_description": "Outline is a beautiful, real-time team knowledge base for documentation and wikis. Designed for speed with a modern editor and instant search. Features include nested document structures, collaborative editing, rich text with embeds, team collections, full-text search, and integrations with Slack and other tools.",
@@ -4210,7 +4210,7 @@
           "Real-time collaboration: invite users via workspace settings"
         ]
       },
-      "free_tier": true,
+      "free_tier": false,
       "github_url": "https://github.com/toeverything/AFFiNE",
       "tagline": "Open-source knowledge base with AI",
       "long_description": "AFFiNE is an open-source, privacy-first knowledge base that combines docs, whiteboards, and databases in one tool. It's a Notion alternative with local-first storage and optional collaboration. Features include editable blocks, infinite whiteboards, linked databases, local data ownership, and AI-powered writing assistance.",
