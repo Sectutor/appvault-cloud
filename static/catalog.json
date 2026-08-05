@@ -16,7 +16,23 @@
         "MYSQL_ROOT_PASSWORD=appvault_root_secret"
       ],
       "free_tier": true,
-      "emoji": "🗄️"
+      "emoji": "🗄️",
+      "healthcheck": {
+        "port": 3306,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 60,
+      "min_mem_mb": 512,
+      "min_disk_gb": 2
     },
     {
       "id": "central-postgres",
@@ -34,7 +50,23 @@
         "POSTGRES_PASSWORD=appvault_root_secret"
       ],
       "free_tier": false,
-      "emoji": "🐘"
+      "emoji": "🐘",
+      "healthcheck": {
+        "port": 5432,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 60,
+      "min_mem_mb": 512,
+      "min_disk_gb": 2
     },
     {
       "id": "owncloud",
@@ -92,7 +124,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=ownCloud+Dashboard",
         "https://placehold.co/800x600/1e293b/38bdf8?text=ownCloud+Files"
       ],
-      "emoji": "☁️"
+      "emoji": "☁️",
+      "healthcheck": {
+        "port": 8080,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "n8n",
@@ -179,7 +227,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=n8n+Workflow+Editor",
         "https://placehold.co/800x600/1e293b/38bdf8?text=n8n+Node+Library"
       ],
-      "emoji": "📝"
+      "emoji": "📝",
+      "healthcheck": {
+        "port": 5678,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 150,
+      "min_mem_mb": 512,
+      "min_disk_gb": 2
     },
     {
       "id": "pihole",
@@ -235,7 +299,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Pi-hole+Dashboard",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Pi-hole+Query+Log"
       ],
-      "emoji": "🛡️"
+      "emoji": "🛡️",
+      "healthcheck": {
+        "port": 80,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "openwebui",
@@ -286,7 +366,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Open+WebUI+Chat",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Open+WebUI+Models"
       ],
-      "emoji": "💬"
+      "emoji": "💬",
+      "healthcheck": {
+        "port": 8080,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 300,
+      "min_mem_mb": 2048,
+      "min_disk_gb": 3
     },
     {
       "id": "crewai-studio",
@@ -338,7 +434,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=CrewAI+Studio+Agents",
         "https://placehold.co/800x600/1e293b/38bdf8?text=CrewAI+Workflow"
       ],
-      "emoji": "🤖"
+      "emoji": "🤖",
+      "healthcheck": {
+        "port": 8501,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 300,
+      "min_mem_mb": 2048,
+      "min_disk_gb": 3
     },
     {
       "id": "hermes-agent",
@@ -388,7 +500,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Hermes+Agent+Chat",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Hermes+Agent+Tasks"
       ],
-      "emoji": "🧠"
+      "emoji": "🧠",
+      "healthcheck": {
+        "port": 8642,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 300,
+      "min_mem_mb": 2048,
+      "min_disk_gb": 3
     },
     {
       "id": "adguard",
@@ -439,7 +567,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=AdGuard+Home+Dashboard",
         "https://placehold.co/800x600/1e293b/38bdf8?text=AdGuard+Query+Log"
       ],
-      "emoji": "🛡️"
+      "emoji": "🛡️",
+      "healthcheck": {
+        "port": 3000,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "wordpress",
@@ -586,7 +730,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=WordPress+Editor",
         "https://placehold.co/800x600/1e293b/38bdf8?text=WordPress+Dashboard"
       ],
-      "emoji": "🌐"
+      "emoji": "🌐",
+      "healthcheck": {
+        "port": 80,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "nextcloud",
@@ -641,7 +801,33 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Nextcloud+Files",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Nextcloud+Dashboard"
       ],
-      "emoji": "📁"
+      "emoji": "📁",
+      "deps": [
+        {
+          "name": "app-nextcloud-db",
+          "image": "mariadb:10.11",
+          "env": [
+            "MARIADB_DATABASE=nextcloud",
+            "MARIADB_USER=nextcloud",
+            "MARIADB_PASSWORD=nextcloud",
+            "MARIADB_ROOT_PASSWORD=nextcloud"
+          ],
+          "volumes": [
+            "nextcloud-db-data:/var/lib/mysql"
+          ]
+        }
+      ],
+      "healthcheck": {
+        "port": 80,
+        "path": "/index.php/login",
+        "expect": [
+          200,
+          302
+        ]
+      },
+      "boot_timeout": 300,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 5
     },
     {
       "id": "onlyoffice",
@@ -690,7 +876,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=OnlyOffice+Document+Editor",
         "https://placehold.co/800x600/1e293b/38bdf8?text=OnlyOffice+Spreadsheet"
       ],
-      "emoji": "📄"
+      "emoji": "📄",
+      "healthcheck": {
+        "port": 80,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "gitlab",
@@ -747,7 +949,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=GitLab+Repository",
         "https://placehold.co/800x600/1e293b/38bdf8?text=GitLab+CI%2FCD+Pipelines"
       ],
-      "emoji": "🔧"
+      "emoji": "🔧",
+      "healthcheck": {
+        "port": 80,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 150,
+      "min_mem_mb": 512,
+      "min_disk_gb": 2
     },
     {
       "id": "bookstack",
@@ -806,7 +1024,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=BookStack+Bookshelf",
         "https://placehold.co/800x600/1e293b/38bdf8?text=BookStack+Page+Editor"
       ],
-      "emoji": "📖"
+      "emoji": "📖",
+      "healthcheck": {
+        "port": 80,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "paperless",
@@ -866,7 +1100,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Paperless-ngx+Dashboard",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Paperless-ngx+Documents"
       ],
-      "emoji": "🗂️"
+      "emoji": "🗂️",
+      "healthcheck": {
+        "port": 8000,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "jellyfin",
@@ -921,7 +1171,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Jellyfin+Home",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Jellyfin+Library"
       ],
-      "emoji": "🎬"
+      "emoji": "🎬",
+      "healthcheck": {
+        "port": 8096,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "navidrome",
@@ -968,7 +1234,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Navidrome+Interface",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Navidrome+Player"
       ],
-      "emoji": "🎵"
+      "emoji": "🎵",
+      "healthcheck": {
+        "port": 4533,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "kavita",
@@ -1022,7 +1304,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Kavita+Library",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Kavita+Reader"
       ],
-      "emoji": "📚"
+      "emoji": "📚",
+      "healthcheck": {
+        "port": 5000,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "photoprism",
@@ -1080,7 +1378,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=PhotoPrism+Albums",
         "https://placehold.co/800x600/1e293b/38bdf8?text=PhotoPrism+Search"
       ],
-      "emoji": "🖼️"
+      "emoji": "🖼️",
+      "healthcheck": {
+        "port": 2342,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "immich",
@@ -1139,7 +1453,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Immich+Photos",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Immich+Albums"
       ],
-      "emoji": "📸"
+      "emoji": "📸",
+      "healthcheck": {
+        "port": 2283,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "immich-machine-learning",
@@ -1155,7 +1485,23 @@
       "hidden": true,
       "free_tier": false,
       "container_port": 3003,
-      "emoji": "🧠"
+      "emoji": "🧠",
+      "healthcheck": {
+        "port": 3003,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 300,
+      "min_mem_mb": 2048,
+      "min_disk_gb": 3
     },
     {
       "id": "wireguard",
@@ -1213,7 +1559,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=WireGuard+Interface",
         "https://placehold.co/800x600/1e293b/38bdf8?text=WireGuard+Peer+Manager"
       ],
-      "emoji": "🔐"
+      "emoji": "🔐",
+      "healthcheck": {
+        "port": 51820,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "vaultwarden",
@@ -1258,7 +1620,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Vaultwarden+Vault",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Vaultwarden+Login"
       ],
-      "emoji": "🔑"
+      "emoji": "🔑",
+      "healthcheck": {
+        "port": 80,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "nginx-proxy-manager",
@@ -1311,7 +1689,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Nginx+Proxy+Manager",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Nginx+Proxy+Hosts"
       ],
-      "emoji": "🔄"
+      "emoji": "🔄",
+      "healthcheck": {
+        "port": 81,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "traefik",
@@ -1320,8 +1714,8 @@
       "image": "traefik:v3.0",
       "container_port": 8080,
       "extra_ports": {
-        "80": "${TRAEFIK_HTTP_PORT:-8088}",
-        "443": "${TRAEFIK_HTTPS_PORT:-8445}"
+        "80": "8088",
+        "443": "8445"
       },
       "volumes": [
         "/var/run/docker.sock:/var/run/docker.sock:ro"
@@ -1360,7 +1754,20 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Traefik+Dashboard",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Traefik+Routes"
       ],
-      "emoji": "🚦"
+      "emoji": "🚦",
+      "healthcheck": {
+        "port": 8080,
+        "path": "/",
+        "expect": [
+          200,
+          302,
+          401,
+          404
+        ]
+      },
+      "boot_timeout": 60,
+      "min_mem_mb": 256,
+      "min_disk_gb": 1
     },
     {
       "id": "uptime-kuma",
@@ -1407,7 +1814,23 @@
       "repository_url": "https://github.com/louislam/uptime-kuma",
       "changelog": "Uptime Kuma latest with multi-channel alerts and beautiful status pages.",
       "screenshots": [],
-      "emoji": "📊"
+      "emoji": "📊",
+      "healthcheck": {
+        "port": 3001,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "portainer",
@@ -1460,7 +1883,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Portainer+Dashboard",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Portainer+Containers"
       ],
-      "emoji": "🐳"
+      "emoji": "🐳",
+      "healthcheck": {
+        "port": 9000,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 150,
+      "min_mem_mb": 512,
+      "min_disk_gb": 2
     },
     {
       "id": "dozzle",
@@ -1504,7 +1943,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Dozzle+Logs",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Dozzle+Container+View"
       ],
-      "emoji": "📜"
+      "emoji": "📜",
+      "healthcheck": {
+        "port": 8080,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 150,
+      "min_mem_mb": 512,
+      "min_disk_gb": 2
     },
     {
       "id": "code-server",
@@ -1558,7 +2013,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=VS+Code+Browser",
         "https://placehold.co/800x600/1e293b/38bdf8?text=VS+Code+Terminal"
       ],
-      "emoji": "💻"
+      "emoji": "💻",
+      "healthcheck": {
+        "port": 8443,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 150,
+      "min_mem_mb": 512,
+      "min_disk_gb": 2
     },
     {
       "id": "gitea",
@@ -1612,7 +2083,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Gitea+Repository",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Gitea+Dashboard"
       ],
-      "emoji": "🐙"
+      "emoji": "🐙",
+      "healthcheck": {
+        "port": 3000,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 150,
+      "min_mem_mb": 512,
+      "min_disk_gb": 2
     },
     {
       "id": "stirling-pdf",
@@ -1664,7 +2151,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Stirling+PDF+Tools",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Stirling+PDF+Merge"
       ],
-      "emoji": "📄"
+      "emoji": "📄",
+      "healthcheck": {
+        "port": 8080,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "excalidraw",
@@ -1706,7 +2209,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Excalidraw+Canvas",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Excalidraw+Library"
       ],
-      "emoji": "✏️"
+      "emoji": "✏️",
+      "healthcheck": {
+        "port": 80,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "drawio",
@@ -1750,7 +2269,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Draw.io+Editor",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Draw.io+Shapes"
       ],
-      "emoji": "📐"
+      "emoji": "📐",
+      "healthcheck": {
+        "port": 8080,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "9router",
@@ -1797,7 +2332,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=9Router+Dashboard",
         "https://placehold.co/800x600/1e293b/38bdf8?text=9Router+Providers"
       ],
-      "emoji": "🔀"
+      "emoji": "🔀",
+      "healthcheck": {
+        "port": 20128,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 300,
+      "min_mem_mb": 2048,
+      "min_disk_gb": 3
     },
     {
       "id": "openmaic",
@@ -1814,7 +2365,23 @@
       "compose_url": "https://raw.githubusercontent.com/THU-MAIC/OpenMAIC/main/docker-compose.yml",
       "free_tier": true,
       "hidden": true,
-      "emoji": "🤖"
+      "emoji": "🤖",
+      "healthcheck": {
+        "port": 3000,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 300,
+      "min_mem_mb": 2048,
+      "min_disk_gb": 3
     },
     {
       "id": "documenso",
@@ -1858,7 +2425,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Documenso+Sign",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Documenso+Documents"
       ],
-      "emoji": "✍️"
+      "emoji": "✍️",
+      "healthcheck": {
+        "port": 3000,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "appflowy",
@@ -1874,7 +2457,23 @@
       "is_stack": true,
       "compose_url": "https://raw.githubusercontent.com/AppFlowy-IO/AppFlowy-Cloud/main/docker-compose.yml",
       "hidden": true,
-      "emoji": "📝"
+      "emoji": "📝",
+      "healthcheck": {
+        "port": 8000,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "central-redis",
@@ -1888,7 +2487,23 @@
       "category": "infrastructure",
       "hidden": true,
       "free_tier": true,
-      "emoji": "⚡"
+      "emoji": "⚡",
+      "healthcheck": {
+        "port": 6379,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 150,
+      "min_mem_mb": 512,
+      "min_disk_gb": 2
     },
     {
       "id": "twenty",
@@ -1946,7 +2561,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Twenty+CRM+Contacts",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Twenty+CRM+Pipelines"
       ],
-      "emoji": "🤝"
+      "emoji": "🤝",
+      "healthcheck": {
+        "port": 3000,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "shieldsign",
@@ -1987,7 +2618,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=ShieldSign+Sign",
         "https://placehold.co/800x600/1e293b/38bdf8?text=ShieldSign+Documents"
       ],
-      "emoji": "🛡️"
+      "emoji": "🛡️",
+      "healthcheck": {
+        "port": 3000,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "anythingllm",
@@ -2040,7 +2687,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=AnythingLLM+Chat",
         "https://placehold.co/800x600/1e293b/38bdf8?text=AnythingLLM+Workspaces"
       ],
-      "emoji": "🤖"
+      "emoji": "🤖",
+      "healthcheck": {
+        "port": 3001,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 300,
+      "min_mem_mb": 2048,
+      "min_disk_gb": 3
     },
     {
       "id": "searxng",
@@ -2090,7 +2753,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=SearXNG+Search",
         "https://placehold.co/800x600/1e293b/38bdf8?text=SearXNG+Preferences"
       ],
-      "emoji": "🔎"
+      "emoji": "🔎",
+      "healthcheck": {
+        "port": 8080,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 300,
+      "min_mem_mb": 2048,
+      "min_disk_gb": 3
     },
     {
       "id": "central-mongo",
@@ -2106,7 +2785,23 @@
       "hidden": true,
       "min_ram_mb": 512,
       "free_tier": false,
-      "emoji": "🍃"
+      "emoji": "🍃",
+      "healthcheck": {
+        "port": 27017,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 60,
+      "min_mem_mb": 512,
+      "min_disk_gb": 2
     },
     {
       "id": "dify",
@@ -2162,7 +2857,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Dify+App+Builder",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Dify+Workflow"
       ],
-      "emoji": "🧩"
+      "emoji": "🧩",
+      "healthcheck": {
+        "port": 3000,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 300,
+      "min_mem_mb": 2048,
+      "min_disk_gb": 3
     },
     {
       "id": "librechat",
@@ -2223,7 +2934,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=LibreChat+Chat",
         "https://placehold.co/800x600/1e293b/38bdf8?text=LibreChat+Models"
       ],
-      "emoji": "💬"
+      "emoji": "💬",
+      "healthcheck": {
+        "port": 3080,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 300,
+      "min_mem_mb": 2048,
+      "min_disk_gb": 3
     },
     {
       "id": "comfyui",
@@ -2274,7 +3001,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=ComfyUI+Workflow",
         "https://placehold.co/800x600/1e293b/38bdf8?text=ComfyUI+Gallery"
       ],
-      "emoji": "🎨"
+      "emoji": "🎨",
+      "healthcheck": {
+        "port": 8188,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 300,
+      "min_mem_mb": 2048,
+      "min_disk_gb": 3
     },
     {
       "id": "openhands",
@@ -2324,7 +3067,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=OpenHands+Agent",
         "https://placehold.co/800x600/1e293b/38bdf8?text=OpenHands+Terminal"
       ],
-      "emoji": "🖐️"
+      "emoji": "🖐️",
+      "healthcheck": {
+        "port": 3000,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 300,
+      "min_mem_mb": 2048,
+      "min_disk_gb": 3
     },
     {
       "id": "khoj",
@@ -2375,7 +3134,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Khoj+Chat",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Khoj+Knowledge+Base"
       ],
-      "emoji": "🧘"
+      "emoji": "🧘",
+      "healthcheck": {
+        "port": 42110,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 300,
+      "min_mem_mb": 2048,
+      "min_disk_gb": 3
     },
     {
       "id": "wg-easy",
@@ -2431,7 +3206,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=WG-Easy+Setup",
         "https://placehold.co/800x600/1e293b/38bdf8?text=WG-Easy+Peers"
       ],
-      "emoji": "🔐"
+      "emoji": "🔐",
+      "healthcheck": {
+        "port": 51821,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "mattermost",
@@ -2492,7 +3283,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Mattermost+Channels",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Mattermost+Chat"
       ],
-      "emoji": "💬"
+      "emoji": "💬",
+      "healthcheck": {
+        "port": 8065,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "baserow",
@@ -2555,7 +3362,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Baserow+Database",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Baserow+Table"
       ],
-      "emoji": "🗄️"
+      "emoji": "🗄️",
+      "healthcheck": {
+        "port": 80,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 60,
+      "min_mem_mb": 512,
+      "min_disk_gb": 2
     },
     {
       "id": "umami",
@@ -2613,7 +3436,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Umami+Dashboard",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Umami+Websites"
       ],
-      "emoji": "📈"
+      "emoji": "📈",
+      "healthcheck": {
+        "port": 3000,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 150,
+      "min_mem_mb": 512,
+      "min_disk_gb": 2
     },
     {
       "id": "ghost",
@@ -2666,7 +3505,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Ghost+Editor",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Ghost+Admin"
       ],
-      "emoji": "👻"
+      "emoji": "👻",
+      "healthcheck": {
+        "port": 2368,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "directus",
@@ -2728,7 +3583,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Directus+Data+Studio",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Directus+Collections"
       ],
-      "emoji": "🗃️"
+      "emoji": "🗃️",
+      "healthcheck": {
+        "port": 8055,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 150,
+      "min_mem_mb": 512,
+      "min_disk_gb": 2
     },
     {
       "id": "formbricks",
@@ -2779,7 +3650,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Formbricks+Surveys",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Formbricks+Analytics"
       ],
-      "emoji": "📋"
+      "emoji": "📋",
+      "healthcheck": {
+        "port": 3000,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "chatwoot",
@@ -2834,7 +3721,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Chatwoot+Conversations",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Chatwoot+Dashboard"
       ],
-      "emoji": "💬"
+      "emoji": "💬",
+      "healthcheck": {
+        "port": 3000,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "plane",
@@ -2889,7 +3792,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Plane+Projects",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Plane+Issues"
       ],
-      "emoji": "✈️"
+      "emoji": "✈️",
+      "healthcheck": {
+        "port": 80,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "outline",
@@ -2953,13 +3872,29 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Outline+Documents",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Outline+Search"
       ],
-      "emoji": "📘"
+      "emoji": "📘",
+      "healthcheck": {
+        "port": 3000,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     },
     {
       "id": "listmonk",
       "name": "Listmonk",
       "description": "Self-hosted email newsletter & mailing-list manager — your private Mailchimp. Subscribers, segments, campaigns, templates, open/click tracking (GPL-3.0)",
-      "image": "",
+      "image": "listmonk/listmonk:latest",
       "container_port": 9000,
       "type": "stack",
       "is_stack": true,
@@ -3210,7 +4145,34 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Listmonk+Campaigns",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Listmonk+Subscribers"
       ],
-      "emoji": "📧"
+      "emoji": "📧",
+      "deps": [
+        {
+          "name": "app-listmonk-db",
+          "image": "postgres:15-alpine",
+          "env": [
+            "POSTGRES_DB=listmonk",
+            "POSTGRES_USER=listmonk",
+            "POSTGRES_PASSWORD=listmonk"
+          ],
+          "volumes": [
+            "listmonk-db-data:/var/lib/postgresql/data"
+          ]
+        }
+      ],
+      "healthcheck": {
+        "port": 9000,
+        "path": "/",
+        "expect": [
+          200,
+          302,
+          401,
+          403
+        ]
+      },
+      "boot_timeout": 120,
+      "min_mem_mb": 512,
+      "min_disk_gb": 2
     },
     {
       "id": "affine",
@@ -3261,7 +4223,23 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=AFFiNE+Whiteboard",
         "https://placehold.co/800x600/1e293b/38bdf8?text=AFFiNE+Documents"
       ],
-      "emoji": "📝"
+      "emoji": "📝",
+      "healthcheck": {
+        "port": 3010,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 180,
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2
     }
   ]
 }
