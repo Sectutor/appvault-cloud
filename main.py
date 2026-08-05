@@ -3,7 +3,7 @@ AppVault Cloud â€” Central Admin Server
 Handles: agent registration, job queue, catalog management, admin panel, Stripe
 """
 
-import os, uuid, json, sqlite3, hmac, hashlib, threading, time, subprocess, urllib.request, base64
+import os, uuid, json, sqlite3, hmac, hashlib, threading, time, subprocess, urllib.request, base64, re, shlex
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -632,6 +632,69 @@ async def logout(request: Request):
     """Clear admin session."""
     request.session.clear()
     return RedirectResponse("/login", status_code=303)
+
+# ── One-click remote install (any Linux box) ──────────────────────────
+DEPLOYS = {}
+
+class DeployRequest(BaseModel):
+    host: str
+    port: int = 22
+    username: str = "root"
+    password: str = ""
+
+@app.post("/api/deploy/linux")
+async def deploy_linux(data: DeployRequest):
+    """SSH into any Linux server and install AppVault automatically."""
+    if not data.host or not data.password:
+        return JSONResponse({"status": "error", "message": "Server IP and password are required"}, status_code=400)
+    deploy_id = uuid.uuid4().hex[:12]
+    DEPLOYS[deploy_id] = {"status": "running", "log": [], "store_url": "", "error": ""}
+    threading.Thread(target=_run_deploy, args=(deploy_id, data), daemon=True).start()
+    return {"deploy_id": deploy_id}
+
+@app.get("/api/deploy/linux/{deploy_id}")
+async def deploy_status(deploy_id: str):
+    d = DEPLOYS.get(deploy_id)
+    if not d:
+        return JSONResponse({"status": "error", "message": "Unknown deploy"}, status_code=404)
+    return {"status": d["status"], "log": d["log"][-80:], "store_url": d["store_url"], "error": d["error"]}
+
+def _run_deploy(deploy_id: str, data: DeployRequest):
+    d = DEPLOYS[deploy_id]
+    client = None
+    try:
+        import paramiko
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.connect(data.host, port=data.port, username=data.username, password=data.password,
+                       timeout=20, banner_timeout=20, auth_timeout=20)
+        d["log"].append(f"Connected to {data.host} as {data.username}")
+        d["log"].append("Installing AppVault — this takes a few minutes…")
+        install_cmd = os.getenv("DEPLOY_CMD") or 'bash -c "$(curl -fsSL https://raw.githubusercontent.com/Sectutor/appvault-agent/main/install.sh)"'
+        if data.username != "root":
+            install_cmd = f"echo {shlex.quote(data.password)} | sudo -S bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Sectutor/appvault-agent/main/install.sh)\""
+        stdin, stdout, stderr = client.exec_command(install_cmd, timeout=1500, get_pty=True)
+        for line in iter(stdout.readline, ""):
+            line = line.rstrip()
+            if line:
+                d["log"].append(line)
+            m = re.search(r"https?://[\d.]+:\d+", line)
+            if m and not d["store_url"]:
+                d["store_url"] = m.group(0)
+            if len(d["log"]) > 400:
+                d["log"] = d["log"][-300:]
+        d["status"] = "done"
+    except Exception as e:
+        d["status"] = "error"
+        d["error"] = str(e)
+        d["log"].append(f"ERROR: {e}")
+    finally:
+        try:
+            if client:
+                client.close()
+        except Exception:
+            pass
+
 
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_panel(request: Request):

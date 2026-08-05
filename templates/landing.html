@@ -225,6 +225,33 @@
       </a>
       <div style="font-size:12px;color:#64748b;margin-top:10px;">No terminal skills needed — creates your server, installs AppVault and opens the store for you (≈4 min).</div>
     </div>
+    <div style="margin:0 auto 26px;max-width:560px;background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:18px 20px;text-align:left;">
+      <div style="font-weight:700;font-size:14px;color:#e2e8f0;margin-bottom:4px;">🖥️ Install on your own Linux server</div>
+      <div style="font-size:12px;color:#64748b;margin-bottom:14px;">Any provider — OVH, Hetzner, Contabo, DigitalOcean, AWS, Google Cloud, or a home server. Enter your server's details and AppVault installs itself.</div>
+      <form id="deploy-form" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;gap:10px;">
+          <input id="dep-host" placeholder="Server IP (e.g. 203.0.113.10)" required
+                 style="flex:1.4;padding:10px 12px;border-radius:8px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:13px;">
+          <input id="dep-user" placeholder="User (root)" value="root"
+                 style="flex:.8;padding:10px 12px;border-radius:8px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:13px;">
+        </div>
+        <input id="dep-pass" type="password" placeholder="Password (used only for this install, never stored)" required
+               style="padding:10px 12px;border-radius:8px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:13px;">
+        <button type="submit" id="dep-btn"
+                style="background:#22c55e;color:#fff;font-weight:700;font-size:14px;padding:12px;border:none;border-radius:8px;cursor:pointer;">
+          🚀 Install AppVault on my server
+        </button>
+      </form>
+      <div id="dep-progress" style="display:none;margin-top:12px;">
+        <div id="dep-log" style="background:#0a0f1e;border:1px solid #1e293b;border-radius:8px;padding:10px 12px;font-family:monospace;font-size:11px;color:#94a3b8;max-height:220px;overflow-y:auto;white-space:pre-wrap;"></div>
+        <div id="dep-done" style="display:none;margin-top:12px;background:#052e16;border:1px solid #166534;border-radius:8px;padding:14px;font-size:13px;color:#bbf7d0;">
+          🎉 <b>AppVault is installed!</b><br><br>
+          Your store: <a id="dep-url" href="#" target="_blank" style="color:#4ade80;font-weight:700;"></a><br><br>
+          Open it, install a free app, and follow the on-screen steps to make your server invisible (30 seconds).
+        </div>
+        <div id="dep-err" style="display:none;margin-top:12px;background:#450a0a;border:1px solid #7f1d1d;border-radius:8px;padding:14px;font-size:13px;color:#fecaca;"></div>
+      </div>
+    </div>
     <div class="install-cmd">
       <strong>Windows (PowerShell):</strong> PS&gt; irm https://raw.githubusercontent.com/Sectutor/appvault-agent/main/install.ps1 | iex<br>
       <strong>macOS / Linux:</strong> $ bash -c "$(curl -fsSL https://raw.githubusercontent.com/Sectutor/appvault-agent/main/install.sh)"
@@ -618,6 +645,59 @@ function handleHash() {
 window.addEventListener('hashchange', handleHash);
 renderGrid();
 handleHash();
+  document.getElementById('deploy-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var host = document.getElementById('dep-host').value.trim();
+    var user = document.getElementById('dep-user').value.trim() || 'root';
+    var pass = document.getElementById('dep-pass').value;
+    if (!host || !pass) return;
+    document.getElementById('dep-btn').disabled = true;
+    document.getElementById('dep-btn').textContent = '⏳ Installing… (3-5 minutes)';
+    document.getElementById('dep-progress').style.display = 'block';
+    document.getElementById('dep-done').style.display = 'none';
+    document.getElementById('dep-err').style.display = 'none';
+    document.getElementById('dep-log').textContent = 'Connecting…';
+    fetch('/api/deploy/linux', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({host: host, username: user, password: pass})
+    }).then(function(r){ return r.json(); }).then(function(res){
+      if (!res.deploy_id) {
+        showDepErr(res.message || 'Could not start the install');
+        return;
+      }
+      var poll = setInterval(function(){
+        fetch('/api/deploy/linux/' + res.deploy_id).then(function(r){ return r.json(); }).then(function(st){
+          var logEl = document.getElementById('dep-log');
+          logEl.textContent = (st.log || []).join('\n');
+          logEl.scrollTop = logEl.scrollHeight;
+          if (st.status === 'done') {
+            clearInterval(poll);
+            document.getElementById('dep-btn').disabled = false;
+            document.getElementById('dep-btn').textContent = '🚀 Install AppVault on my server';
+            var url = st.store_url || ('http://' + host + ':8085');
+            document.getElementById('dep-url').href = url;
+            document.getElementById('dep-url').textContent = url;
+            document.getElementById('dep-done').style.display = 'block';
+          } else if (st.status === 'error') {
+            clearInterval(poll);
+            document.getElementById('dep-btn').disabled = false;
+            document.getElementById('dep-btn').textContent = '🚀 Install AppVault on my server';
+            showDepErr(st.error || 'Install failed');
+          }
+        });
+      }, 2000);
+    }).catch(function(err){
+      showDepErr('Could not reach the installer: ' + err);
+    });
+  });
+  function showDepErr(msg) {
+    var el = document.getElementById('dep-err');
+    el.textContent = '❌ ' + msg;
+    el.style.display = 'block';
+    document.getElementById('dep-btn').disabled = false;
+    document.getElementById('dep-btn').textContent = '🚀 Install AppVault on my server';
+  }
 </script>
 
 </body>
