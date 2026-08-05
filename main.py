@@ -634,6 +634,22 @@ async def logout(request: Request):
     return RedirectResponse("/login", status_code=303)
 
 # ── One-click remote install (any Linux box) ──────────────────────────
+@app.post("/api/probe")
+async def api_probe(data: dict):
+    """External reachability check — the central (outside the user's network)
+    verifies the store URL actually answers, so the installer can confirm
+    'install complete' honestly (cloud firewalls must not silently block)."""
+    url = (data or {}).get("url", "")
+    if not url or not url.startswith(("http://", "https://")):
+        return {"reachable": False, "status": 0}
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "AppVaultProbe/1.0"})
+        with urllib.request.urlopen(req, timeout=8) as r:
+            return {"reachable": True, "status": r.status}
+    except Exception as e:
+        return {"reachable": False, "status": 0, "detail": str(e)[:80]}
+
+
 DEPLOYS = {}
 
 class DeployRequest(BaseModel):
