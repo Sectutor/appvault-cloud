@@ -262,7 +262,7 @@
       ],
       "category": "networking",
       "min_ram_mb": 128,
-      "web_path": "/admin/",
+      "web_path": "/admin/login",
       "education": {
         "docs_url": "https://docs.pi-hole.net/",
         "quick_start": "Pi-hole blocks ads across your entire network at the DNS level. After install, set the admin password, configure upstream DNS, then point your router's DNS to this machine.",
@@ -315,7 +315,15 @@
       },
       "boot_timeout": 180,
       "min_mem_mb": 1024,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "certified": {
+        "status": "ok",
+        "legs": [
+          "--leg"
+        ],
+        "date": "2026-08-06",
+        "url": "http://localhost:50382/admin/login"
+      }
     },
     {
       "id": "openwebui",
@@ -382,7 +390,15 @@
       },
       "boot_timeout": 300,
       "min_mem_mb": 2048,
-      "min_disk_gb": 3
+      "min_disk_gb": 3,
+      "certified": {
+        "status": "ok",
+        "legs": [
+          "--leg"
+        ],
+        "date": "2026-08-06",
+        "url": "http://localhost:50436/"
+      }
     },
     {
       "id": "crewai-studio",
@@ -450,7 +466,15 @@
       },
       "boot_timeout": 300,
       "min_mem_mb": 2048,
-      "min_disk_gb": 3
+      "min_disk_gb": 3,
+      "certified": {
+        "status": "ok",
+        "legs": [
+          "--leg"
+        ],
+        "date": "2026-08-06",
+        "url": "http://localhost:50594/"
+      }
     },
     {
       "id": "hermes-agent",
@@ -587,11 +611,13 @@
       "certified": {
         "status": "ok",
         "legs": [
-          "windows"
+          "windows",
+          "--leg"
         ],
         "date": "2026-08-06",
-        "url": "http://localhost:3000/"
-      }
+        "url": "http://localhost:56689/install.html"
+      },
+      "web_path": "/install.html"
     },
     {
       "id": "wordpress",
@@ -900,7 +926,16 @@
       },
       "boot_timeout": 180,
       "min_mem_mb": 1024,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "web_path": "/welcome/",
+      "certified": {
+        "status": "ok",
+        "legs": [
+          "--leg"
+        ],
+        "date": "2026-08-06",
+        "url": "http://localhost:51208/welcome/"
+      }
     },
     {
       "id": "gitlab",
@@ -1201,10 +1236,11 @@
       "certified": {
         "status": "ok",
         "legs": [
-          "windows"
+          "windows",
+          "--leg"
         ],
         "date": "2026-08-06",
-        "url": "http://localhost:8096/web/"
+        "url": "http://localhost:53117/web/"
       }
     },
     {
@@ -1268,7 +1304,16 @@
       },
       "boot_timeout": 180,
       "min_mem_mb": 1024,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "web_path": "/app/",
+      "certified": {
+        "status": "ok",
+        "legs": [
+          "--leg"
+        ],
+        "date": "2026-08-06",
+        "url": "http://localhost:53254/app/"
+      }
     },
     {
       "id": "kavita",
@@ -1338,7 +1383,15 @@
       },
       "boot_timeout": 180,
       "min_mem_mb": 1024,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "certified": {
+        "status": "ok",
+        "legs": [
+          "--leg"
+        ],
+        "date": "2026-08-06",
+        "url": "http://localhost:62517/"
+      }
     },
     {
       "id": "photoprism",
@@ -1659,10 +1712,11 @@
       "certified": {
         "status": "ok",
         "legs": [
-          "windows"
+          "windows",
+          "--leg"
         ],
         "date": "2026-08-06",
-        "url": "http://localhost:51168/"
+        "url": "http://localhost:62371/"
       }
     },
     {
@@ -1733,7 +1787,15 @@
       },
       "boot_timeout": 180,
       "min_mem_mb": 1024,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "certified": {
+        "status": "ok",
+        "legs": [
+          "--leg"
+        ],
+        "date": "2026-08-06",
+        "url": "http://localhost:62650/"
+      }
     },
     {
       "id": "traefik",
@@ -1798,7 +1860,16 @@
       },
       "boot_timeout": 60,
       "min_mem_mb": 256,
-      "min_disk_gb": 1
+      "min_disk_gb": 1,
+      "web_path": "/dashboard/",
+      "certified": {
+        "status": "ok",
+        "legs": [
+          "--leg"
+        ],
+        "date": "2026-08-06",
+        "url": "http://localhost:62490/dashboard/"
+      }
     },
     {
       "id": "uptime-kuma",
@@ -1934,10 +2005,11 @@
       "certified": {
         "status": "ok",
         "legs": [
-          "windows"
+          "windows",
+          "--leg"
         ],
         "date": "2026-08-06",
-        "url": "http://localhost:9000/"
+        "url": "http://localhost:62541/"
       }
     },
     {
@@ -1998,7 +2070,15 @@
       },
       "boot_timeout": 150,
       "min_mem_mb": 512,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "certified": {
+        "status": "ok",
+        "legs": [
+          "--leg"
+        ],
+        "date": "2026-08-06",
+        "url": "http://localhost:62572/"
+      }
     },
     {
       "id": "code-server",
@@ -2068,7 +2148,16 @@
       },
       "boot_timeout": 150,
       "min_mem_mb": 512,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "web_path": "/login",
+      "certified": {
+        "status": "ok",
+        "legs": [
+          "--leg"
+        ],
+        "date": "2026-08-06",
+        "url": "http://localhost:62739/login"
+      }
     },
     {
       "id": "gitea",
@@ -2138,7 +2227,15 @@
       },
       "boot_timeout": 150,
       "min_mem_mb": 512,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "certified": {
+        "status": "ok",
+        "legs": [
+          "--leg"
+        ],
+        "date": "2026-08-06",
+        "url": "http://localhost:62747/"
+      }
     },
     {
       "id": "stirling-pdf",
@@ -2206,7 +2303,15 @@
       },
       "boot_timeout": 180,
       "min_mem_mb": 1024,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "certified": {
+        "status": "ok",
+        "legs": [
+          "--leg"
+        ],
+        "date": "2026-08-06",
+        "url": "http://localhost:62779/"
+      }
     },
     {
       "id": "excalidraw",
@@ -2264,7 +2369,15 @@
       },
       "boot_timeout": 180,
       "min_mem_mb": 1024,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "certified": {
+        "status": "ok",
+        "legs": [
+          "--leg"
+        ],
+        "date": "2026-08-06",
+        "url": "http://localhost:62800/"
+      }
     },
     {
       "id": "drawio",
@@ -2324,7 +2437,15 @@
       },
       "boot_timeout": 180,
       "min_mem_mb": 1024,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "certified": {
+        "status": "ok",
+        "legs": [
+          "--leg"
+        ],
+        "date": "2026-08-06",
+        "url": "http://localhost:62830/"
+      }
     },
     {
       "id": "9router",
@@ -2387,7 +2508,16 @@
       },
       "boot_timeout": 300,
       "min_mem_mb": 2048,
-      "min_disk_gb": 3
+      "min_disk_gb": 3,
+      "web_path": "/login",
+      "certified": {
+        "status": "ok",
+        "legs": [
+          "--leg"
+        ],
+        "date": "2026-08-06",
+        "url": "http://localhost:62978/login"
+      }
     },
     {
       "id": "openmaic",
@@ -2744,7 +2874,15 @@
       },
       "boot_timeout": 300,
       "min_mem_mb": 2048,
-      "min_disk_gb": 3
+      "min_disk_gb": 3,
+      "certified": {
+        "status": "ok",
+        "legs": [
+          "--leg"
+        ],
+        "date": "2026-08-06",
+        "url": "http://localhost:57331/"
+      }
     },
     {
       "id": "searxng",
@@ -2810,7 +2948,15 @@
       },
       "boot_timeout": 300,
       "min_mem_mb": 2048,
-      "min_disk_gb": 3
+      "min_disk_gb": 3,
+      "certified": {
+        "status": "ok",
+        "legs": [
+          "--leg"
+        ],
+        "date": "2026-08-06",
+        "url": "http://localhost:57293/"
+      }
     },
     {
       "id": "central-mongo",
@@ -3058,7 +3204,9 @@
       },
       "boot_timeout": 300,
       "min_mem_mb": 2048,
-      "min_disk_gb": 3
+      "min_disk_gb": 3,
+      "disabled": true,
+      "notes": "Image unavailable (certified 2026-08-06: neither ghcr.io nor Docker Hub tag exists) — re-enable when a working image is published"
     },
     {
       "id": "openhands",
@@ -3124,7 +3272,15 @@
       },
       "boot_timeout": 300,
       "min_mem_mb": 2048,
-      "min_disk_gb": 3
+      "min_disk_gb": 3,
+      "certified": {
+        "status": "ok",
+        "legs": [
+          "--leg"
+        ],
+        "date": "2026-08-06",
+        "url": "http://localhost:59684/"
+      }
     },
     {
       "id": "khoj",
@@ -3563,7 +3719,15 @@
       },
       "boot_timeout": 180,
       "min_mem_mb": 1024,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "certified": {
+        "status": "ok",
+        "legs": [
+          "--leg"
+        ],
+        "date": "2026-08-06",
+        "url": "http://localhost:61351/"
+      }
     },
     {
       "id": "directus",
