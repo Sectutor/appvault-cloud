@@ -138,7 +138,7 @@
           404
         ]
       },
-      "boot_timeout": 180,
+      "boot_timeout": 300,
       "min_mem_mb": 1024,
       "min_disk_gb": 2
     },
@@ -241,7 +241,7 @@
           404
         ]
       },
-      "boot_timeout": 150,
+      "boot_timeout": 240,
       "min_mem_mb": 512,
       "min_disk_gb": 2
     },
@@ -752,7 +752,7 @@
           404
         ]
       },
-      "boot_timeout": 180,
+      "boot_timeout": 240,
       "min_mem_mb": 1024,
       "min_disk_gb": 2
     },
@@ -972,7 +972,7 @@
           404
         ]
       },
-      "boot_timeout": 150,
+      "boot_timeout": 300,
       "min_mem_mb": 512,
       "min_disk_gb": 2
     },
@@ -1047,7 +1047,7 @@
           404
         ]
       },
-      "boot_timeout": 180,
+      "boot_timeout": 240,
       "min_mem_mb": 1024,
       "min_disk_gb": 2
     },
@@ -1123,7 +1123,7 @@
           404
         ]
       },
-      "boot_timeout": 180,
+      "boot_timeout": 300,
       "min_mem_mb": 1024,
       "min_disk_gb": 2
     },
@@ -1410,7 +1410,7 @@
           404
         ]
       },
-      "boot_timeout": 180,
+      "boot_timeout": 240,
       "min_mem_mb": 1024,
       "min_disk_gb": 2
     },
@@ -1485,7 +1485,7 @@
           404
         ]
       },
-      "boot_timeout": 180,
+      "boot_timeout": 300,
       "min_mem_mb": 1024,
       "min_disk_gb": 2
     },
@@ -1593,7 +1593,8 @@
       },
       "boot_timeout": 180,
       "min_mem_mb": 1024,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "web_ui": false
     },
     {
       "id": "vaultwarden",
@@ -2477,7 +2478,7 @@
           404
         ]
       },
-      "boot_timeout": 180,
+      "boot_timeout": 300,
       "min_mem_mb": 1024,
       "min_disk_gb": 2,
       "free_tier": false
@@ -2615,7 +2616,7 @@
           404
         ]
       },
-      "boot_timeout": 180,
+      "boot_timeout": 300,
       "min_mem_mb": 1024,
       "min_disk_gb": 2
     },
@@ -2996,7 +2997,7 @@
       "id": "comfyui",
       "name": "ComfyUI",
       "description": "Node-based AI image generation (Midjourney / DALL-E alternative) — requires a GPU",
-      "image": "ghcr.io/comfyanonymous/comfyui:latest",
+      "image": "ghcr.io/comfyanonymous/comfyui:main",
       "container_port": 8188,
       "volumes": [
         "comfyui-models:/root/.cache",
@@ -3338,7 +3339,7 @@
           404
         ]
       },
-      "boot_timeout": 180,
+      "boot_timeout": 300,
       "min_mem_mb": 1024,
       "min_disk_gb": 2
     },
@@ -3417,7 +3418,7 @@
           404
         ]
       },
-      "boot_timeout": 60,
+      "boot_timeout": 240,
       "min_mem_mb": 512,
       "min_disk_gb": 2
     },
@@ -3491,7 +3492,7 @@
           404
         ]
       },
-      "boot_timeout": 150,
+      "boot_timeout": 240,
       "min_mem_mb": 512,
       "min_disk_gb": 2
     },
@@ -3638,7 +3639,7 @@
           404
         ]
       },
-      "boot_timeout": 150,
+      "boot_timeout": 300,
       "min_mem_mb": 512,
       "min_disk_gb": 2
     },
@@ -3927,7 +3928,7 @@
           404
         ]
       },
-      "boot_timeout": 180,
+      "boot_timeout": 300,
       "min_mem_mb": 1024,
       "min_disk_gb": 2
     },
@@ -4321,7 +4322,7 @@
           303
         ]
       },
-      "boot_timeout": 240,
+      "boot_timeout": 300,
       "min_mem_mb": 1024,
       "min_disk_gb": 5,
       "category": "productivity",
