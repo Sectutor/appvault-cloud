@@ -583,7 +583,15 @@
       },
       "boot_timeout": 180,
       "min_mem_mb": 1024,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "certified": {
+        "status": "ok",
+        "legs": [
+          "windows"
+        ],
+        "date": "2026-08-06",
+        "url": "http://localhost:3000/"
+      }
     },
     {
       "id": "wordpress",
@@ -1186,9 +1194,18 @@
           404
         ]
       },
-      "boot_timeout": 180,
+      "boot_timeout": 120,
       "min_mem_mb": 1024,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "web_path": "/web/",
+      "certified": {
+        "status": "ok",
+        "legs": [
+          "windows"
+        ],
+        "date": "2026-08-06",
+        "url": "http://localhost:8096/web/"
+      }
     },
     {
       "id": "navidrome",
@@ -1637,7 +1654,15 @@
       },
       "boot_timeout": 180,
       "min_mem_mb": 1024,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "certified": {
+        "status": "ok",
+        "legs": [
+          "windows"
+        ],
+        "date": "2026-08-06",
+        "url": "http://localhost:51168/"
+      }
     },
     {
       "id": "nginx-proxy-manager",
@@ -1904,7 +1929,15 @@
       },
       "boot_timeout": 150,
       "min_mem_mb": 512,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "certified": {
+        "status": "ok",
+        "legs": [
+          "windows"
+        ],
+        "date": "2026-08-06",
+        "url": "http://localhost:9000/"
+      }
     },
     {
       "id": "dozzle",
