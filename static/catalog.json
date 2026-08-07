@@ -479,68 +479,182 @@
     {
       "id": "hermes-agent",
       "name": "Hermes Agent",
-      "description": "An open-source, persistent, self-improving autonomous AI agent developed by Nous Research.",
-      "image": "nousresearch/hermes-agent:latest",
-      "container_port": 8642,
-      "extra_ports": {
-        "9119": 9119
-      },
-      "volumes": [
-        "hermes-agent-data:/opt/data"
-      ],
-      "env": [
-        "TZ=UTC"
-      ],
+      "description": "AppVault Agentic OS watcher daemon: 24/7 RSS signal sweeper, shared-memory sync, multi-session chat. Runs on :8095.",
+      "image": "ghcr.io/sectutor/appvault-hermes-agent:latest",
+      "container_port": 8095,
+      "extra_ports": {},
+      "volumes": [],
+      "env": [],
       "category": "ai",
-      "tier": "premium",
+      "tier": "free",
       "min_ram_mb": 512,
       "education": {
-        "docs_url": "https://github.com/NousResearch/hermes-agent",
-        "quick_start": "Hermes Agent is an AI agent from Nous Research. Note: This is a very large download (several GB) that includes AI models.",
+        "docs_url": "https://github.com/Sectutor/appvault",
+        "quick_start": "Hermes Agent is the Agentic OS watcher: it sweeps live RSS feeds every 10 minutes, writes Signal files to the Obsidian vault, and answers in multi-session chat via the centralized LLM config.",
         "setup_steps": [
-          "The image is large (>5GB) — first pull may take 5-10 minutes",
-          "Once running, the agent provides an API for AI tasks",
-          "Check the logs for access instructions: docker logs app-hermes-agent"
+          "Chat with Hermes from the Agentic OS page in the store",
+          "Configure the LLM provider/API key in the LLM Settings drawer",
+          "View signal files in the Obsidian vault 03_Signals folder"
         ]
       },
-      "free_tier": false,
-      "tagline": "Persistent, self-improving autonomous AI agent",
-      "long_description": "Hermes Agent is an open-source, persistent, self-improving autonomous AI agent developed by Nous Research. It can browse the web, write and execute code, manage files, and learn from its interactions over time. Features include persistent memory across sessions, tool use (web search, code execution, file management), self-improvement capabilities, and local or remote LLM backend support.",
-      "version": "0.1.0",
-      "author": "Nous Research",
+      "free_tier": true,
+      "tagline": "24/7 signal watcher & session chat",
+      "long_description": "Hermes Agent is the AppVault Agentic OS continuous watcher daemon. It sweeps live RSS feeds (Google News, HN, The Verge, BBC) every 10 minutes, scores stories by AI relevance, writes Signal files to the Obsidian vault, and provides multi-session chat backed by the centralized LLM configuration.",
+      "version": "2.1.0",
+      "author": "AppVault",
       "tags": [
         "ai",
         "agent",
-        "autonomous",
-        "self-improving",
-        "nous"
+        "watcher",
+        "signals",
+        "rss"
       ],
-      "website": "https://nousresearch.com",
-      "docs_url": "https://hermes-agent-docs.nousresearch.com",
-      "forum_url": "https://discord.gg/nousresearch",
-      "repository_url": "https://github.com/NousResearch/hermes-agent",
-      "changelog": "Initial AppVault release of Hermes Agent.",
-      "screenshots": [
-        "https://placehold.co/800x600/1e293b/38bdf8?text=Hermes+Agent+Chat",
-        "https://placehold.co/800x600/1e293b/38bdf8?text=Hermes+Agent+Tasks"
-      ],
+      "website": "https://appvault.airepoindex.com",
+      "docs_url": "https://github.com/Sectutor/appvault",
+      "repository_url": "https://github.com/Sectutor/appvault",
+      "changelog": "Real 10-minute RSS sweep, config persistence, keyless Ollama fallback.",
+      "hidden": false,
+      "container_name_override": "appvault-hermes-agent",
       "emoji": "🧠",
       "healthcheck": {
-        "port": 8642,
-        "path": "/",
+        "port": 8095,
+        "path": "/health",
         "expect": [
-          200,
-          301,
-          302,
-          307,
-          401,
-          403,
-          404
+          200
         ]
       },
-      "boot_timeout": 300,
-      "min_mem_mb": 2048,
-      "min_disk_gb": 3
+      "boot_timeout": 120,
+      "min_mem_mb": 512,
+      "min_disk_gb": 1
+    },
+    {
+      "id": "crewai-runner",
+      "name": "CrewAI Runner",
+      "description": "AppVault Agentic OS multi-agent execution engine. Dispatches real per-role LLM crews and logs artifacts to the vault. Runs on :8000.",
+      "image": "ghcr.io/sectutor/appvault-crewai-runner:latest",
+      "container_port": 8000,
+      "extra_ports": {},
+      "volumes": [],
+      "env": [],
+      "category": "ai",
+      "tier": "free",
+      "min_ram_mb": 512,
+      "education": {
+        "docs_url": "https://github.com/Sectutor/appvault",
+        "quick_start": "CrewAI Runner executes multi-agent workflows: dispatch a crew from the Agentic OS page and each role (Architect, Engineer, Reviewer) produces real LLM output.",
+        "setup_steps": [
+          "Dispatch a crew from the Agentic OS page (⚡ Dispatch Crew)",
+          "Results land in the Obsidian vault 02_Agent_Logs folder",
+          "Uses the centralized LLM config — keyless local Ollama works out of the box"
+        ]
+      },
+      "free_tier": true,
+      "tagline": "Multi-agent crew execution engine",
+      "long_description": "CrewAI Runner is the Agentic OS multi-agent execution engine. It takes a crew definition and a task, runs real per-role LLM calls (Architect, Lead Engineer, Code Reviewer), collects the results, and writes an execution report to the Obsidian vault.",
+      "version": "1.0.0",
+      "author": "AppVault",
+      "tags": ["ai", "agent", "crew", "orchestrator"],
+      "website": "https://appvault.airepoindex.com",
+      "docs_url": "https://github.com/Sectutor/appvault",
+      "repository_url": "https://github.com/Sectutor/appvault",
+      "changelog": "Real per-role LLM crew execution.",
+      "hidden": false,
+      "container_name_override": "appvault-crewai-runner",
+      "emoji": "🎼",
+      "healthcheck": {
+        "port": 8000,
+        "path": "/health",
+        "expect": [200]
+      },
+      "boot_timeout": 120,
+      "min_mem_mb": 512,
+      "min_disk_gb": 1
+    },
+    {
+      "id": "litellm",
+      "name": "LiteLLM Router",
+      "description": "AppVault Agentic OS unified LLM provider gateway. Routes model calls across OpenAI, Anthropic and local Ollama with fallbacks. Runs on :4000.",
+      "image": "ghcr.io/berriai/litellm:main-v1.30.0",
+      "container_port": 4000,
+      "extra_ports": {},
+      "volumes": [],
+      "env": [],
+      "category": "ai",
+      "tier": "free",
+      "min_ram_mb": 512,
+      "education": {
+        "docs_url": "https://docs.litellm.ai",
+        "quick_start": "LiteLLM is the unified gateway for the Agentic OS fleet. The store's Agentic OS page shows its live status and the centralized LLM config controls which provider the fleet uses.",
+        "setup_steps": [
+          "Configure provider keys in the Agentic OS LLM Settings drawer",
+          "Local Ollama models are available as automatic fallbacks",
+          "Status appears in the Agentic OS roster"
+        ]
+      },
+      "free_tier": true,
+      "tagline": "Unified LLM provider gateway",
+      "long_description": "LiteLLM Router is the Agentic OS model gateway. It exposes one OpenAI-compatible endpoint and routes to the configured providers (OpenAI, Anthropic, local Ollama) with retries and fallbacks.",
+      "version": "1.30.0",
+      "author": "BerriAI",
+      "tags": ["ai", "llm", "gateway", "proxy"],
+      "website": "https://litellm.ai",
+      "docs_url": "https://docs.litellm.ai",
+      "repository_url": "https://github.com/BerriAI/litellm",
+      "changelog": "Agentic OS gateway with env-key passthrough.",
+      "hidden": false,
+      "container_name_override": "appvault-litellm",
+      "emoji": "🔀",
+      "healthcheck": {
+        "port": 4000,
+        "path": "/health",
+        "expect": [200, 401, 403]
+      },
+      "boot_timeout": 120,
+      "min_mem_mb": 512,
+      "min_disk_gb": 1
+    },
+    {
+      "id": "memory-mcp",
+      "name": "Memory MCP",
+      "description": "AppVault Agentic OS shared-memory server. Exposes the unified memory feed and Obsidian vault sync to agents. Runs on :3001.",
+      "image": "ghcr.io/sectutor/appvault-memory-mcp:latest",
+      "container_port": 3001,
+      "extra_ports": {},
+      "volumes": [],
+      "env": [],
+      "category": "ai",
+      "tier": "free",
+      "min_ram_mb": 256,
+      "education": {
+        "docs_url": "https://github.com/Sectutor/appvault",
+        "quick_start": "Memory MCP is the shared-memory plane of the Agentic OS: agents read and write the unified memory feed, synced to the Obsidian vault.",
+        "setup_steps": [
+          "See the shared memory stream on the Agentic OS page",
+          "Agents post to memory automatically (sweeps, crews, conversations)",
+          "Vault files land under 01_Inbox/Agentic_Memory_Feed.md"
+        ]
+      },
+      "free_tier": true,
+      "tagline": "Shared memory & vault sync",
+      "long_description": "Memory MCP is the Agentic OS shared-memory server. It exposes the unified memory feed (SQLite-backed) and Obsidian vault access to all agents, replacing the old @onebrain/mcp-server package that never existed on npm.",
+      "version": "1.0.0",
+      "author": "AppVault",
+      "tags": ["ai", "memory", "mcp", "obsidian"],
+      "website": "https://appvault.airepoindex.com",
+      "docs_url": "https://github.com/Sectutor/appvault",
+      "repository_url": "https://github.com/Sectutor/appvault",
+      "changelog": "Real shared-memory MCP server (replaces nonexistent npm package).",
+      "hidden": false,
+      "container_name_override": "appvault-memory-mcp",
+      "emoji": "🧠",
+      "healthcheck": {
+        "port": 3001,
+        "path": "/health",
+        "expect": [200]
+      },
+      "boot_timeout": 60,
+      "min_mem_mb": 256,
+      "min_disk_gb": 1
     },
     {
       "id": "adguard",
