@@ -401,6 +401,131 @@
       }
     },
     {
+      "id": "omniroute",
+      "name": "OmniRoute AI Gateway",
+      "description": "Free MIT AI Gateway — unified API endpoint for 290+ providers & 500+ models with quota-aware auto-fallback & token compression.",
+      "image": "diegosouzapw/omniroute:latest",
+      "container_port": 3000,
+      "web_path": "/",
+      "volumes": [
+        "omniroute-data:/app/data"
+      ],
+      "env": [
+        "DATA_DIR=/app/data",
+        "JWT_SECRET=__AUTO__",
+        "API_KEY_SECRET=__AUTO__",
+        "INITIAL_PASSWORD=CHANGEME",
+        "PORT=3000",
+        "NODE_ENV=production",
+        "HOSTNAME=0.0.0.0",
+        "OMNIROUTE_MEMORY_MB=1024"
+      ],
+      "category": "ai",
+      "min_mem_mb": 1024,
+      "min_disk_gb": 2,
+      "healthcheck": {
+        "port": 3000,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302
+        ]
+      },
+      "boot_timeout": 180,
+      "free_tier": true,
+      "education": {
+        "docs_url": "https://github.com/diegosouzapw/OmniRoute",
+        "quick_start": "OmniRoute is a free MIT AI Gateway supporting 290+ providers and 500+ models. Log in with the default admin / CHANGEME (set by INITIAL_PASSWORD) on first launch, then configure providers.",
+        "default_login": {
+          "username": "admin",
+          "password": "CHANGEME",
+          "path": "/"
+        },
+        "setup_steps": [
+          "Open http://localhost:PORT/ in your browser",
+          "Log in to the OmniRoute Dashboard",
+          "Configure your AI model providers (OpenAI, Claude, Gemini, DeepSeek, etc.)",
+          "Use http://localhost:PORT/v1 as your universal OpenAI-compatible endpoint"
+        ]
+      },
+      "tagline": "Unified AI Gateway — 290+ providers & 500+ models",
+      "long_description": "OmniRoute is an open-source, MIT-licensed AI Gateway providing a single OpenAI-compatible API endpoint for over 290 providers and 500 models. Includes quota-aware automatic fallbacks, RTK+Caveman token compression (saving 15-95% tokens), MCP/A2A support, and full PWA dashboard.",
+      "version": "1.0.0",
+      "author": "Diego Souza",
+      "tags": [
+        "ai",
+        "gateway",
+        "llm",
+        "openai-proxy",
+        "deepseek",
+        "claude"
+      ]
+    },
+    {
+      "id": "ods",
+      "name": "Osmantic ODS AI Server",
+      "description": "Turn your PC, Mac, or Linux box into a full AI server — local LLM inference, Open WebUI, voice, RAG, agents, workflows, and image generation.",
+      "image": "",
+      "container_port": 8080,
+      "type": "stack",
+      "is_stack": true,
+      "compose_url": "https://raw.githubusercontent.com/Osmantic/ODS/main/ods/docker-compose.base.yml",
+      "web_path": "/",
+      "volumes": [
+        "ods-data:/app/data"
+      ],
+      "env": [
+        "PORT=8080",
+        "NODE_ENV=production",
+        "OLLAMA_BASE_URL=http://host.docker.internal:11434"
+      ],
+      "category": "ai",
+      "min_mem_mb": 2048,
+      "min_disk_gb": 5,
+      "healthcheck": {
+        "port": 8080,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          401,
+          403
+        ]
+      },
+      "boot_timeout": 180,
+      "free_tier": true,
+      "education": {
+        "docs_url": "https://github.com/Osmantic/ODS",
+        "quick_start": "ODS turns your hardware into a complete self-hosted AI stack (LLM inference, chat UI, voice, agents, RAG, and image generation).",
+        "default_login": {
+          "username": "admin@example.com",
+          "password": "set on first login",
+          "path": "/"
+        },
+        "setup_steps": [
+          "Open http://localhost:PORT/ in your browser",
+          "Complete the initial admin setup and account creation",
+          "Select your local or cloud LLM backend",
+          "Start chatting, running RAG workflows, or generating images"
+        ]
+      },
+      "tagline": "Private AI server — LLMs, chat UI, RAG, voice, agents & image gen",
+      "long_description": "Osmantic ODS (Open AI Server) transforms your local hardware into a complete, private AI server. Automates local model inference, Open WebUI integration, voice (STT/TTS), RAG knowledge bases, multi-agent workflows, and image generation — all running in self-hosted Docker containers.",
+      "version": "1.0.0",
+      "author": "Osmantic",
+      "tags": [
+        "ai",
+        "llm",
+        "rag",
+        "chat",
+        "agents",
+        "image-gen",
+        "open-webui"
+      ]
+    },
+    {
       "id": "crewai-studio",
       "name": "CrewAI Studio",
       "description": "Streamlit-based visual interface to build and orchestrate multi-agent crews without code.",
@@ -2885,15 +3010,12 @@
       "id": "twenty",
       "name": "Twenty CRM",
       "description": "Open-source modern CRM. Beautiful, fast, and self-hosted.",
-      "image": "twentycrm/twenty:v2.26.0",
+      "image": "",
       "container_port": 3000,
       "is_stack": true,
       "type": "stack",
       "compose_url": "http://central:8000/api/agent/compose/twenty",
-      "volumes": [
-        "twenty-db-data",
-        "twenty-server-data"
-      ],
+      "volumes": [],
       "env": [
         "SERVER_URL=http://localhost:3000",
         "STORAGE_TYPE=local",
@@ -3348,7 +3470,7 @@
       "id": "comfyui",
       "name": "ComfyUI",
       "description": "Node-based AI image generation (Midjourney / DALL-E alternative) — requires a GPU",
-      "image": "ghcr.io/comfyanonymous/comfyui:main",
+      "image": "ghcr.io/ai-dock/comfyui:latest",
       "container_port": 8188,
       "volumes": [
         "comfyui-models:/root/.cache",
@@ -4305,7 +4427,7 @@
       "id": "listmonk",
       "name": "Listmonk",
       "description": "Self-hosted email newsletter & mailing-list manager — your private Mailchimp. Subscribers, segments, campaigns, templates, open/click tracking (GPL-3.0)",
-      "image": "listmonk/listmonk:latest",
+      "image": "",
       "container_port": 9000,
       "type": "stack",
       "is_stack": true,
