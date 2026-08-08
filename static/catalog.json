@@ -553,7 +553,12 @@
       "long_description": "CrewAI Runner is the Agentic OS multi-agent execution engine. It takes a crew definition and a task, runs real per-role LLM calls (Architect, Lead Engineer, Code Reviewer), collects the results, and writes an execution report to the Obsidian vault.",
       "version": "1.0.0",
       "author": "AppVault",
-      "tags": ["ai", "agent", "crew", "orchestrator"],
+      "tags": [
+        "ai",
+        "agent",
+        "crew",
+        "orchestrator"
+      ],
       "website": "https://appvault.airepoindex.com",
       "docs_url": "https://github.com/Sectutor/appvault",
       "repository_url": "https://github.com/Sectutor/appvault",
@@ -564,7 +569,9 @@
       "healthcheck": {
         "port": 8000,
         "path": "/health",
-        "expect": [200]
+        "expect": [
+          200
+        ]
       },
       "boot_timeout": 120,
       "min_mem_mb": 512,
@@ -596,7 +603,12 @@
       "long_description": "LiteLLM Router is the Agentic OS model gateway. It exposes one OpenAI-compatible endpoint and routes to the configured providers (OpenAI, Anthropic, local Ollama) with retries and fallbacks.",
       "version": "1.30.0",
       "author": "BerriAI",
-      "tags": ["ai", "llm", "gateway", "proxy"],
+      "tags": [
+        "ai",
+        "llm",
+        "gateway",
+        "proxy"
+      ],
       "website": "https://litellm.ai",
       "docs_url": "https://docs.litellm.ai",
       "repository_url": "https://github.com/BerriAI/litellm",
@@ -607,7 +619,11 @@
       "healthcheck": {
         "port": 4000,
         "path": "/health",
-        "expect": [200, 401, 403]
+        "expect": [
+          200,
+          401,
+          403
+        ]
       },
       "boot_timeout": 120,
       "min_mem_mb": 512,
@@ -639,7 +655,12 @@
       "long_description": "Memory MCP is the Agentic OS shared-memory server. It exposes the unified memory feed (SQLite-backed) and Obsidian vault access to all agents, replacing the old @onebrain/mcp-server package that never existed on npm.",
       "version": "1.0.0",
       "author": "AppVault",
-      "tags": ["ai", "memory", "mcp", "obsidian"],
+      "tags": [
+        "ai",
+        "memory",
+        "mcp",
+        "obsidian"
+      ],
       "website": "https://appvault.airepoindex.com",
       "docs_url": "https://github.com/Sectutor/appvault",
       "repository_url": "https://github.com/Sectutor/appvault",
@@ -650,7 +671,9 @@
       "healthcheck": {
         "port": 3001,
         "path": "/health",
-        "expect": [200]
+        "expect": [
+          200
+        ]
       },
       "boot_timeout": 60,
       "min_mem_mb": 256,
@@ -2664,6 +2687,74 @@
       },
       "boot_timeout": 300,
       "min_mem_mb": 2048,
+      "min_disk_gb": 3
+    },
+    {
+      "id": "openship",
+      "name": "OpenShip",
+      "description": "Self-hosted deployment platform with built-in CI/CD - point it at a repo and it builds, ships, routes and TLS-terminates your apps. A self-hosted Coolify/Vercel alternative with a web dashboard, project pipelines and deploy targets. Open source (Apache-2.0), 10k+ stars.",
+      "image": "",
+      "container_port": 3001,
+      "type": "stack",
+      "is_stack": true,
+      "compose_url": "https://raw.githubusercontent.com/Sectutor/openship-stack/main/docker-compose.yml",
+      "volumes": [],
+      "env": [],
+      "category": "automation",
+      "min_ram_mb": 1536,
+      "education": {
+        "docs_url": "https://openship.io/docs",
+        "quick_start": "OpenShip is a self-hosted deployment platform: connect a git repo, it builds and ships the app, with dashboards for projects, deployments and servers. The stack starts the control plane (dashboard on port 3001, API on 4000) plus its own PostgreSQL and Redis; the one-shot setup service auto-creates the first admin on first boot. After install, open the app and sign in with the default admin below, then create your first project and point it at a repo.",
+        "default_login": {
+          "username": "admin@openship.local",
+          "password": "Openship2026!",
+          "path": "/"
+        },
+        "setup_steps": [
+          "Open the launch URL in your browser",
+          "Sign in with admin@openship.local / Openship2026! (auto-created on first boot)",
+          "Create your first project and connect a git repository",
+          "Deploy to a remote server (SSH) - auto-domain routing on this box needs a separate OpenResty edge container (the AppVault Caddy owns ports 80/443)"
+        ]
+      },
+      "free_tier": false,
+      "github_url": "https://github.com/oblien/openship",
+      "tagline": "Self-hosted deployment platform with CI/CD",
+      "long_description": "OpenShip is an open-source, self-hostable deployment platform with built-in CI/CD. Point it at a git repository and it builds, ships, routes, and TLS-terminates your application. It includes a web dashboard, CLI, and desktop app for managing projects, deployments, servers, domains and TLS certificates. Self-hosted mode runs the full control plane (API + dashboard + PostgreSQL + Redis) on your own box and can deploy apps to the same machine or to remote servers over SSH. Apache-2.0, 10k+ GitHub stars, actively developed.",
+      "version": "0.6.1",
+      "author": "Oblien",
+      "tags": [
+        "deployments",
+        "ci-cd",
+        "self-hosted",
+        "devops",
+        "automation"
+      ],
+      "website": "https://openship.io",
+      "docs_url": "https://openship.io/docs",
+      "forum_url": "https://github.com/oblien/openship/discussions",
+      "repository_url": "https://github.com/oblien/openship",
+      "changelog": "AppVault catalog release - self-hosted deployment platform with CI/CD (curated stack, admin auto-bootstrap).",
+      "screenshots": [
+        "https://placehold.co/800x600/1e293b/38bdf8?text=OpenShip+Dashboard",
+        "https://placehold.co/800x600/1e293b/38bdf8?text=OpenShip+Projects"
+      ],
+      "emoji": "🚀",
+      "healthcheck": {
+        "port": 3001,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 300,
+      "min_mem_mb": 1024,
       "min_disk_gb": 3
     },
     {
