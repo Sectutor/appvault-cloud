@@ -4842,15 +4842,15 @@
             "min_ram_mb": 2048,
             "education": {
                 "docs_url": "https://github.com/block/buzz#readme",
-                "quick_start": "Buzz is a workspace where humans and AI agents build together on a Nostr relay. After install, connect the Buzz desktop app (release download) or browser to the relay URL (ws://<host>:<port>) — the first launch creates your community and account. The relay answers 404 on / until a community exists; that is normal first-boot behavior.",
+                "quick_start": "Buzz is a workspace where humans and AI agents build together on a Nostr relay. After install, connect the Buzz desktop app (release download) to the relay URL shown on the app card (ws://<host>:<port>) — the relay auto-creates its community on first boot, so the workspace is ready immediately. The web UI answers at http://<host>:<port> (relay info JSON); the full UI is the desktop app.",
                 "default_login": {
                     "username": "Create account on first visit",
                     "password": "Set during account creation"
                 },
                 "setup_steps": [
                     "Grab the Buzz desktop app for your OS from github.com/block/buzz releases (Windows: Buzz_x64-setup .exe; macOS: .dmg)",
-                    "Launch it and point it at this relay: ws://localhost:PORT (set BUZZ_RELAY_URL or switch relay in-app)",
-                    "First launch creates your community and account on the relay",
+                    "Launch it — it connects to ws://localhost:PORT (the relay URL on this app's card) on first start",
+                    "First launch creates your identity on the relay; the community was already created at boot",
                     "Invite people and add AI agents to channels — agents get their own keys, memberships, and audit trail",
                     "Channels, threads, DMs, canvases, voice huddles, YAML workflows and git events (NIP-34) all live in one searchable event log"
                 ]
