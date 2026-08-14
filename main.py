@@ -243,6 +243,21 @@ init_db()
 with open(CATALOG_PATH, encoding="utf-8") as f:
     GLOBAL_CATALOG = json.load(f)
 
+def reload_catalog():
+    """Reload catalog from disk (after admin edits). Returns app count."""
+    global GLOBAL_CATALOG
+    with open(CATALOG_PATH, encoding="utf-8") as f:
+        GLOBAL_CATALOG = json.load(f)
+    return len(GLOBAL_CATALOG.get("apps", []))
+
+@app.post("/admin/catalog/reload")
+async def admin_reload_catalog(request: Request):
+    """Reload catalog from disk without restarting the server."""
+    require_admin(request)
+    count = reload_catalog()
+    _audit("catalog.reload", f"reloaded {count} apps from disk")
+    return {"status": "ok", "apps": count, "catalog_version": get_catalog_version()}
+
 def get_catalog_version() -> int:
     db = get_db()
     row = db.execute("SELECT MAX(version) as v FROM catalog_versions").fetchone()
