@@ -7,3 +7,4 @@ python-multipart==0.0.9
 pydantic==2.9.0
 PyYAML==6.0.2
 itsdangerous==2.2.0
+paramiko

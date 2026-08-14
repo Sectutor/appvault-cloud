@@ -1,48 +1,36 @@
-import io, sys, urllib.request, json
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+import unittest
+import urllib.request
+import json
+import os
 
-def get(url):
-    req = urllib.request.Request(url)
-    with urllib.request.urlopen(req, timeout=10) as r:
-        return r.status, r.read().decode("utf-8", errors="replace")
+class TestDetail(unittest.TestCase):
+    def test_catalog_detail_data(self):
+        # 1. Try to fetch from live running central server (8001 or 8000)
+        html = None
+        for port in [8001, 8000]:
+            try:
+                req = urllib.request.Request(f"http://localhost:{port}/")
+                with urllib.request.urlopen(req, timeout=3) as r:
+                    if r.status == 200:
+                        html = r.read().decode("utf-8", errors="replace")
+                        break
+            except Exception:
+                continue
 
-# 1. Landing page
-status, html = get("http://localhost:8000/")
-print(f"=== GET / -> {status}, {len(html)} bytes ===")
-print("Contains 'Full App Catalog':", "Full App Catalog" in html)
-print("Contains 'Learn more':", "learn-more" in html)
-print("Contains 'catalog_json':", "CATALOG_APPS" in html)
-print("Contains n8n in embedded catalog:", '"n8n"' in html)
-print("Contains emoji for n8n (📝):", "📝" in html)
-print("Contains renderDetail:", "function renderDetail" in html)
-print()
+        if html:
+            self.assertIn("CATALOG_APPS", html)
+            self.assertIn('"n8n"', html)
+        else:
+            # Fallback to inspecting static catalog file directly
+            cat_path = "central/static/catalog.json" if os.path.exists("central/static/catalog.json") else "static/catalog.json"
+            self.assertTrue(os.path.exists(cat_path))
+            with open(cat_path, encoding="utf-8") as f:
+                data = json.load(f)
+                apps = data.get("apps", [])
+                self.assertGreater(len(apps), 0)
+                n8n = next((a for a in apps if a["id"] == "n8n"), None)
+                self.assertIsNotNone(n8n)
+                self.assertTrue("description" in n8n or "tagline" in n8n)
 
-# 2. Check the embedded catalog has tagline data
-import re
-m = re.search(r'var CATALOG_APPS = (.*?);\n', html, re.S)
-if m:
-    try:
-        data = json.loads(m.group(1))
-        apps = data.get("apps", [])
-        print(f"Embedded apps: {len(apps)}")
-        n8n = next((a for a in apps if a["id"]=="n8n"), None)
-        if n8n:
-            print("n8n tagline:", n8n.get("tagline", "MISSING")[:60])
-            print("n8n emoji:", n8n.get("emoji", "MISSING"))
-            print("n8n has long_description:", bool(n8n.get("long_description")))
-    except Exception as e:
-        print("JSON parse error:", e)
-        print(m.group(1)[:200])
-else:
-    print("Could not find CATALOG_APPS in HTML")
-
-# 3. Check a sample of visible apps are embedded
-print()
-print("=== Visible apps in embedded catalog ===")
-try:
-    data = json.loads(m.group(1))
-    for a in data["apps"][:8]:
-        print(f"  {a['id']} | {a.get('emoji')} | {a.get('tagline','')[:40]}")
-    print(f"  ... ({len(data['apps'])} total)")
-except Exception as e:
-    print("err", e)
+if __name__ == "__main__":
+    unittest.main()

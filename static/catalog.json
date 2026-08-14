@@ -15,8 +15,8 @@
             "env": [
                 "MYSQL_ROOT_PASSWORD=appvault_root_secret"
             ],
-            "free_tier": false,
-            "emoji": "ðŸ—„ï¸",
+            "free_tier": true,
+            "emoji": "🗄️",
             "healthcheck": {
                 "port": 3306,
                 "path": "/",
@@ -50,7 +50,7 @@
                 "POSTGRES_PASSWORD=appvault_root_secret"
             ],
             "free_tier": false,
-            "emoji": "ðŸ˜",
+            "emoji": "🐘",
             "healthcheck": {
                 "port": 5432,
                 "path": "/",
@@ -99,14 +99,14 @@
                 },
                 "setup_steps": [
                     "Log in with admin / admin",
-                    "Go to Settings â†’ Admin â†’ set a secure admin password",
+                    "Go to Settings → Admin → set a secure admin password",
                     "Configure email server for password resets",
                     "Install desktop sync client from owncloud.com"
                 ]
             },
             "free_tier": false,
             "tagline": "Self-hosted file sync, share & collaborate",
-            "long_description": "ownCloud is a self-hosted file sync and share server. It provides access to your data through a web interface, sync clients or WebDAV while providing a platform to view, sync and share across devices easily â€” all under your control. Features include file sync & share, collaborative editing with Collabora/OnlyOffice, calendar & contacts, sharing permissions, and a rich app ecosystem.",
+            "long_description": "ownCloud is a self-hosted file sync and share server. It provides access to your data through a web interface, sync clients or WebDAV while providing a platform to view, sync and share across devices easily — all under your control. Features include file sync & share, collaborative editing with Collabora/OnlyOffice, calendar & contacts, sharing permissions, and a rich app ecosystem.",
             "version": "10.14.0",
             "author": "ownCloud GmbH",
             "tags": [
@@ -124,7 +124,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=ownCloud+Dashboard",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=ownCloud+Files"
             ],
-            "emoji": "â˜ï¸",
+            "emoji": "☁️",
             "healthcheck": {
                 "port": 8080,
                 "path": "/",
@@ -138,7 +138,7 @@
                     404
                 ]
             },
-            "boot_timeout": 180,
+            "boot_timeout": 300,
             "min_mem_mb": 1024,
             "min_disk_gb": 2
         },
@@ -167,7 +167,7 @@
                     "password": "set on first login"
                 },
                 "setup_steps": [
-                    "Open the app URL â†’ create your account (first user is owner)",
+                    "Open the app URL → create your account (first user is owner)",
                     "Explore the template library for ready-made workflows",
                     "Connect your apps via the integrations panel",
                     "Set up the n8n desktop app for local triggers"
@@ -222,12 +222,12 @@
             "docs_url": "https://docs.n8n.io",
             "forum_url": "https://community.n8n.io",
             "repository_url": "https://github.com/n8n-io/n8n",
-            "changelog": "AppVault catalog release â€” n8n latest stable with visual editor and 300+ integrations.",
+            "changelog": "AppVault catalog release — n8n latest stable with visual editor and 300+ integrations.",
             "screenshots": [
                 "https://placehold.co/800x600/1e293b/38bdf8?text=n8n+Workflow+Editor",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=n8n+Node+Library"
             ],
-            "emoji": "ðŸ“",
+            "emoji": "📝",
             "healthcheck": {
                 "port": 5678,
                 "path": "/",
@@ -241,7 +241,7 @@
                     404
                 ]
             },
-            "boot_timeout": 150,
+            "boot_timeout": 240,
             "min_mem_mb": 512,
             "min_disk_gb": 2
         },
@@ -262,7 +262,7 @@
             ],
             "category": "networking",
             "min_ram_mb": 128,
-            "web_path": "/admin/",
+            "web_path": "/admin/login",
             "education": {
                 "docs_url": "https://docs.pi-hole.net/",
                 "quick_start": "Pi-hole blocks ads across your entire network at the DNS level. After install, set the admin password, configure upstream DNS, then point your router's DNS to this machine.",
@@ -299,7 +299,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Pi-hole+Dashboard",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Pi-hole+Query+Log"
             ],
-            "emoji": "ðŸ›¡ï¸",
+            "emoji": "🛡️",
             "healthcheck": {
                 "port": 80,
                 "path": "/",
@@ -315,7 +315,15 @@
             },
             "boot_timeout": 180,
             "min_mem_mb": 1024,
-            "min_disk_gb": 2
+            "min_disk_gb": 2,
+            "certified": {
+                "status": "ok",
+                "legs": [
+                    "--leg"
+                ],
+                "date": "2026-08-06",
+                "url": "http://localhost:50382/admin/login"
+            }
         },
         {
             "id": "openwebui",
@@ -339,15 +347,15 @@
                     "password": "set on first login"
                 },
                 "setup_steps": [
-                    "Open the app â†’ create your admin account",
-                    "Go to Settings â†’ Connections â†’ add your Ollama endpoint",
+                    "Open the app → create your admin account",
+                    "Go to Settings → Connections → add your Ollama endpoint",
                     "Browse and pull models from the model library",
                     "Start chatting with your local AI"
                 ]
             },
-            "free_tier": true,
+            "free_tier": false,
             "tagline": "Self-hosted AI chat interface for any LLM",
-            "long_description": "Open WebUI is a self-hosted web interface for interacting with large language models. It supports Ollama, OpenAI-compatible APIs, and many other backends â€” all from a single, polished chat UI. Features include multi-model chat, conversation history, document RAG (upload PDFs/docs and chat with them), prompt library, role-based access control, and full mobile responsiveness.",
+            "long_description": "Open WebUI is a self-hosted web interface for interacting with large language models. It supports Ollama, OpenAI-compatible APIs, and many other backends — all from a single, polished chat UI. Features include multi-model chat, conversation history, document RAG (upload PDFs/docs and chat with them), prompt library, role-based access control, and full mobile responsiveness.",
             "version": "0.3.29",
             "author": "Open WebUI",
             "tags": [
@@ -366,7 +374,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Open+WebUI+Chat",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Open+WebUI+Models"
             ],
-            "emoji": "ðŸ’¬",
+            "emoji": "💬",
             "healthcheck": {
                 "port": 8080,
                 "path": "/",
@@ -382,7 +390,81 @@
             },
             "boot_timeout": 300,
             "min_mem_mb": 2048,
-            "min_disk_gb": 3
+            "min_disk_gb": 3,
+            "certified": {
+                "status": "ok",
+                "legs": [
+                    "--leg"
+                ],
+                "date": "2026-08-06",
+                "url": "http://localhost:50436/"
+            }
+        },
+        {
+            "id": "omniroute",
+            "name": "OmniRoute AI Gateway",
+            "description": "Free MIT AI Gateway — unified API endpoint for 290+ providers & 500+ models with quota-aware auto-fallback & token compression.",
+            "image": "diegosouzapw/omniroute:latest",
+            "container_port": 3000,
+            "web_path": "/",
+            "volumes": [
+                "omniroute-data:/app/data"
+            ],
+            "env": [
+                "DATA_DIR=/app/data",
+                "JWT_SECRET=__AUTO__",
+                "API_KEY_SECRET=__AUTO__",
+                "INITIAL_PASSWORD=CHANGEME",
+                "PORT=3000",
+                "NODE_ENV=production",
+                "HOSTNAME=0.0.0.0",
+                "OMNIROUTE_MEMORY_MB=1024"
+            ],
+            "category": "ai",
+            "min_mem_mb": 1024,
+            "min_disk_gb": 2,
+            "healthcheck": {
+                "port": 3000,
+                "path": "/",
+                "expect": [
+                    200,
+                    301,
+                    302,
+                    307,
+                    401,
+                    403,
+                    404
+                ]
+            },
+            "boot_timeout": 180,
+            "free_tier": true,
+            "education": {
+                "docs_url": "https://github.com/diegosouzapw/OmniRoute",
+                "quick_start": "OmniRoute is a free MIT AI Gateway supporting 290+ providers and 500+ models. The dashboard login is PASSWORD-ONLY — no username/email field. Use the password CHANGEME (all caps, set by INITIAL_PASSWORD).",
+                "default_login": {
+                    "username": "— not used (password-only login)",
+                    "password": "CHANGEME",
+                    "path": "/"
+                },
+                "setup_steps": [
+                    "Open http://localhost:PORT/ — it redirects to the login page",
+                    "Enter the password CHANGEME (all caps, case-sensitive) — there is no username field",
+                    "Configure your AI model providers (OpenAI, Claude, Gemini, DeepSeek, etc.)",
+                    "Use http://localhost:PORT/v1 as your universal OpenAI-compatible endpoint"
+                ]
+            },
+            "tagline": "Unified AI Gateway — 290+ providers & 500+ models",
+            "long_description": "OmniRoute is an open-source, MIT-licensed AI Gateway providing a single OpenAI-compatible API endpoint for over 290 providers and 500 models. Includes quota-aware automatic fallbacks, RTK+Caveman token compression (saving 15-95% tokens), MCP/A2A support, and full PWA dashboard.",
+            "version": "1.0.0",
+            "author": "Diego Souza",
+            "tags": [
+                "ai",
+                "gateway",
+                "llm",
+                "openai-proxy",
+                "deepseek",
+                "claude"
+            ]
         },
         {
             "id": "crewai-studio",
@@ -407,14 +489,14 @@
                     "password": "set on first login"
                 },
                 "setup_steps": [
-                    "Open the app â†’ create your account",
+                    "Open the app → create your account",
                     "Define your first AI agent (role, goal, backstory)",
                     "Create a task for the agent",
                     "Assemble a crew and run it"
                 ]
             },
             "free_tier": false,
-            "tagline": "Visual multi-agent AI â€” no code required",
+            "tagline": "Visual multi-agent AI — no code required",
             "long_description": "CrewAI Studio provides a Streamlit-based visual interface to build and orchestrate multi-agent crews without writing code. Define agents, tasks, and tools through a point-and-click UI, then run autonomous agent teams that collaborate on complex workflows. Features include a visual crew builder, pre-built agent templates, tool integrations, execution monitoring, and export to code.",
             "version": "0.1.0",
             "author": "AppVault / CrewAI",
@@ -434,7 +516,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=CrewAI+Studio+Agents",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=CrewAI+Workflow"
             ],
-            "emoji": "ðŸ¤–",
+            "emoji": "🤖",
             "healthcheck": {
                 "port": 8501,
                 "path": "/",
@@ -450,73 +532,218 @@
             },
             "boot_timeout": 300,
             "min_mem_mb": 2048,
-            "min_disk_gb": 3
+            "min_disk_gb": 3,
+            "certified": {
+                "status": "ok",
+                "legs": [
+                    "--leg"
+                ],
+                "date": "2026-08-06",
+                "url": "http://localhost:50594/"
+            }
         },
         {
             "id": "hermes-agent",
             "name": "Hermes Agent",
-            "description": "An open-source, persistent, self-improving autonomous AI agent developed by Nous Research.",
-            "image": "nousresearch/hermes-agent:latest",
-            "container_port": 8642,
-            "extra_ports": {
-                "9119": 9119
-            },
-            "volumes": [
-                "hermes-agent-data:/opt/data"
-            ],
-            "env": [
-                "TZ=UTC"
-            ],
+            "description": "AppVault Agentic OS watcher daemon: 24/7 RSS signal sweeper, shared-memory sync, multi-session chat. Runs on :8095.",
+            "image": "ghcr.io/sectutor/appvault-hermes-agent:latest",
+            "container_port": 8095,
+            "extra_ports": {},
+            "volumes": [],
+            "env": [],
             "category": "ai",
-            "tier": "premium",
+            "tier": "free",
             "min_ram_mb": 512,
             "education": {
-                "docs_url": "https://github.com/NousResearch/hermes-agent",
-                "quick_start": "Hermes Agent is an AI agent from Nous Research. Note: This is a very large download (several GB) that includes AI models.",
+                "docs_url": "https://github.com/Sectutor/appvault",
+                "quick_start": "Hermes Agent is the Agentic OS watcher: it sweeps live RSS feeds every 10 minutes, writes Signal files to the Obsidian vault, and answers in multi-session chat via the centralized LLM config.",
                 "setup_steps": [
-                    "The image is large (>5GB) â€” first pull may take 5-10 minutes",
-                    "Once running, the agent provides an API for AI tasks",
-                    "Check the logs for access instructions: docker logs app-hermes-agent"
+                    "Chat with Hermes from the Agentic OS page in the store",
+                    "Configure the LLM provider/API key in the LLM Settings drawer",
+                    "View signal files in the Obsidian vault 03_Signals folder"
                 ]
             },
-            "free_tier": false,
-            "tagline": "Persistent, self-improving autonomous AI agent",
-            "long_description": "Hermes Agent is an open-source, persistent, self-improving autonomous AI agent developed by Nous Research. It can browse the web, write and execute code, manage files, and learn from its interactions over time. Features include persistent memory across sessions, tool use (web search, code execution, file management), self-improvement capabilities, and local or remote LLM backend support.",
-            "version": "0.1.0",
-            "author": "Nous Research",
+            "free_tier": true,
+            "tagline": "24/7 signal watcher & session chat",
+            "long_description": "Hermes Agent is the AppVault Agentic OS continuous watcher daemon. It sweeps live RSS feeds (Google News, HN, The Verge, BBC) every 10 minutes, scores stories by AI relevance, writes Signal files to the Obsidian vault, and provides multi-session chat backed by the centralized LLM configuration.",
+            "version": "2.1.0",
+            "author": "AppVault",
             "tags": [
                 "ai",
                 "agent",
-                "autonomous",
-                "self-improving",
-                "nous"
+                "watcher",
+                "signals",
+                "rss"
             ],
-            "website": "https://nousresearch.com",
-            "docs_url": "https://hermes-agent-docs.nousresearch.com",
-            "forum_url": "https://discord.gg/nousresearch",
-            "repository_url": "https://github.com/NousResearch/hermes-agent",
-            "changelog": "Initial AppVault release of Hermes Agent.",
-            "screenshots": [
-                "https://placehold.co/800x600/1e293b/38bdf8?text=Hermes+Agent+Chat",
-                "https://placehold.co/800x600/1e293b/38bdf8?text=Hermes+Agent+Tasks"
-            ],
-            "emoji": "ðŸ§ ",
+            "website": "https://appvault.airepoindex.com",
+            "docs_url": "https://github.com/Sectutor/appvault",
+            "repository_url": "https://github.com/Sectutor/appvault",
+            "changelog": "Real 10-minute RSS sweep, config persistence, keyless Ollama fallback.",
+            "hidden": false,
+            "container_name_override": "appvault-hermes-agent",
+            "emoji": "🧠",
             "healthcheck": {
-                "port": 8642,
-                "path": "/",
+                "port": 8095,
+                "path": "/health",
                 "expect": [
-                    200,
-                    301,
-                    302,
-                    307,
-                    401,
-                    403,
-                    404
+                    200
                 ]
             },
-            "boot_timeout": 300,
-            "min_mem_mb": 2048,
-            "min_disk_gb": 3
+            "boot_timeout": 120,
+            "min_mem_mb": 512,
+            "min_disk_gb": 1
+        },
+        {
+            "id": "crewai-runner",
+            "name": "CrewAI Runner",
+            "description": "AppVault Agentic OS multi-agent execution engine. Dispatches real per-role LLM crews and logs artifacts to the vault. Runs on :8000.",
+            "image": "ghcr.io/sectutor/appvault-crewai-runner:latest",
+            "container_port": 8000,
+            "extra_ports": {},
+            "volumes": [],
+            "env": [],
+            "category": "ai",
+            "tier": "free",
+            "min_ram_mb": 512,
+            "education": {
+                "docs_url": "https://github.com/Sectutor/appvault",
+                "quick_start": "CrewAI Runner executes multi-agent workflows: dispatch a crew from the Agentic OS page and each role (Architect, Engineer, Reviewer) produces real LLM output.",
+                "setup_steps": [
+                    "Dispatch a crew from the Agentic OS page (⚡ Dispatch Crew)",
+                    "Results land in the Obsidian vault 02_Agent_Logs folder",
+                    "Uses the centralized LLM config — keyless local Ollama works out of the box"
+                ]
+            },
+            "free_tier": true,
+            "tagline": "Multi-agent crew execution engine",
+            "long_description": "CrewAI Runner is the Agentic OS multi-agent execution engine. It takes a crew definition and a task, runs real per-role LLM calls (Architect, Lead Engineer, Code Reviewer), collects the results, and writes an execution report to the Obsidian vault.",
+            "version": "1.0.0",
+            "author": "AppVault",
+            "tags": [
+                "ai",
+                "agent",
+                "crew",
+                "orchestrator"
+            ],
+            "website": "https://appvault.airepoindex.com",
+            "docs_url": "https://github.com/Sectutor/appvault",
+            "repository_url": "https://github.com/Sectutor/appvault",
+            "changelog": "Real per-role LLM crew execution.",
+            "hidden": false,
+            "container_name_override": "appvault-crewai-runner",
+            "emoji": "🎼",
+            "healthcheck": {
+                "port": 8000,
+                "path": "/health",
+                "expect": [
+                    200
+                ]
+            },
+            "boot_timeout": 120,
+            "min_mem_mb": 512,
+            "min_disk_gb": 1
+        },
+        {
+            "id": "litellm",
+            "name": "LiteLLM Router",
+            "description": "AppVault Agentic OS unified LLM provider gateway. Routes model calls across OpenAI, Anthropic and local Ollama with fallbacks. Runs on :4000.",
+            "image": "ghcr.io/berriai/litellm:main-v1.30.0",
+            "container_port": 4000,
+            "extra_ports": {},
+            "volumes": [],
+            "env": [],
+            "category": "ai",
+            "tier": "free",
+            "min_ram_mb": 512,
+            "education": {
+                "docs_url": "https://docs.litellm.ai",
+                "quick_start": "LiteLLM is the unified gateway for the Agentic OS fleet. The store's Agentic OS page shows its live status and the centralized LLM config controls which provider the fleet uses.",
+                "setup_steps": [
+                    "Configure provider keys in the Agentic OS LLM Settings drawer",
+                    "Local Ollama models are available as automatic fallbacks",
+                    "Status appears in the Agentic OS roster"
+                ]
+            },
+            "free_tier": true,
+            "tagline": "Unified LLM provider gateway",
+            "long_description": "LiteLLM Router is the Agentic OS model gateway. It exposes one OpenAI-compatible endpoint and routes to the configured providers (OpenAI, Anthropic, local Ollama) with retries and fallbacks.",
+            "version": "1.30.0",
+            "author": "BerriAI",
+            "tags": [
+                "ai",
+                "llm",
+                "gateway",
+                "proxy"
+            ],
+            "website": "https://litellm.ai",
+            "docs_url": "https://docs.litellm.ai",
+            "repository_url": "https://github.com/BerriAI/litellm",
+            "changelog": "Agentic OS gateway with env-key passthrough.",
+            "hidden": false,
+            "container_name_override": "appvault-litellm",
+            "emoji": "🔀",
+            "healthcheck": {
+                "port": 4000,
+                "path": "/health",
+                "expect": [
+                    200,
+                    401,
+                    403
+                ]
+            },
+            "boot_timeout": 120,
+            "min_mem_mb": 512,
+            "min_disk_gb": 1
+        },
+        {
+            "id": "memory-mcp",
+            "name": "Memory MCP",
+            "description": "AppVault Agentic OS shared-memory server. Exposes the unified memory feed and Obsidian vault sync to agents. Runs on :3001.",
+            "image": "ghcr.io/sectutor/appvault-memory-mcp:latest",
+            "container_port": 3001,
+            "extra_ports": {},
+            "volumes": [],
+            "env": [],
+            "category": "ai",
+            "tier": "free",
+            "min_ram_mb": 256,
+            "education": {
+                "docs_url": "https://github.com/Sectutor/appvault",
+                "quick_start": "Memory MCP is the shared-memory plane of the Agentic OS: agents read and write the unified memory feed, synced to the Obsidian vault.",
+                "setup_steps": [
+                    "See the shared memory stream on the Agentic OS page",
+                    "Agents post to memory automatically (sweeps, crews, conversations)",
+                    "Vault files land under 01_Inbox/Agentic_Memory_Feed.md"
+                ]
+            },
+            "free_tier": true,
+            "tagline": "Shared memory & vault sync",
+            "long_description": "Memory MCP is the Agentic OS shared-memory server. It exposes the unified memory feed (SQLite-backed) and Obsidian vault access to all agents, replacing the old @onebrain/mcp-server package that never existed on npm.",
+            "version": "1.0.0",
+            "author": "AppVault",
+            "tags": [
+                "ai",
+                "memory",
+                "mcp",
+                "obsidian"
+            ],
+            "website": "https://appvault.airepoindex.com",
+            "docs_url": "https://github.com/Sectutor/appvault",
+            "repository_url": "https://github.com/Sectutor/appvault",
+            "changelog": "Real shared-memory MCP server (replaces nonexistent npm package).",
+            "hidden": false,
+            "container_name_override": "appvault-memory-mcp",
+            "emoji": "🧠",
+            "healthcheck": {
+                "port": 3001,
+                "path": "/health",
+                "expect": [
+                    200
+                ]
+            },
+            "boot_timeout": 60,
+            "min_mem_mb": 256,
+            "min_disk_gb": 1
         },
         {
             "id": "adguard",
@@ -540,7 +767,7 @@
                     "path": "/"
                 },
                 "setup_steps": [
-                    "Open http://localhost:PORT/ â€” the setup wizard will appear",
+                    "Open http://localhost:PORT/ — the setup wizard will appear",
                     "Set up your admin credentials",
                     "Configure upstream DNS (Cloudflare, Google, etc.)",
                     "Point your router's DNS to this machine's IP"
@@ -567,7 +794,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=AdGuard+Home+Dashboard",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=AdGuard+Query+Log"
             ],
-            "emoji": "ðŸ›¡ï¸",
+            "emoji": "🛡️",
             "healthcheck": {
                 "port": 3000,
                 "path": "/",
@@ -583,7 +810,17 @@
             },
             "boot_timeout": 180,
             "min_mem_mb": 1024,
-            "min_disk_gb": 2
+            "min_disk_gb": 2,
+            "certified": {
+                "status": "ok",
+                "legs": [
+                    "windows",
+                    "--leg"
+                ],
+                "date": "2026-08-06",
+                "url": "http://localhost:56689/install.html"
+            },
+            "web_path": "/install.html"
         },
         {
             "id": "wordpress",
@@ -604,19 +841,19 @@
             "min_ram_mb": 256,
             "education": {
                 "docs_url": "https://wordpress.org/documentation/",
-                "quick_start": "WordPress is the world's most popular CMS. After install, the setup wizard will guide you through creating your site â€” choose a language, set up your database (already configured), and create your admin account.",
+                "quick_start": "WordPress is the world's most popular CMS. After install, the setup wizard will guide you through creating your site — choose a language, set up your database (already configured), and create your admin account.",
                 "default_login": {
                     "username": "set during setup",
                     "password": "set during setup"
                 },
                 "setup_steps": [
-                    "Open the app URL â†’ WordPress setup wizard will appear",
+                    "Open the app URL → WordPress setup wizard will appear",
                     "Select your language and click Continue",
                     "Enter a Site Title, Username, and Password",
                     "Your site is ready! Visit /wp-admin to manage it"
                 ]
             },
-            "free_tier": false,
+            "free_tier": true,
             "mcp": {
                 "credential": {
                     "type": "api_key",
@@ -730,7 +967,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=WordPress+Editor",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=WordPress+Dashboard"
             ],
-            "emoji": "ðŸŒ",
+            "emoji": "🌐",
             "healthcheck": {
                 "port": 80,
                 "path": "/",
@@ -744,7 +981,7 @@
                     404
                 ]
             },
-            "boot_timeout": 180,
+            "boot_timeout": 240,
             "min_mem_mb": 1024,
             "min_disk_gb": 2
         },
@@ -773,7 +1010,7 @@
                     "password": "set during setup"
                 },
                 "setup_steps": [
-                    "Open the app URL â†’ create your admin account",
+                    "Open the app URL → create your admin account",
                     "Choose 'Install Recommended Apps' for full functionality",
                     "Install desktop/mobile sync clients from nextcloud.com",
                     "Set up calendar & contacts sync"
@@ -801,7 +1038,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Nextcloud+Files",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Nextcloud+Dashboard"
             ],
-            "emoji": "ðŸ“",
+            "emoji": "📁",
             "deps": [
                 {
                     "name": "app-nextcloud-db",
@@ -848,7 +1085,7 @@
                 "docs_url": "https://helpcenter.onlyoffice.com/",
                 "quick_start": "OnlyOffice Document Server provides online document editing (Word, Excel, PowerPoint) that integrates with Nextcloud, ownCloud, and other platforms.",
                 "setup_steps": [
-                    "This is a backend service â€” it works with Nextcloud/ownCloud apps",
+                    "This is a backend service — it works with Nextcloud/ownCloud apps",
                     "Install the ONLYOFFICE connector plugin in your cloud platform",
                     "Configure the connector to point to http://app-onlyoffice:PORT/",
                     "Test by creating/editing a document in your cloud"
@@ -856,7 +1093,7 @@
             },
             "free_tier": false,
             "container_port": 80,
-            "tagline": "Self-hosted office suite â€” docs, sheets & slides",
+            "tagline": "Self-hosted office suite — docs, sheets & slides",
             "long_description": "OnlyOffice Docs is a self-hosted online office suite that enables you to create and edit documents, spreadsheets, and presentations directly in your browser. It offers the best compatibility with Microsoft Office formats and supports real-time collaborative editing. Features include document/spreadsheet/presentation editors, collaborative editing, version history, PDF support, and integration connectors for Nextcloud/ownCloud.",
             "version": "8.1.0",
             "author": "Ascensio System",
@@ -876,7 +1113,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=OnlyOffice+Document+Editor",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=OnlyOffice+Spreadsheet"
             ],
-            "emoji": "ðŸ“„",
+            "emoji": "📄",
             "healthcheck": {
                 "port": 80,
                 "path": "/",
@@ -892,7 +1129,16 @@
             },
             "boot_timeout": 180,
             "min_mem_mb": 1024,
-            "min_disk_gb": 2
+            "min_disk_gb": 2,
+            "web_path": "/welcome/",
+            "certified": {
+                "status": "ok",
+                "legs": [
+                    "--leg"
+                ],
+                "date": "2026-08-06",
+                "url": "http://localhost:51208/welcome/"
+            }
         },
         {
             "id": "gitlab",
@@ -923,15 +1169,15 @@
                     "password": "set on first login"
                 },
                 "setup_steps": [
-                    "Open the app URL â†’ set the root password",
+                    "Open the app URL → set the root password",
                     "Log in with root and your chosen password",
                     "Create your first project",
-                    "Add SSH keys in Preferences â†’ SSH Keys"
+                    "Add SSH keys in Preferences → SSH Keys"
                 ]
             },
             "free_tier": false,
             "tagline": "Complete DevOps platform, self-hosted",
-            "long_description": "GitLab is a complete DevOps platform, delivered as a single application. It provides Git repository management, CI/CD pipelines, container registry, security scanning, package registry, monitoring, and project management â€” all in one self-hosted package. Features include Git repos, CI/CD with Auto DevOps, issue tracking, code review, container registry, security scanning, and Kubernetes integration.",
+            "long_description": "GitLab is a complete DevOps platform, delivered as a single application. It provides Git repository management, CI/CD pipelines, container registry, security scanning, package registry, monitoring, and project management — all in one self-hosted package. Features include Git repos, CI/CD with Auto DevOps, issue tracking, code review, container registry, security scanning, and Kubernetes integration.",
             "version": "17.2.0",
             "author": "GitLab Inc.",
             "tags": [
@@ -950,7 +1196,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=GitLab+Repository",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=GitLab+CI%2FCD+Pipelines"
             ],
-            "emoji": "ðŸ”§",
+            "emoji": "🔧",
             "healthcheck": {
                 "port": 80,
                 "path": "/",
@@ -964,7 +1210,7 @@
                     404
                 ]
             },
-            "boot_timeout": 150,
+            "boot_timeout": 300,
             "min_mem_mb": 512,
             "min_disk_gb": 2
         },
@@ -992,7 +1238,7 @@
             "main_port": 9087,
             "education": {
                 "docs_url": "https://www.bookstackapp.com/docs/",
-                "quick_start": "BookStack is a self-hosted wiki/documentation platform. Organize content into Shelves â†’ Books â†’ Chapters â†’ Pages hierarchy.",
+                "quick_start": "BookStack is a self-hosted wiki/documentation platform. Organize content into Shelves → Books → Chapters → Pages hierarchy.",
                 "default_login": {
                     "username": "admin@admin.com",
                     "password": "password"
@@ -1000,7 +1246,7 @@
                 "setup_steps": [
                     "Log in with admin@admin.com / password",
                     "Change the default credentials immediately",
-                    "Create your first Shelf â†’ Book â†’ Page",
+                    "Create your first Shelf → Book → Page",
                     "Configure SMTP for email notifications"
                 ]
             },
@@ -1025,7 +1271,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=BookStack+Bookshelf",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=BookStack+Page+Editor"
             ],
-            "emoji": "ðŸ“–",
+            "emoji": "📖",
             "healthcheck": {
                 "port": 80,
                 "path": "/",
@@ -1039,7 +1285,7 @@
                     404
                 ]
             },
-            "boot_timeout": 180,
+            "boot_timeout": 240,
             "min_mem_mb": 1024,
             "min_disk_gb": 2
         },
@@ -1074,7 +1320,7 @@
                     "password": "set on first login"
                 },
                 "setup_steps": [
-                    "Open the app â†’ create your superuser account",
+                    "Open the app → create your superuser account",
                     "Configure the consumption folder for auto-importing",
                     "Set up document types and correspondents",
                     "Install the mobile app for scanning on the go"
@@ -1101,7 +1347,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Paperless-ngx+Dashboard",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Paperless-ngx+Documents"
             ],
-            "emoji": "ðŸ—‚ï¸",
+            "emoji": "🗂️",
             "healthcheck": {
                 "port": 8000,
                 "path": "/",
@@ -1115,7 +1361,7 @@
                     404
                 ]
             },
-            "boot_timeout": 180,
+            "boot_timeout": 300,
             "min_mem_mb": 1024,
             "min_disk_gb": 2
         },
@@ -1145,15 +1391,15 @@
                     "password": "set during setup"
                 },
                 "setup_steps": [
-                    "Open the app URL â†’ complete the setup wizard",
+                    "Open the app URL → complete the setup wizard",
                     "Add your media folders (Movies, TV Shows, Music)",
                     "Wait for the library scan to complete",
                     "Install Jellyfin clients on your TV, phone, or tablet"
                 ]
             },
             "free_tier": true,
-            "tagline": "Free media system â€” stream anything, anywhere",
-            "long_description": "Jellyfin is a free, open-source media system that lets you stream your movies, TV shows, music, and photos to any device. It's a community-driven alternative to Plex and Emby with no premium features locked behind a paywall â€” everything is free. Features include movie/TV/music libraries, live TV & DVR, hardware transcoding, multi-user support, plugins, and apps for every platform.",
+            "tagline": "Free media system — stream anything, anywhere",
+            "long_description": "Jellyfin is a free, open-source media system that lets you stream your movies, TV shows, music, and photos to any device. It's a community-driven alternative to Plex and Emby with no premium features locked behind a paywall — everything is free. Features include movie/TV/music libraries, live TV & DVR, hardware transcoding, multi-user support, plugins, and apps for every platform.",
             "version": "10.9.7",
             "author": "Jellyfin",
             "tags": [
@@ -1172,7 +1418,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Jellyfin+Home",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Jellyfin+Library"
             ],
-            "emoji": "ðŸŽ¬",
+            "emoji": "🎬",
             "healthcheck": {
                 "port": 8096,
                 "path": "/",
@@ -1186,9 +1432,19 @@
                     404
                 ]
             },
-            "boot_timeout": 180,
+            "boot_timeout": 120,
             "min_mem_mb": 1024,
-            "min_disk_gb": 2
+            "min_disk_gb": 2,
+            "web_path": "/web/",
+            "certified": {
+                "status": "ok",
+                "legs": [
+                    "windows",
+                    "--leg"
+                ],
+                "date": "2026-08-06",
+                "url": "http://localhost:53117/web/"
+            }
         },
         {
             "id": "navidrome",
@@ -1210,7 +1466,7 @@
                 "quick_start": "Navidrome is a personal music streaming server. Point it to your music folder and stream your collection from anywhere.",
                 "setup_steps": [
                     "Place your music files in the music volume",
-                    "Open the app â€” Navidrome will scan automatically",
+                    "Open the app — Navidrome will scan automatically",
                     "Log in and start streaming",
                     "Use Subsonic-compatible apps (Ultrasonic, DSub) for mobile access"
                 ]
@@ -1235,7 +1491,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Navidrome+Interface",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Navidrome+Player"
             ],
-            "emoji": "ðŸŽµ",
+            "emoji": "🎵",
             "healthcheck": {
                 "port": 4533,
                 "path": "/",
@@ -1251,7 +1507,16 @@
             },
             "boot_timeout": 180,
             "min_mem_mb": 1024,
-            "min_disk_gb": 2
+            "min_disk_gb": 2,
+            "web_path": "/app/",
+            "certified": {
+                "status": "ok",
+                "legs": [
+                    "--leg"
+                ],
+                "date": "2026-08-06",
+                "url": "http://localhost:53254/app/"
+            }
         },
         {
             "id": "kavita",
@@ -1279,7 +1544,7 @@
                 },
                 "setup_steps": [
                     "Log in with admin / admin",
-                    "Go to Settings â†’ Libraries â†’ Add your media folders",
+                    "Go to Settings → Libraries → Add your media folders",
                     "Set up the library scanner",
                     "Start reading in your browser or mobile app"
                 ]
@@ -1305,7 +1570,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Kavita+Library",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Kavita+Reader"
             ],
-            "emoji": "ðŸ“š",
+            "emoji": "📚",
             "healthcheck": {
                 "port": 5000,
                 "path": "/",
@@ -1321,7 +1586,15 @@
             },
             "boot_timeout": 180,
             "min_mem_mb": 1024,
-            "min_disk_gb": 2
+            "min_disk_gb": 2,
+            "certified": {
+                "status": "ok",
+                "legs": [
+                    "--leg"
+                ],
+                "date": "2026-08-06",
+                "url": "http://localhost:62517/"
+            }
         },
         {
             "id": "photoprism",
@@ -1352,7 +1625,7 @@
                     "password": "set on first login"
                 },
                 "setup_steps": [
-                    "Open the app â†’ set your admin password",
+                    "Open the app → set your admin password",
                     "Point PhotoPrism to your photo directory",
                     "Let the indexing run (may take time for large libraries)",
                     "Explore the map view, albums, and search"
@@ -1379,7 +1652,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=PhotoPrism+Albums",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=PhotoPrism+Search"
             ],
-            "emoji": "ðŸ–¼ï¸",
+            "emoji": "🖼️",
             "healthcheck": {
                 "port": 2342,
                 "path": "/",
@@ -1393,7 +1666,7 @@
                     404
                 ]
             },
-            "boot_timeout": 180,
+            "boot_timeout": 240,
             "min_mem_mb": 1024,
             "min_disk_gb": 2
         },
@@ -1426,7 +1699,7 @@
                     "password": "set during setup"
                 },
                 "setup_steps": [
-                    "Open the app â†’ create your admin account",
+                    "Open the app → create your admin account",
                     "Install the Immich mobile app from the app store",
                     "Enable auto-backup on your phone",
                     "Wait for ML-powered search indexing (face detection, object recognition)"
@@ -1454,7 +1727,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Immich+Photos",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Immich+Albums"
             ],
-            "emoji": "ðŸ“¸",
+            "emoji": "📸",
             "healthcheck": {
                 "port": 2283,
                 "path": "/",
@@ -1468,7 +1741,7 @@
                     404
                 ]
             },
-            "boot_timeout": 180,
+            "boot_timeout": 300,
             "min_mem_mb": 1024,
             "min_disk_gb": 2
         },
@@ -1486,7 +1759,7 @@
             "hidden": true,
             "free_tier": false,
             "container_port": 3003,
-            "emoji": "ðŸ§ ",
+            "emoji": "🧠",
             "healthcheck": {
                 "port": 3003,
                 "path": "/",
@@ -1560,7 +1833,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=WireGuard+Interface",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=WireGuard+Peer+Manager"
             ],
-            "emoji": "ðŸ”",
+            "emoji": "🔐",
             "healthcheck": {
                 "port": 51820,
                 "path": "/",
@@ -1576,7 +1849,8 @@
             },
             "boot_timeout": 180,
             "min_mem_mb": 1024,
-            "min_disk_gb": 2
+            "min_disk_gb": 2,
+            "web_ui": false
         },
         {
             "id": "vaultwarden",
@@ -1594,7 +1868,7 @@
                 "docs_url": "https://github.com/dani-garcia/vaultwarden/wiki",
                 "quick_start": "Vaultwarden is a self-hosted Bitwarden-compatible password manager. Store, generate, and sync passwords across all devices.",
                 "setup_steps": [
-                    "Open the app â†’ create your account",
+                    "Open the app → create your account",
                     "Install the Bitwarden browser extension",
                     "Configure the extension to use your self-hosted server URL",
                     "Install the Bitwarden mobile app and connect to your server"
@@ -1605,7 +1879,7 @@
             "tagline": "Self-hosted password manager (Bitwarden-compatible)",
             "long_description": "Vaultwarden is an alternative server implementation of the Bitwarden clients, written in Rust and compatible with the official Bitwarden clients. It lets you self-host your passwords with zero lock-in. Features include full Bitwarden API compatibility, web vault, password generator, attachments, TOTP, emergency access, and a tiny resource footprint.",
             "version": "1.31.0",
-            "author": "Daniel GarcÃ­a / dani-garcia",
+            "author": "Daniel García / dani-garcia",
             "tags": [
                 "passwords",
                 "security",
@@ -1621,7 +1895,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Vaultwarden+Vault",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Vaultwarden+Login"
             ],
-            "emoji": "ðŸ”‘",
+            "emoji": "🔑",
             "healthcheck": {
                 "port": 80,
                 "path": "/",
@@ -1637,7 +1911,16 @@
             },
             "boot_timeout": 180,
             "min_mem_mb": 1024,
-            "min_disk_gb": 2
+            "min_disk_gb": 2,
+            "certified": {
+                "status": "ok",
+                "legs": [
+                    "windows",
+                    "--leg"
+                ],
+                "date": "2026-08-06",
+                "url": "http://localhost:62371/"
+            }
         },
         {
             "id": "nginx-proxy-manager",
@@ -1667,7 +1950,7 @@
                 "setup_steps": [
                     "Log in with admin@example.com / changeme",
                     "Change the admin email and password immediately",
-                    "Add your first Proxy Host (domain â†’ internal service)",
+                    "Add your first Proxy Host (domain → internal service)",
                     "Request SSL certificates via Let's Encrypt"
                 ]
             },
@@ -1691,7 +1974,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Nginx+Proxy+Manager",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Nginx+Proxy+Hosts"
             ],
-            "emoji": "ðŸ”„",
+            "emoji": "🔄",
             "healthcheck": {
                 "port": 81,
                 "path": "/",
@@ -1707,7 +1990,15 @@
             },
             "boot_timeout": 180,
             "min_mem_mb": 1024,
-            "min_disk_gb": 2
+            "min_disk_gb": 2,
+            "certified": {
+                "status": "ok",
+                "legs": [
+                    "--leg"
+                ],
+                "date": "2026-08-06",
+                "url": "http://localhost:62650/"
+            }
         },
         {
             "id": "traefik",
@@ -1759,7 +2050,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Traefik+Dashboard",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Traefik+Routes"
             ],
-            "emoji": "ðŸš¦",
+            "emoji": "🚦",
             "healthcheck": {
                 "port": 8080,
                 "path": "/",
@@ -1772,7 +2063,16 @@
             },
             "boot_timeout": 60,
             "min_mem_mb": 256,
-            "min_disk_gb": 1
+            "min_disk_gb": 1,
+            "web_path": "/dashboard/",
+            "certified": {
+                "status": "ok",
+                "legs": [
+                    "--leg"
+                ],
+                "date": "2026-08-06",
+                "url": "http://localhost:62490/dashboard/"
+            }
         },
         {
             "id": "uptime-kuma",
@@ -1794,7 +2094,7 @@
                     "password": "set during setup"
                 },
                 "setup_steps": [
-                    "Open the app â†’ create your admin account",
+                    "Open the app → create your admin account",
                     "Click 'Add Monitor' to monitor your first service",
                     "Configure notification methods (Email, Telegram, Slack, etc.)",
                     "Set up the status page for public display"
@@ -1819,7 +2119,7 @@
             "repository_url": "https://github.com/louislam/uptime-kuma",
             "changelog": "Uptime Kuma latest with multi-channel alerts and beautiful status pages.",
             "screenshots": [],
-            "emoji": "ðŸ“Š",
+            "emoji": "📊",
             "healthcheck": {
                 "port": 3001,
                 "path": "/",
@@ -1862,15 +2162,15 @@
                     "password": "set on first login"
                 },
                 "setup_steps": [
-                    "Open the app â†’ set your admin password (min 8 chars)",
+                    "Open the app → set your admin password (min 8 chars)",
                     "Select your Docker environment (local socket)",
-                    "Explore the dashboard â€” containers, images, volumes",
+                    "Explore the dashboard — containers, images, volumes",
                     "Use Portainer's App Templates to quickly deploy services"
                 ]
             },
             "free_tier": true,
             "tagline": "Docker management UI for your containers",
-            "long_description": "Portainer is a lightweight management UI that lets you easily manage your Docker environments â€” containers, images, volumes, networks, and stacks. It supports Docker standalone, Docker Swarm, and Kubernetes. Features include container/image/volume/network management, stack deployment, a web terminal, role-based access control, and templates for common apps.",
+            "long_description": "Portainer is a lightweight management UI that lets you easily manage your Docker environments — containers, images, volumes, networks, and stacks. It supports Docker standalone, Docker Swarm, and Kubernetes. Features include container/image/volume/network management, stack deployment, a web terminal, role-based access control, and templates for common apps.",
             "version": "2.20.3",
             "author": "Portainer.io",
             "tags": [
@@ -1888,7 +2188,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Portainer+Dashboard",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Portainer+Containers"
             ],
-            "emoji": "ðŸ³",
+            "emoji": "🐳",
             "healthcheck": {
                 "port": 9000,
                 "path": "/",
@@ -1904,7 +2204,16 @@
             },
             "boot_timeout": 150,
             "min_mem_mb": 512,
-            "min_disk_gb": 2
+            "min_disk_gb": 2,
+            "certified": {
+                "status": "ok",
+                "legs": [
+                    "windows",
+                    "--leg"
+                ],
+                "date": "2026-08-06",
+                "url": "http://localhost:62541/"
+            }
         },
         {
             "id": "dozzle",
@@ -1922,15 +2231,15 @@
                 "docs_url": "https://github.com/amir20/dozzle",
                 "quick_start": "Dozzle is a real-time Docker log viewer. See logs from all your containers in one browser window with search and filtering.",
                 "setup_steps": [
-                    "Open the app â†’ see live logs from all running containers",
+                    "Open the app → see live logs from all running containers",
                     "Click any container to see its logs",
                     "Use the search bar to filter log entries",
                     "Bookmark specific containers for quick access"
                 ]
             },
-            "free_tier": false,
+            "free_tier": true,
             "tagline": "Real-time Docker log viewer",
-            "long_description": "Dozzle is a small, lightweight application that provides you a web-based interface to monitor your Docker container logs in real-time. It's perfect for development and debugging â€” no need to SSH into your server or use the Docker CLI to view logs. Features include real-time log streaming, a simple web UI, container search, regex filtering, and minimal resource usage.",
+            "long_description": "Dozzle is a small, lightweight application that provides you a web-based interface to monitor your Docker container logs in real-time. It's perfect for development and debugging — no need to SSH into your server or use the Docker CLI to view logs. Features include real-time log streaming, a simple web UI, container search, regex filtering, and minimal resource usage.",
             "version": "8.3.0",
             "author": "Amir Raminfar",
             "tags": [
@@ -1948,7 +2257,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Dozzle+Logs",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Dozzle+Container+View"
             ],
-            "emoji": "ðŸ“œ",
+            "emoji": "📜",
             "healthcheck": {
                 "port": 8080,
                 "path": "/",
@@ -1964,7 +2273,15 @@
             },
             "boot_timeout": 150,
             "min_mem_mb": 512,
-            "min_disk_gb": 2
+            "min_disk_gb": 2,
+            "certified": {
+                "status": "ok",
+                "legs": [
+                    "--leg"
+                ],
+                "date": "2026-08-06",
+                "url": "http://localhost:62572/"
+            }
         },
         {
             "id": "code-server",
@@ -1991,7 +2308,7 @@
                     "password": "set on first login (check logs)"
                 },
                 "setup_steps": [
-                    "Open the app â†’ enter the password shown in container logs",
+                    "Open the app → enter the password shown in container logs",
                     "Install extensions from the VS Code marketplace",
                     "Open a terminal and start coding",
                     "Configure settings sync across devices"
@@ -1999,7 +2316,7 @@
             },
             "free_tier": false,
             "tagline": "VS Code in the browser, self-hosted",
-            "long_description": "Code Server (code-server) lets you run VS Code on any machine and access it in the browser. It provides the full VS Code experience â€” extensions, terminal, debugging, IntelliSense â€” from any device with a browser. Features include full VS Code compatibility, extension marketplace access, integrated terminal, Git support, multi-language support, and persistent workspaces.",
+            "long_description": "Code Server (code-server) lets you run VS Code on any machine and access it in the browser. It provides the full VS Code experience — extensions, terminal, debugging, IntelliSense — from any device with a browser. Features include full VS Code compatibility, extension marketplace access, integrated terminal, Git support, multi-language support, and persistent workspaces.",
             "version": "4.92.2",
             "author": "Coder Technologies",
             "tags": [
@@ -2018,7 +2335,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=VS+Code+Browser",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=VS+Code+Terminal"
             ],
-            "emoji": "ðŸ’»",
+            "emoji": "💻",
             "healthcheck": {
                 "port": 8443,
                 "path": "/",
@@ -2034,7 +2351,16 @@
             },
             "boot_timeout": 150,
             "min_mem_mb": 512,
-            "min_disk_gb": 2
+            "min_disk_gb": 2,
+            "web_path": "/login",
+            "certified": {
+                "status": "ok",
+                "legs": [
+                    "--leg"
+                ],
+                "date": "2026-08-06",
+                "url": "http://localhost:62739/login"
+            }
         },
         {
             "id": "gitea",
@@ -2056,13 +2382,13 @@
             "min_ram_mb": 256,
             "education": {
                 "docs_url": "https://docs.gitea.com/",
-                "quick_start": "Gitea is a lightweight Git service. Create repositories, manage issues, and collaborate with pull requests â€” like GitHub but self-hosted.",
+                "quick_start": "Gitea is a lightweight Git service. Create repositories, manage issues, and collaborate with pull requests — like GitHub but self-hosted.",
                 "default_login": {
                     "username": "set during setup",
                     "password": "set during setup"
                 },
                 "setup_steps": [
-                    "Open the app â†’ the setup page will appear",
+                    "Open the app → the setup page will appear",
                     "Configure your Gitea instance (DB is already set up)",
                     "Create your admin account",
                     "Create your first repository and push code"
@@ -2088,7 +2414,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Gitea+Repository",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Gitea+Dashboard"
             ],
-            "emoji": "ðŸ™",
+            "emoji": "🐙",
             "healthcheck": {
                 "port": 3000,
                 "path": "/",
@@ -2104,7 +2430,15 @@
             },
             "boot_timeout": 150,
             "min_mem_mb": 512,
-            "min_disk_gb": 2
+            "min_disk_gb": 2,
+            "certified": {
+                "status": "ok",
+                "legs": [
+                    "--leg"
+                ],
+                "date": "2026-08-06",
+                "url": "http://localhost:62747/"
+            }
         },
         {
             "id": "stirling-pdf",
@@ -2128,17 +2462,17 @@
             "min_ram_mb": 512,
             "education": {
                 "docs_url": "https://www.stirlingpdf.com/",
-                "quick_start": "Stirling PDF is a tool for manipulating PDFs â€” merge, split, convert, compress, and more. All processing happens locally.",
+                "quick_start": "Stirling PDF is a tool for manipulating PDFs — merge, split, convert, compress, and more. All processing happens locally.",
                 "setup_steps": [
-                    "Open the app â†’ see the full PDF toolset",
+                    "Open the app → see the full PDF toolset",
                     "Upload a PDF and choose an operation",
                     "Download the result",
-                    "No configuration needed â€” just use it"
+                    "No configuration needed — just use it"
                 ]
             },
             "free_tier": false,
             "tagline": "All-in-one PDF toolkit, self-hosted",
-            "long_description": "Stirling-PDF is a robust, locally-hosted web application that lets you perform a wide variety of PDF operations. Merge, split, rotate, compress, convert, add/remove pages, extract text, add watermarks, and more â€” all from your browser without uploading files to third-party services. Features include merge/split/rotate/compress, PDF to/from images, OCR, add watermarks, and a clean UI.",
+            "long_description": "Stirling-PDF is a robust, locally-hosted web application that lets you perform a wide variety of PDF operations. Merge, split, rotate, compress, convert, add/remove pages, extract text, add watermarks, and more — all from your browser without uploading files to third-party services. Features include merge/split/rotate/compress, PDF to/from images, OCR, add watermarks, and a clean UI.",
             "version": "0.27.0",
             "author": "Frooodle / Stirling-Tools",
             "tags": [
@@ -2156,7 +2490,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Stirling+PDF+Tools",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Stirling+PDF+Merge"
             ],
-            "emoji": "ðŸ“„",
+            "emoji": "📄",
             "healthcheck": {
                 "port": 8080,
                 "path": "/",
@@ -2172,7 +2506,15 @@
             },
             "boot_timeout": 180,
             "min_mem_mb": 1024,
-            "min_disk_gb": 2
+            "min_disk_gb": 2,
+            "certified": {
+                "status": "ok",
+                "legs": [
+                    "--leg"
+                ],
+                "date": "2026-08-06",
+                "url": "http://localhost:62779/"
+            }
         },
         {
             "id": "excalidraw",
@@ -2188,7 +2530,7 @@
                 "docs_url": "https://docs.excalidraw.com/",
                 "quick_start": "Excalidraw is a whiteboard tool for sketching diagrams. Draw flowcharts, wireframes, and diagrams with a hand-drawn feel.",
                 "setup_steps": [
-                    "Open the app â†’ start drawing immediately",
+                    "Open the app → start drawing immediately",
                     "Use the library for pre-made shapes and icons",
                     "Collaborate in real-time by sharing the room link",
                     "Export as PNG or SVG"
@@ -2214,7 +2556,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Excalidraw+Canvas",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Excalidraw+Library"
             ],
-            "emoji": "âœï¸",
+            "emoji": "✏️",
             "healthcheck": {
                 "port": 80,
                 "path": "/",
@@ -2230,7 +2572,15 @@
             },
             "boot_timeout": 180,
             "min_mem_mb": 1024,
-            "min_disk_gb": 2
+            "min_disk_gb": 2,
+            "certified": {
+                "status": "ok",
+                "legs": [
+                    "--leg"
+                ],
+                "date": "2026-08-06",
+                "url": "http://localhost:62800/"
+            }
         },
         {
             "id": "drawio",
@@ -2248,7 +2598,7 @@
                 "docs_url": "https://drawio-app.com/",
                 "quick_start": "Draw.io is a diagramming tool for flowcharts, network diagrams, UML, and more. Integrates with Google Drive, OneDrive, and GitHub.",
                 "setup_steps": [
-                    "Open the app â†’ choose where to save your diagrams",
+                    "Open the app → choose where to save your diagrams",
                     "Drag shapes from the left panel to create diagrams",
                     "Export as PNG, SVG, or PDF",
                     "Save to cloud storage or locally"
@@ -2274,7 +2624,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Draw.io+Editor",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Draw.io+Shapes"
             ],
-            "emoji": "ðŸ“",
+            "emoji": "📐",
             "healthcheck": {
                 "port": 8080,
                 "path": "/",
@@ -2290,7 +2640,15 @@
             },
             "boot_timeout": 180,
             "min_mem_mb": 1024,
-            "min_disk_gb": 2
+            "min_disk_gb": 2,
+            "certified": {
+                "status": "ok",
+                "legs": [
+                    "--leg"
+                ],
+                "date": "2026-08-06",
+                "url": "http://localhost:62830/"
+            }
         },
         {
             "id": "9router",
@@ -2337,9 +2695,51 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=9Router+Dashboard",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=9Router+Providers"
             ],
-            "emoji": "ðŸ”€",
+            "emoji": "🔀",
             "healthcheck": {
                 "port": 20128,
+                "path": "/",
+                "expect": [
+                    200,
+                    301,
+                    302,
+                    307,
+                    401,
+                    403,
+                    404
+                ]
+            },
+            "boot_timeout": 300,
+            "min_mem_mb": 2048,
+            "min_disk_gb": 3,
+            "web_path": "/login",
+            "certified": {
+                "status": "ok",
+                "legs": [
+                    "--leg"
+                ],
+                "date": "2026-08-06",
+                "url": "http://localhost:62978/login"
+            }
+        },
+        {
+            "id": "openmaic",
+            "name": "OpenMAIC",
+            "description": "",
+            "image": "",
+            "container_port": 3000,
+            "volumes": [],
+            "env": [],
+            "category": "ai",
+            "min_ram_mb": 512,
+            "type": "stack",
+            "is_stack": true,
+            "compose_url": "https://raw.githubusercontent.com/THU-MAIC/OpenMAIC/main/docker-compose.yml",
+            "free_tier": true,
+            "hidden": true,
+            "emoji": "🤖",
+            "healthcheck": {
+                "port": 3000,
                 "path": "/",
                 "expect": [
                     200,
@@ -2356,23 +2756,58 @@
             "min_disk_gb": 3
         },
         {
-            "id": "openmaic",
-            "name": "OpenMAIC",
-            "description": "",
+            "id": "openship",
+            "name": "OpenShip",
+            "description": "Self-hosted deployment platform with built-in CI/CD - point it at a repo and it builds, ships, routes and TLS-terminates your apps. A self-hosted Coolify/Vercel alternative with a web dashboard, project pipelines and deploy targets. Open source (Apache-2.0), 10k+ stars.",
             "image": "",
-            "container_port": 3000,
-            "volumes": [],
-            "env": [],
-            "category": "ai",
-            "min_ram_mb": 512,
+            "container_port": 3001,
             "type": "stack",
             "is_stack": true,
-            "compose_url": "https://raw.githubusercontent.com/THU-MAIC/OpenMAIC/main/docker-compose.yml",
+            "compose_url": "https://raw.githubusercontent.com/Sectutor/openship-stack/main/docker-compose.yml",
+            "volumes": [],
+            "env": [],
+            "category": "automation",
+            "min_ram_mb": 1536,
+            "education": {
+                "docs_url": "https://openship.io/docs",
+                "quick_start": "OpenShip is a self-hosted deployment platform: connect a git repo, it builds and ships the app, with dashboards for projects, deployments and servers. The stack starts the control plane (dashboard on port 3001, API on 4000) plus its own PostgreSQL and Redis; the one-shot setup service auto-creates the first admin on first boot. After install, open the app and sign in with the default admin below, then create your first project and point it at a repo.",
+                "default_login": {
+                    "username": "admin@openship.local",
+                    "password": "Openship2026!",
+                    "path": "/"
+                },
+                "setup_steps": [
+                    "Open the launch URL in your browser",
+                    "Sign in with admin@openship.local / Openship2026! (auto-created on first boot)",
+                    "Create your first project and connect a git repository",
+                    "Deploy to a remote server (SSH) - auto-domain routing on this box needs a separate OpenResty edge container (the AppVault Caddy owns ports 80/443)"
+                ]
+            },
             "free_tier": false,
-            "hidden": true,
-            "emoji": "ðŸ¤–",
+            "github_url": "https://github.com/oblien/openship",
+            "tagline": "Self-hosted deployment platform with CI/CD",
+            "long_description": "OpenShip is an open-source, self-hostable deployment platform with built-in CI/CD. Point it at a git repository and it builds, ships, routes, and TLS-terminates your application. It includes a web dashboard, CLI, and desktop app for managing projects, deployments, servers, domains and TLS certificates. Self-hosted mode runs the full control plane (API + dashboard + PostgreSQL + Redis) on your own box and can deploy apps to the same machine or to remote servers over SSH. Apache-2.0, 10k+ GitHub stars, actively developed.",
+            "version": "0.6.1",
+            "author": "Oblien",
+            "tags": [
+                "deployments",
+                "ci-cd",
+                "self-hosted",
+                "devops",
+                "automation"
+            ],
+            "website": "https://openship.io",
+            "docs_url": "https://openship.io/docs",
+            "forum_url": "https://github.com/oblien/openship/discussions",
+            "repository_url": "https://github.com/oblien/openship",
+            "changelog": "AppVault catalog release - self-hosted deployment platform with CI/CD (curated stack, admin auto-bootstrap).",
+            "screenshots": [
+                "https://placehold.co/800x600/1e293b/38bdf8?text=OpenShip+Dashboard",
+                "https://placehold.co/800x600/1e293b/38bdf8?text=OpenShip+Projects"
+            ],
+            "emoji": "🚀",
             "healthcheck": {
-                "port": 3000,
+                "port": 3001,
                 "path": "/",
                 "expect": [
                     200,
@@ -2385,7 +2820,7 @@
                 ]
             },
             "boot_timeout": 300,
-            "min_mem_mb": 2048,
+            "min_mem_mb": 1024,
             "min_disk_gb": 3
         },
         {
@@ -2430,7 +2865,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Documenso+Sign",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Documenso+Documents"
             ],
-            "emoji": "âœï¸",
+            "emoji": "✍️",
             "healthcheck": {
                 "port": 3000,
                 "path": "/",
@@ -2444,7 +2879,7 @@
                     404
                 ]
             },
-            "boot_timeout": 180,
+            "boot_timeout": 300,
             "min_mem_mb": 1024,
             "min_disk_gb": 2,
             "free_tier": false
@@ -2463,7 +2898,7 @@
             "is_stack": true,
             "compose_url": "https://raw.githubusercontent.com/AppFlowy-IO/AppFlowy-Cloud/main/docker-compose.yml",
             "hidden": true,
-            "emoji": "ðŸ“",
+            "emoji": "📝",
             "healthcheck": {
                 "port": 8000,
                 "path": "/",
@@ -2493,8 +2928,8 @@
             "env": [],
             "category": "infrastructure",
             "hidden": true,
-            "free_tier": false,
-            "emoji": "âš¡",
+            "free_tier": true,
+            "emoji": "⚡",
             "healthcheck": {
                 "port": 6379,
                 "path": "/",
@@ -2516,15 +2951,12 @@
             "id": "twenty",
             "name": "Twenty CRM",
             "description": "Open-source modern CRM. Beautiful, fast, and self-hosted.",
-            "image": "twentycrm/twenty:v2.26.0",
+            "image": "",
             "container_port": 3000,
             "is_stack": true,
             "type": "stack",
             "compose_url": "http://central:8000/api/agent/compose/twenty",
-            "volumes": [
-                "twenty-db-data",
-                "twenty-server-data"
-            ],
+            "volumes": [],
             "env": [
                 "SERVER_URL=http://localhost:3000",
                 "STORAGE_TYPE=local",
@@ -2568,7 +3000,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Twenty+CRM+Contacts",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Twenty+CRM+Pipelines"
             ],
-            "emoji": "ðŸ¤",
+            "emoji": "🤝",
             "healthcheck": {
                 "port": 3000,
                 "path": "/",
@@ -2582,7 +3014,7 @@
                     404
                 ]
             },
-            "boot_timeout": 180,
+            "boot_timeout": 300,
             "min_mem_mb": 1024,
             "min_disk_gb": 2
         },
@@ -2625,7 +3057,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=ShieldSign+Sign",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=ShieldSign+Documents"
             ],
-            "emoji": "ðŸ›¡ï¸",
+            "emoji": "🛡️",
             "healthcheck": {
                 "port": 3000,
                 "path": "/",
@@ -2694,7 +3126,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=AnythingLLM+Chat",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=AnythingLLM+Workspaces"
             ],
-            "emoji": "ðŸ¤–",
+            "emoji": "🤖",
             "healthcheck": {
                 "port": 3001,
                 "path": "/",
@@ -2710,12 +3142,20 @@
             },
             "boot_timeout": 300,
             "min_mem_mb": 2048,
-            "min_disk_gb": 3
+            "min_disk_gb": 3,
+            "certified": {
+                "status": "ok",
+                "legs": [
+                    "--leg"
+                ],
+                "date": "2026-08-06",
+                "url": "http://localhost:57331/"
+            }
         },
         {
             "id": "searxng",
             "name": "SearXNG",
-            "description": "Privacy-first metasearch engine â€” your private Perplexity-style web search, no tracking",
+            "description": "Privacy-first metasearch engine — your private Perplexity-style web search, no tracking",
             "image": "searxng/searxng:latest",
             "container_port": 8080,
             "volumes": [
@@ -2734,12 +3174,12 @@
                 },
                 "setup_steps": [
                     "Open http://localhost:PORT/ in your browser",
-                    "Try a search â€” results aggregate from many engines privately",
+                    "Try a search — results aggregate from many engines privately",
                     "Optional: set it as your browser's default search engine",
                     "Pair with Open WebUI for private AI chat + web search"
                 ]
             },
-            "free_tier": true,
+            "free_tier": false,
             "github_url": "https://github.com/searxng/searxng",
             "tagline": "Privacy-first metasearch engine",
             "long_description": "SearXNG is a privacy-respecting, hackable metasearch engine that queries 70+ search engines and aggregates results without tracking you. It removes the need to use commercial search engines directly - no profiling, no cookies, no ads. Features include result aggregation, search categories (web, images, videos, news), instant answers, and complete self-hosting.",
@@ -2760,7 +3200,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=SearXNG+Search",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=SearXNG+Preferences"
             ],
-            "emoji": "ðŸ”Ž",
+            "emoji": "🔎",
             "healthcheck": {
                 "port": 8080,
                 "path": "/",
@@ -2776,7 +3216,15 @@
             },
             "boot_timeout": 300,
             "min_mem_mb": 2048,
-            "min_disk_gb": 3
+            "min_disk_gb": 3,
+            "certified": {
+                "status": "ok",
+                "legs": [
+                    "--leg"
+                ],
+                "date": "2026-08-06",
+                "url": "http://localhost:57293/"
+            }
         },
         {
             "id": "central-mongo",
@@ -2792,7 +3240,7 @@
             "hidden": true,
             "min_ram_mb": 512,
             "free_tier": false,
-            "emoji": "ðŸƒ",
+            "emoji": "🍃",
             "healthcheck": {
                 "port": 27017,
                 "path": "/",
@@ -2813,7 +3261,7 @@
         {
             "id": "dify",
             "name": "Dify",
-            "description": "Open-source LLM app platform â€” build Notion-AI-style workflows and AI support bots",
+            "description": "Open-source LLM app platform — build Notion-AI-style workflows and AI support bots",
             "image": "",
             "container_port": 3000,
             "volumes": [],
@@ -2864,7 +3312,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Dify+App+Builder",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Dify+Workflow"
             ],
-            "emoji": "ðŸ§©",
+            "emoji": "🧩",
             "healthcheck": {
                 "port": 3000,
                 "path": "/",
@@ -2885,7 +3333,7 @@
         {
             "id": "librechat",
             "name": "LibreChat",
-            "description": "Drop-in ChatGPT / Claude Pro replacement â€” multi-user AI chat with many providers",
+            "description": "Drop-in ChatGPT / Claude Pro replacement — multi-user AI chat with many providers",
             "image": "ghcr.io/danny-avila/librechat:latest",
             "container_port": 3080,
             "volumes": [
@@ -2941,7 +3389,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=LibreChat+Chat",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=LibreChat+Models"
             ],
-            "emoji": "ðŸ’¬",
+            "emoji": "💬",
             "healthcheck": {
                 "port": 3080,
                 "path": "/",
@@ -2962,8 +3410,8 @@
         {
             "id": "comfyui",
             "name": "ComfyUI",
-            "description": "Node-based AI image generation (Midjourney / DALL-E alternative) â€” requires a GPU",
-            "image": "ghcr.io/comfyanonymous/comfyui:latest",
+            "description": "Node-based AI image generation (Midjourney / DALL-E alternative) — requires a GPU",
+            "image": "ghcr.io/ai-dock/comfyui:latest",
             "container_port": 8188,
             "volumes": [
                 "comfyui-models:/root/.cache",
@@ -2974,7 +3422,7 @@
             "min_ram_mb": 4096,
             "education": {
                 "docs_url": "https://docs.comfy.org/",
-                "quick_start": "ComfyUI is a node-based interface for AI image generation (Stable Diffusion, Flux). IMPORTANT: requires a GPU â€” it will not run well on CPU-only machines. After install, open the app, pick or load a workflow, and generate images.",
+                "quick_start": "ComfyUI is a node-based interface for AI image generation (Stable Diffusion, Flux). IMPORTANT: requires a GPU — it will not run well on CPU-only machines. After install, open the app, pick or load a workflow, and generate images.",
                 "default_login": {
                     "username": "none",
                     "password": "none",
@@ -3008,7 +3456,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=ComfyUI+Workflow",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=ComfyUI+Gallery"
             ],
-            "emoji": "ðŸŽ¨",
+            "emoji": "🎨",
             "healthcheck": {
                 "port": 8188,
                 "path": "/",
@@ -3024,12 +3472,14 @@
             },
             "boot_timeout": 300,
             "min_mem_mb": 2048,
-            "min_disk_gb": 3
+            "min_disk_gb": 3,
+            "disabled": true,
+            "notes": "Image unavailable (certified 2026-08-06: neither ghcr.io nor Docker Hub tag exists) — re-enable when a working image is published"
         },
         {
             "id": "openhands",
             "name": "OpenHands",
-            "description": "AI software engineer in your browser â€” Copilot-grade dev agent you control (web UI)",
+            "description": "AI software engineer in your browser — Copilot-grade dev agent you control (web UI)",
             "image": "ghcr.io/all-hands-ai/openhands:latest",
             "container_port": 3000,
             "volumes": [
@@ -3040,7 +3490,7 @@
             "min_ram_mb": 2048,
             "education": {
                 "docs_url": "https://docs.all-hands.dev/",
-                "quick_start": "OpenHands is an AI coding agent with a web UI. NOTE: it needs access to the Docker socket to create sandbox runtimes â€” works best on the agent host. After install, open the app, connect an LLM, and give it a task.",
+                "quick_start": "OpenHands is an AI coding agent with a web UI. NOTE: it needs access to the Docker socket to create sandbox runtimes — works best on the agent host. After install, open the app, connect an LLM, and give it a task.",
                 "default_login": {
                     "username": "none",
                     "password": "none",
@@ -3074,7 +3524,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=OpenHands+Agent",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=OpenHands+Terminal"
             ],
-            "emoji": "ðŸ–ï¸",
+            "emoji": "🖐️",
             "healthcheck": {
                 "port": 3000,
                 "path": "/",
@@ -3090,12 +3540,20 @@
             },
             "boot_timeout": 300,
             "min_mem_mb": 2048,
-            "min_disk_gb": 3
+            "min_disk_gb": 3,
+            "certified": {
+                "status": "ok",
+                "legs": [
+                    "--leg"
+                ],
+                "date": "2026-08-06",
+                "url": "http://localhost:59684/"
+            }
         },
         {
             "id": "khoj",
             "name": "Khoj",
-            "description": "AI second brain â€” chat with your notes, documents, and the web from one interface",
+            "description": "AI second brain — chat with your notes, documents, and the web from one interface",
             "image": "ghcr.io/khoj-ai/khoj:latest",
             "container_port": 42110,
             "volumes": [
@@ -3141,7 +3599,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Khoj+Chat",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Khoj+Knowledge+Base"
             ],
-            "emoji": "ðŸ§˜",
+            "emoji": "🧘",
             "healthcheck": {
                 "port": 42110,
                 "path": "/",
@@ -3162,7 +3620,7 @@
         {
             "id": "wg-easy",
             "name": "WG-Easy",
-            "description": "WireGuard VPN with a web UI â€” private access to your server from anywhere",
+            "description": "WireGuard VPN with a web UI — private access to your server from anywhere",
             "image": "ghcr.io/wg-easy/wg-easy:latest",
             "container_port": 51821,
             "extra_ports": {
@@ -3193,7 +3651,7 @@
                     "Set WG_HOST to your public IP/domain for remote use"
                 ]
             },
-            "free_tier": true,
+            "free_tier": false,
             "github_url": "https://github.com/wg-easy/wg-easy",
             "tagline": "WireGuard VPN with a simple web UI",
             "long_description": "WG-Easy is the easiest way to run a WireGuard VPN - a web UI where you create and manage VPN clients with one click. Generate configs, QR codes, and manage access without touching the command line. Features include a responsive dashboard, client management with QR codes, traffic stats, and automatic restart policies.",
@@ -3214,7 +3672,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=WG-Easy+Setup",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=WG-Easy+Peers"
             ],
-            "emoji": "ðŸ”",
+            "emoji": "🔐",
             "healthcheck": {
                 "port": 51821,
                 "path": "/",
@@ -3235,7 +3693,7 @@
         {
             "id": "mattermost",
             "name": "Mattermost",
-            "description": "Self-hosted Slack / Teams replacement â€” secure team messaging",
+            "description": "Self-hosted Slack / Teams replacement — secure team messaging",
             "image": "mattermost/mattermost-team-edition:latest",
             "container_port": 8065,
             "volumes": [
@@ -3291,7 +3749,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Mattermost+Channels",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Mattermost+Chat"
             ],
-            "emoji": "ðŸ’¬",
+            "emoji": "💬",
             "healthcheck": {
                 "port": 8065,
                 "path": "/",
@@ -3305,14 +3763,14 @@
                     404
                 ]
             },
-            "boot_timeout": 180,
+            "boot_timeout": 300,
             "min_mem_mb": 1024,
             "min_disk_gb": 2
         },
         {
             "id": "baserow",
             "name": "Baserow",
-            "description": "Open-source Airtable alternative â€” databases, grids, and no-code apps",
+            "description": "Open-source Airtable alternative — databases, grids, and no-code apps",
             "image": "baserow/baserow:latest",
             "container_port": 80,
             "volumes": [
@@ -3370,7 +3828,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Baserow+Database",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Baserow+Table"
             ],
-            "emoji": "ðŸ—„ï¸",
+            "emoji": "🗄️",
             "healthcheck": {
                 "port": 80,
                 "path": "/",
@@ -3384,14 +3842,14 @@
                     404
                 ]
             },
-            "boot_timeout": 60,
+            "boot_timeout": 240,
             "min_mem_mb": 512,
             "min_disk_gb": 2
         },
         {
             "id": "umami",
             "name": "Umami",
-            "description": "Privacy-friendly Google Analytics alternative â€” light, cookie-free, GDPR-friendly",
+            "description": "Privacy-friendly Google Analytics alternative — light, cookie-free, GDPR-friendly",
             "image": "ghcr.io/umami-software/umami:latest",
             "container_port": 3000,
             "volumes": [],
@@ -3423,7 +3881,7 @@
                     "Paste the script into your site to start collecting analytics"
                 ]
             },
-            "free_tier": false,
+            "free_tier": true,
             "github_url": "https://github.com/umami-software/umami",
             "tagline": "Privacy-friendly Google Analytics alternative",
             "long_description": "Umami is a simple, fast, privacy-focused web analytics tool - a lightweight alternative to Google Analytics. Track website visitors without cookies or personal data, fully GDPR-compliant. Features include real-time analytics, event tracking, custom dashboards, team sharing, and a tiny footprint that won't slow your site.",
@@ -3444,7 +3902,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Umami+Dashboard",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Umami+Websites"
             ],
-            "emoji": "ðŸ“ˆ",
+            "emoji": "📈",
             "healthcheck": {
                 "port": 3000,
                 "path": "/",
@@ -3458,14 +3916,14 @@
                     404
                 ]
             },
-            "boot_timeout": 150,
+            "boot_timeout": 240,
             "min_mem_mb": 512,
             "min_disk_gb": 2
         },
         {
             "id": "ghost",
             "name": "Ghost",
-            "description": "Modern publishing platform â€” Medium / Squarespace blog alternative",
+            "description": "Modern publishing platform — Medium / Squarespace blog alternative",
             "image": "ghost:latest",
             "container_port": 2368,
             "volumes": [
@@ -3513,7 +3971,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Ghost+Editor",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Ghost+Admin"
             ],
-            "emoji": "ðŸ‘»",
+            "emoji": "👻",
             "healthcheck": {
                 "port": 2368,
                 "path": "/",
@@ -3529,12 +3987,20 @@
             },
             "boot_timeout": 180,
             "min_mem_mb": 1024,
-            "min_disk_gb": 2
+            "min_disk_gb": 2,
+            "certified": {
+                "status": "ok",
+                "legs": [
+                    "--leg"
+                ],
+                "date": "2026-08-06",
+                "url": "http://localhost:61351/"
+            }
         },
         {
             "id": "directus",
             "name": "Directus",
-            "description": "Headless CMS / backend â€” instant admin UI over your PostgreSQL data",
+            "description": "Headless CMS / backend — instant admin UI over your PostgreSQL data",
             "image": "directus/directus:latest",
             "container_port": 8055,
             "volumes": [],
@@ -3557,7 +4023,7 @@
             ],
             "education": {
                 "docs_url": "https://docs.directus.io/",
-                "quick_start": "Directus is a headless CMS and data platform â€” it puts an instant admin UI and REST/GraphQL API over your database. It uses the shared PostgreSQL (auto-provisioned).",
+                "quick_start": "Directus is a headless CMS and data platform — it puts an instant admin UI and REST/GraphQL API over your database. It uses the shared PostgreSQL (auto-provisioned).",
                 "default_login": {
                     "username": "admin@example.com",
                     "password": "appvault-admin",
@@ -3591,7 +4057,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Directus+Data+Studio",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Directus+Collections"
             ],
-            "emoji": "ðŸ—ƒï¸",
+            "emoji": "🗃️",
             "healthcheck": {
                 "port": 8055,
                 "path": "/",
@@ -3605,14 +4071,14 @@
                     404
                 ]
             },
-            "boot_timeout": 150,
+            "boot_timeout": 300,
             "min_mem_mb": 512,
             "min_disk_gb": 2
         },
         {
             "id": "formbricks",
             "name": "Formbricks",
-            "description": "Open-source Typeform alternative â€” surveys, forms, and in-app feedback",
+            "description": "Open-source Typeform alternative — surveys, forms, and in-app feedback",
             "image": "",
             "container_port": 3000,
             "volumes": [],
@@ -3658,7 +4124,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Formbricks+Surveys",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Formbricks+Analytics"
             ],
-            "emoji": "ðŸ“‹",
+            "emoji": "📋",
             "healthcheck": {
                 "port": 3000,
                 "path": "/",
@@ -3679,7 +4145,7 @@
         {
             "id": "chatwoot",
             "name": "Chatwoot",
-            "description": "Zendesk / Intercom alternative â€” support inbox with AI bots, for your whole team",
+            "description": "Zendesk / Intercom alternative — support inbox with AI bots, for your whole team",
             "image": "",
             "container_port": 3000,
             "volumes": [],
@@ -3729,7 +4195,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Chatwoot+Conversations",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Chatwoot+Dashboard"
             ],
-            "emoji": "ðŸ’¬",
+            "emoji": "💬",
             "healthcheck": {
                 "port": 3000,
                 "path": "/",
@@ -3750,7 +4216,7 @@
         {
             "id": "plane",
             "name": "Plane",
-            "description": "Open-source project management â€” Asana / Jira / Monday alternative",
+            "description": "Open-source project management — Asana / Jira / Monday alternative",
             "image": "",
             "container_port": 80,
             "volumes": [],
@@ -3800,7 +4266,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Plane+Projects",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Plane+Issues"
             ],
-            "emoji": "âœˆï¸",
+            "emoji": "✈️",
             "healthcheck": {
                 "port": 80,
                 "path": "/",
@@ -3821,7 +4287,7 @@
         {
             "id": "outline",
             "name": "Outline",
-            "description": "Confluence / Notion wiki alternative â€” fast, polished team knowledge base",
+            "description": "Confluence / Notion wiki alternative — fast, polished team knowledge base",
             "image": "docker.getoutline.com/outlinewiki/outline:latest",
             "container_port": 3000,
             "volumes": [
@@ -3880,7 +4346,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Outline+Documents",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Outline+Search"
             ],
-            "emoji": "ðŸ“˜",
+            "emoji": "📘",
             "healthcheck": {
                 "port": 3000,
                 "path": "/",
@@ -3894,15 +4360,15 @@
                     404
                 ]
             },
-            "boot_timeout": 180,
+            "boot_timeout": 300,
             "min_mem_mb": 1024,
             "min_disk_gb": 2
         },
         {
             "id": "listmonk",
             "name": "Listmonk",
-            "description": "Self-hosted email newsletter & mailing-list manager â€” your private Mailchimp. Subscribers, segments, campaigns, templates, open/click tracking (GPL-3.0)",
-            "image": "listmonk/listmonk:latest",
+            "description": "Self-hosted email newsletter & mailing-list manager — your private Mailchimp. Subscribers, segments, campaigns, templates, open/click tracking (GPL-3.0)",
+            "image": "",
             "container_port": 9000,
             "type": "stack",
             "is_stack": true,
@@ -3921,12 +4387,12 @@
                 },
                 "setup_steps": [
                     "Open http://localhost:PORT/ in your browser",
-                    "First run: run the one-time setup â€” inside the container execute: ./listmonk --install (this creates the DB schema and admin account)",
+                    "First run: run the one-time setup — inside the container execute: ./listmonk --install (this creates the DB schema and admin account)",
                     "Log in with the admin account you created",
                     "Create a list, add subscribers (import or API), then send your first campaign"
                 ]
             },
-            "free_tier": false,
+            "free_tier": true,
             "github_url": "https://github.com/knadh/listmonk",
             "mcp": {
                 "credential": {
@@ -4153,7 +4619,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Listmonk+Campaigns",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=Listmonk+Subscribers"
             ],
-            "emoji": "ðŸ“§",
+            "emoji": "📧",
             "deps": [
                 {
                     "name": "app-listmonk-db",
@@ -4231,7 +4697,7 @@
                 "https://placehold.co/800x600/1e293b/38bdf8?text=AFFiNE+Whiteboard",
                 "https://placehold.co/800x600/1e293b/38bdf8?text=AFFiNE+Documents"
             ],
-            "emoji": "ðŸ“",
+            "emoji": "📝",
             "healthcheck": {
                 "port": 3010,
                 "path": "/",
@@ -4252,7 +4718,7 @@
         {
             "id": "odoo",
             "name": "Odoo",
-            "description": "Open-source ERP & CRM â€” sales, inventory, accounting, HR, project management and e-commerce in one platform",
+            "description": "Open-source ERP & CRM — sales, inventory, accounting, HR, project management and e-commerce in one platform",
             "image": "odoo:19.0",
             "container_port": 8069,
             "volumes": [
@@ -4288,24 +4754,59 @@
                     303
                 ]
             },
-            "boot_timeout": 240,
+            "boot_timeout": 300,
             "min_mem_mb": 1024,
             "min_disk_gb": 5,
             "category": "productivity",
             "free_tier": false,
             "education": {
                 "docs_url": "https://www.odoo.com/documentation/19.0/",
-                "quick_start": "Odoo is a complete ERP/CRM suite. On first open, the Database Manager lets you create your database â€” the master password and admin account are set there. Then install apps (Sales, Inventory, Accounting, CRM, HR) from the Apps menu.",
+                "quick_start": "Odoo is a complete ERP/CRM suite. On first open, the Database Manager lets you create your database — the master password and admin account are set there. Then install apps (Sales, Inventory, Accounting, CRM, HR) from the Apps menu.",
                 "default_login": {
                     "username": "admin",
                     "password": "set when creating the database"
                 },
                 "setup_steps": [
-                    "Open the app URL â†’ create your database (set the master password + admin password)",
+                    "Open the app URL → create your database (set the master password + admin password)",
                     "Log in with the admin account you just created",
                     "Install the apps you need from the Apps menu (CRM, Sales, Inventory, Accounting...)",
                     "Set up your company details under Settings"
                 ]
+            }
+        },
+        {
+            "id": "ods",
+            "name": "Osmantic ODS AI Server",
+            "description": "Turn your PC, Mac, or Linux box into a full AI server — a curated ODS stack: system dashboard, dashboard API, and model router (registry images; local LLM inference via Open WebUI/Ollama on the same box).",
+            "image": "",
+            "type": "stack",
+            "is_stack": true,
+            "compose_url": "https://raw.githubusercontent.com/Sectutor/ods-stack/main/docker-compose.yml",
+            "container_port": 3001,
+            "web_path": "/",
+            "volumes": [
+                "ods-data:/app/data"
+            ],
+            "env": [],
+            "category": "ai",
+            "min_mem_mb": 2048,
+            "min_disk_gb": 3,
+            "healthcheck": {
+                "port": 3001,
+                "path": "/",
+                "expect": [
+                    200,
+                    301,
+                    302
+                ]
+            },
+            "boot_timeout": 240,
+            "free_tier": true,
+            "education": {
+                "docs_url": "https://github.com/Osmantic/ODS",
+                "quick_start": "ODS gives you a live dashboard of your AI server: system status, model routing, and GPU metrics. The curated AppVault stack ships the dashboard, dashboard API, and model router as registry images — no source builds, no GPU overlays needed. Pair it with the OpenWebUI app for chat and Ollama for local inference.",
+                "default_login": "no login required (dashboard reads an internal API key)",
+                "setup_steps": "1. Install from the store. 2. Open the dashboard. 3. Add OpenWebUI (store) for chat + Ollama (store) for local models."
             }
         },
         {
