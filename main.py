@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from fastapi import FastAPI, Request, HTTPException, Query
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
@@ -55,8 +55,8 @@ def license_is_valid(key: str) -> bool:
         return False
 
 def generate_license_key() -> str:
-    import random
-    grp = lambda: "".join(random.choices("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", k=4))
+    import secrets
+    grp = lambda: "".join(secrets.choice("ABCDEFGHJKLMNPQRSTUVWXYZ23456789") for _ in range(4))
     return "APPVAULT-" + "-".join(grp() for _ in range(4))
 
 
@@ -122,8 +122,35 @@ async def admin_gate(request: Request, call_next):
 templates = Jinja2Templates(directory="templates")
 
 # Session-based admin login (signed cookie)
-SESSION_SECRET = os.getenv("SESSION_SECRET", ADMIN_PASSWORD + "-appvault-session")
+def _load_or_create_session_secret() -> str:
+    """Persistent random session secret, stored next to the DB so sessions
+    survive restarts. Never derived from the (possibly default) admin password."""
+    env = os.getenv("SESSION_SECRET", "").strip()
+    if env:
+        return env
+    path = os.path.join(os.path.dirname(DB_PATH), "session_secret")
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            existing = f.read().strip()
+        if existing:
+            return existing
+    except Exception:
+        pass
+    import secrets as _secrets
+    secret = _secrets.token_hex(32)
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(secret)
+    except Exception:
+        pass  # read-only fs: fall back to an ephemeral secret
+    return secret
+
+SESSION_SECRET = _load_or_create_session_secret()
 app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET, max_age=60*60*24*30, same_site="lax")
+
+if not DISABLE_ADMIN and ADMIN_PASSWORD == "appvault-admin":
+    print("[central] WARNING: ADMIN_PASSWORD is the default — set a strong one via environment", flush=True)
 
 # Short-lived signed tokens for dashboard links (license key never sits in a URL)
 _dash_serializer = URLSafeTimedSerializer(SESSION_SECRET)
@@ -214,6 +241,11 @@ def init_db():
             activated_at TEXT DEFAULT '',
             created_at TEXT DEFAULT (datetime('now'))
         );
+        CREATE TABLE IF NOT EXISTS webhook_events (
+            event_id TEXT PRIMARY KEY,
+            event_type TEXT,
+            processed_at TEXT DEFAULT (datetime('now'))
+        );
     """)
     # Ensure at least one catalog version exists
     row = db.execute("SELECT COUNT(*) as cnt FROM catalog_versions").fetchone()
@@ -281,6 +313,23 @@ def reload_catalog():
         GLOBAL_CATALOG = json.load(f)
     return len(GLOBAL_CATALOG.get("apps", []))
 
+def _save_catalog():
+    """Atomic catalog persist (tmp+rename) — a crash mid-write can't corrupt it.
+    Falls back to a direct write when CATALOG_PATH is a bind-mounted single
+    file (rename over it fails with EBUSY in docker)."""
+    tmp = CATALOG_PATH + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(GLOBAL_CATALOG, f, indent=2, ensure_ascii=False)
+    try:
+        os.replace(tmp, CATALOG_PATH)
+    except OSError:
+        with open(CATALOG_PATH, "w", encoding="utf-8") as f:
+            json.dump(GLOBAL_CATALOG, f, indent=2, ensure_ascii=False)
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+
 @app.post("/admin/catalog/reload")
 async def admin_reload_catalog(request: Request):
     """Reload catalog from disk without restarting the server."""
@@ -316,7 +365,7 @@ def verify_agent(agent_id: str, api_key: str) -> bool:
     db = get_db()
     row = db.execute("SELECT api_key FROM agents WHERE id = ? AND status != 'disabled'", (agent_id,)).fetchone()
     db.close()
-    return row is not None and row["api_key"] == api_key
+    return row is not None and hmac.compare_digest(str(row["api_key"]), str(api_key))
 
 # ---- Login rate limiting + audit log (brute-force protection) ----
 RATE_LIMIT_WINDOW = 300   # 5 minutes
@@ -360,7 +409,8 @@ def require_admin(request: Request):
             import base64
             decoded = base64.b64decode(auth[6:]).decode()
             username, password = decoded.split(":", 1)
-            if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            if (hmac.compare_digest(username.encode(), ADMIN_USERNAME.encode())
+                    and hmac.compare_digest(password.encode(), ADMIN_PASSWORD.encode())):
                 return True
         except:
             pass
@@ -633,7 +683,8 @@ async def login_submit(request: Request):
             "request": request, "next": next_url,
             "error": "Too many login attempts — try again in a few minutes"
         })
-    if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+    if (hmac.compare_digest(username.encode(), ADMIN_USERNAME.encode())
+            and hmac.compare_digest(password.encode(), ADMIN_PASSWORD.encode())):
         _record_login(client_ip, True)
         request.session["admin"] = True
         return RedirectResponse(next_url, status_code=303)
@@ -648,21 +699,6 @@ async def logout(request: Request):
     request.session.clear()
     return RedirectResponse("/login", status_code=303)
 
-@app.post("/api/probe")
-async def api_probe(data: dict):
-    """External reachability check — the central (outside the user's network)
-    verifies the store URL actually answers, so the installer can confirm
-    'install complete' honestly (cloud firewalls must not silently block)."""
-    url = (data or {}).get("url", "")
-    if not url or not url.startswith(("http://", "https://")):
-        return {"reachable": False, "status": 0}
-    try:
-        req = urllib.request.Request(url, headers={"User-Agent": "AppVaultProbe/1.0"})
-        with urllib.request.urlopen(req, timeout=8) as r:
-            return {"reachable": True, "status": r.status}
-    except Exception as e:
-        return {"reachable": False, "status": 0, "detail": str(e)[:80]}
-
 
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_panel(request: Request):
@@ -695,6 +731,7 @@ async def admin_panel(request: Request):
 @app.post("/admin/agents/{agent_id}/jobs")
 async def admin_push_job(agent_id: str, request: Request):
     """Admin pushes an install/uninstall job to a specific agent."""
+    require_admin(request)
     body = await request.json()
     action = body.get("action", "install")
     app_id = body.get("app_id", "")
@@ -778,8 +815,7 @@ async def admin_edit_app(app_id: str, request: Request):
         changes[field] = value
     if not changes:
         raise HTTPException(status_code=400, detail="No editable fields provided")
-    with open(CATALOG_PATH, "w", encoding="utf-8") as f:
-        json.dump(GLOBAL_CATALOG, f, indent=2, ensure_ascii=False)
+    _save_catalog()
     _audit("catalog.edit", f"{app_id}: {changes}")
     new_version = increment_catalog_version()
     return {"status": "updated", "app_id": app_id, "changes": changes, "new_catalog_version": new_version}
@@ -842,8 +878,7 @@ async def admin_add_app(request: Request):
     GLOBAL_CATALOG.setdefault("apps", []).append(app_entry)
     
     # Persist to disk
-    with open(CATALOG_PATH, "w", encoding="utf-8") as f:
-        json.dump(GLOBAL_CATALOG, f, indent=2, ensure_ascii=False)
+    _save_catalog()
     
     new_version = increment_catalog_version()
     _audit("catalog.add", app_entry["id"])
@@ -861,8 +896,7 @@ async def admin_remove_app(app_id: str, request: Request):
     if before == after:
         raise HTTPException(status_code=404, detail=f"App '{app_id}' not found")
     
-    with open(CATALOG_PATH, "w", encoding="utf-8") as f:
-        json.dump(GLOBAL_CATALOG, f, indent=2, ensure_ascii=False)
+    _save_catalog()
     
     new_version = increment_catalog_version()
     _audit("catalog.remove", app_id)
@@ -878,8 +912,7 @@ async def admin_toggle_free(app_id: str, request: Request):
     if not app:
         raise HTTPException(status_code=404, detail="App not found")
     app["free_tier"] = is_free
-    with open(CATALOG_PATH, "w", encoding="utf-8") as f:
-        json.dump(GLOBAL_CATALOG, f, indent=2, ensure_ascii=False)
+    _save_catalog()
     _audit("catalog.free", f"{app_id} -> {'free' if is_free else 'paid-only'}")
     new_version = increment_catalog_version()
     free_count = sum(1 for a in GLOBAL_CATALOG.get("apps", []) if a.get("free_tier"))
@@ -940,8 +973,7 @@ async def admin_toggle_disabled(app_id: str, request: Request):
         raise HTTPException(status_code=404, detail="App not found")
     app["disabled"] = disabled
     app["published"] = not disabled
-    with open(CATALOG_PATH, "w", encoding="utf-8") as f:
-        json.dump(GLOBAL_CATALOG, f, indent=2, ensure_ascii=False)
+    _save_catalog()
     _audit("catalog.disable", f"{app_id} -> {'disabled' if disabled else 'enabled'}")
     new_version = increment_catalog_version()
     return {"status": "ok", "app_id": app_id, "disabled": disabled,
@@ -961,8 +993,7 @@ async def admin_toggle_published(app_id: str, request: Request):
         raise HTTPException(status_code=404, detail="App not found")
     app["published"] = published
     app["disabled"] = not published
-    with open(CATALOG_PATH, "w", encoding="utf-8") as f:
-        json.dump(GLOBAL_CATALOG, f, indent=2, ensure_ascii=False)
+    _save_catalog()
     _audit("catalog.publish", f"{app_id} -> {'published' if published else 'unpublished'}")
     new_version = increment_catalog_version()
     return {"status": "ok", "app_id": app_id, "published": published,
@@ -982,8 +1013,7 @@ async def admin_update_education(app_id: str, request: Request):
             for key, val in data.items():
                 a["education"][key] = val
             # Persist to disk (same pattern as admin_add_app)
-            with open(CATALOG_PATH, "w", encoding="utf-8") as f:
-                json.dump(GLOBAL_CATALOG, f, indent=2, ensure_ascii=False)
+            _save_catalog()
             new_version = increment_catalog_version()
             return {"status": "updated", "app_id": app_id, "new_catalog_version": new_version}
     
@@ -997,8 +1027,9 @@ async def admin_publish_catalog(request: Request):
     return {"status": "published", "new_catalog_version": new_version}
 
 @app.post("/admin/agents/{agent_id}/touch")
-async def admin_touch_agent(agent_id: str):
+async def admin_touch_agent(agent_id: str, request: Request):
     """Mark an agent as online (for testing without real agent)."""
+    require_admin(request)
     db = get_db()
     db.execute("UPDATE agents SET status='online', last_seen=datetime('now') WHERE id=?", (agent_id,))
     db.commit()
@@ -1210,25 +1241,25 @@ async def _handle_checkout_completed(session):
     # Look it up by instance_id first; fall back to agent binding, then generate a fresh one.
     license_key = metadata.get("license_key", "")
     db = get_db()
-    lic = None
-    if not license_key and instance_id:
-        inst = db.execute("SELECT license_key FROM instances WHERE id = ?", (instance_id,)).fetchone()
-        if inst and inst["license_key"]:
-            license_key = inst["license_key"]
-    if license_key:
-        lic = db.execute("SELECT * FROM licenses WHERE key = ?", (license_key,)).fetchone()
-    if not lic:
-        license_key = generate_license_key()
-        try:
-            db.execute(
-                "INSERT OR REPLACE INTO licenses (key, email, tier, status, stripe_session_id, stripe_customer_id, stripe_subscription_id) "
-                "VALUES (?, ?, ?, 'active', ?, ?, ?)",
-                (license_key, email, tier, session.get("id", ""), customer_id, subscription_id),
-            )
-        except Exception:
-            pass
+    try:
+        lic = None
+        if not license_key and instance_id:
+            inst = db.execute("SELECT license_key FROM instances WHERE id = ?", (instance_id,)).fetchone()
+            if inst and inst["license_key"]:
+                license_key = inst["license_key"]
+        if license_key:
+            lic = db.execute("SELECT * FROM licenses WHERE key = ?", (license_key,)).fetchone()
+        if not lic:
+            license_key = generate_license_key()
+            try:
+                db.execute(
+                    "INSERT OR REPLACE INTO licenses (key, email, tier, status, stripe_session_id, stripe_customer_id, stripe_subscription_id) "
+                    "VALUES (?, ?, ?, 'active', ?, ?, ?)",
+                    (license_key, email, tier, session.get("id", ""), customer_id, subscription_id),
+                )
+            except Exception as e:
+                print(f"[stripe] License insert failed: {e}", flush=True)
 
-    if email:
         # Activate the pre-generated pending license
         db.execute(
             "UPDATE licenses SET email=?, tier=?, status='active', stripe_session_id=?, stripe_customer_id=?, stripe_subscription_id=?, activated_at=datetime('now') WHERE key=?",
@@ -1245,7 +1276,9 @@ async def _handle_checkout_completed(session):
                 (license_key, session.get("id", ""), customer_id, subscription_id, instance_id),
             )
         db.commit()
+    finally:
         db.close()
+    if email:
         _audit("license.issued", f"{tier} -> {email} key={license_key[:16]}...")
 
         subject = "Your AppVault license is ready"
@@ -1340,12 +1373,16 @@ async def stripe_webhook(request: Request):
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature")
 
-    if STRIPE_WEBHOOK_SECRET:
-        try:
-            import stripe
-            stripe.Webhook.construct_event(payload, sig_header, STRIPE_WEBHOOK_SECRET)
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=str(e))
+    # Fail closed: without signature verification anyone could forge a
+    # checkout.session.completed and mint themselves a paid license.
+    if not STRIPE_WEBHOOK_SECRET:
+        print("[stripe] Rejected webhook: STRIPE_WEBHOOK_SECRET not configured", flush=True)
+        raise HTTPException(status_code=503, detail="Webhook secret not configured")
+    try:
+        import stripe
+        stripe.Webhook.construct_event(payload, sig_header, STRIPE_WEBHOOK_SECRET)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     try:
         event = json_lib.loads(payload)
@@ -1353,6 +1390,19 @@ async def stripe_webhook(request: Request):
         raise HTTPException(status_code=400, detail=f"Invalid payload: {str(e)}")
     etype = event["type"]
     obj = event["data"]["object"]
+
+    # Idempotency: Stripe retries delivery — process each event id exactly once.
+    event_id = event.get("id") or ""
+    if event_id:
+        db = get_db()
+        try:
+            db.execute("INSERT INTO webhook_events (event_id, event_type) VALUES (?, ?)",
+                       (event_id, etype))
+            db.commit()
+        except sqlite3.IntegrityError:
+            return JSONResponse({"status": "duplicate"})
+        finally:
+            db.close()
 
     if etype == "checkout.session.completed":
         await _handle_checkout_completed(obj)
@@ -1445,6 +1495,22 @@ async def billing_portal(request: Request):
 async def landing(request: Request):
     ctx = _landing_ctx(request)
     return templates.TemplateResponse(request, "landing.html", ctx)
+
+@app.get("/install.ps1")
+async def serve_install_ps1():
+    ps1_path = os.path.join(os.path.dirname(__file__), "static", "install.ps1")
+    if os.path.exists(ps1_path):
+        return FileResponse(ps1_path, media_type="text/plain; charset=utf-8")
+    # Fallback to GitHub raw
+    return RedirectResponse("https://raw.githubusercontent.com/Sectutor/appvault-agent/main/install.ps1", status_code=302)
+
+@app.get("/install.sh")
+async def serve_install_sh():
+    sh_path = os.path.join(os.path.dirname(__file__), "static", "install.sh")
+    if os.path.exists(sh_path):
+        return FileResponse(sh_path, media_type="text/x-shellscript; charset=utf-8")
+    # Fallback to GitHub raw
+    return RedirectResponse("https://raw.githubusercontent.com/Sectutor/appvault-agent/main/install.sh", status_code=302)
 
 @app.get("/pricing", response_class=HTMLResponse)
 async def pricing_page(request: Request):
@@ -1780,6 +1846,7 @@ async def admin_auto_import(request: Request):
     Accepts: {"url": "https://github.com/user/repo"} or {"image": "user/app:tag"}
     Returns a generated catalog entry that can be reviewed and added.
     """
+    require_admin(request)
     body = await request.json()
     url = body.get("url", "")
     image_name = body.get("image", "")
@@ -1995,1335 +2062,3 @@ async def health():
     online = db.execute("SELECT COUNT(*) as cnt FROM agents WHERE status='online'").fetchone()["cnt"]
     db.close()
     return {"status": "ok", "agents_online": online, "catalog_version": get_catalog_version(), "catalog_apps": len(GLOBAL_CATALOG.get("apps", []))}
-@app.get("/admin", response_class=HTMLResponse)
-async def admin_panel(request: Request):
-    """Admin dashboard — list agents, jobs, catalog. Redirects to login when unauthenticated."""
-    if not request.session.get("admin"):
-        return RedirectResponse("/login?next=/admin", status_code=302)
-    require_admin(request)
-    db = get_db()
-    agents = db.execute("SELECT * FROM agents ORDER BY last_seen DESC").fetchall()
-    jobs = db.execute("""
-        SELECT j.*, a.name as agent_name FROM agent_jobs j
-        LEFT JOIN agents a ON j.agent_id = a.id
-        ORDER BY j.created_at DESC LIMIT 100
-    """).fetchall()
-    licenses = db.execute("""
-        SELECT l.*, (SELECT COUNT(*) FROM agents a WHERE a.license_key = l.key) as agent_count
-        FROM licenses l ORDER BY l.created_at DESC
-    """).fetchall()
-    db.close()
-    
-    return templates.TemplateResponse(request, "admin.html", {
-        "request": request,
-        "agents": [dict(a) for a in agents],
-        "jobs": [dict(j) for j in jobs],
-        "catalog": GLOBAL_CATALOG,
-        "licenses": [dict(l) for l in licenses],
-        "catalog_version": get_catalog_version(),
-    })
-
-@app.post("/admin/agents/{agent_id}/jobs")
-async def admin_push_job(agent_id: str, request: Request):
-    """Admin pushes an install/uninstall job to a specific agent."""
-    body = await request.json()
-    action = body.get("action", "install")
-    app_id = body.get("app_id", "")
-    params = body.get("params", {})
-    
-    if action not in ("install", "uninstall", "restart"):
-        raise HTTPException(status_code=400, detail="Invalid action")
-    if not app_id:
-        raise HTTPException(status_code=400, detail="app_id required")
-    
-    db = get_db()
-    # Verify agent exists
-    agent = db.execute("SELECT id FROM agents WHERE id=?", (agent_id,)).fetchone()
-    if not agent:
-        db.close()
-        raise HTTPException(status_code=404, detail="Agent not found")
-    
-    cur = db.cursor()
-    cur.execute(
-        "INSERT INTO agent_jobs (agent_id, action, app_id, params, status) VALUES (?, ?, ?, ?, 'pending')",
-        (agent_id, action, app_id, json.dumps(params))
-    )
-    job_id = cur.lastrowid
-    db.commit()
-    db.close()
-    
-    return {"job_id": job_id, "status": "queued", "agent_id": agent_id, "action": action, "app_id": app_id}
-
-@app.get("/admin/agents/{agent_id}", response_class=HTMLResponse)
-async def admin_agent_detail(agent_id: str, request: Request):
-    """Admin views agent details and job history."""
-    if not request.session.get("admin"):
-        return RedirectResponse(f"/login?next=/admin/agents/{agent_id}", status_code=302)
-    require_admin(request)
-    db = get_db()
-    agent = db.execute("SELECT * FROM agents WHERE id=?", (agent_id,)).fetchone()
-    if not agent:
-        db.close()
-        raise HTTPException(status_code=404, detail="Agent not found")
-    
-    jobs = db.execute(
-        "SELECT * FROM agent_jobs WHERE agent_id=? ORDER BY created_at DESC LIMIT 50",
-        (agent_id,)
-    ).fetchall()
-    installed = db.execute(
-        "SELECT app_id, status FROM agent_jobs WHERE agent_id=? AND action='install' AND status='completed' GROUP BY app_id ORDER BY completed_at DESC",
-        (agent_id,)
-    ).fetchall()
-    db.close()
-    
-    return templates.TemplateResponse(request, "admin_agent.html", {
-        "request": request,
-        "agent": dict(agent),
-        "catalog": GLOBAL_CATALOG,
-        "jobs": [dict(j) for j in jobs],
-        "installed": [dict(i) for i in installed],
-    })
-
-@app.patch("/admin/catalog/apps/{app_id}")
-async def admin_edit_app(app_id: str, request: Request):
-    """Admin edits catalog app fields (image bump etc.). Persists + version bump + audit."""
-    require_admin(request)
-    body = await request.json()
-    app = next((a for a in GLOBAL_CATALOG.get("apps", []) if a.get("id") == app_id), None)
-    if not app:
-        raise HTTPException(status_code=404, detail="App not found")
-    changes = {}
-    for field, value in body.items():
-        if field not in EDITABLE_CATALOG_FIELDS:
-            continue
-        if field == "image" and value is not None and not isinstance(value, str):
-            raise HTTPException(status_code=400, detail="image must be a string")
-        if field in ("boot_timeout", "min_mem_mb", "min_disk_gb", "container_port") and value is not None:
-            try:
-                value = int(value)
-            except (TypeError, ValueError):
-                raise HTTPException(status_code=400, detail=f"{field} must be an integer")
-        if field in ("free_tier", "disable_proxy", "publish_host_port"):
-            value = bool(value)
-        app[field] = value
-        changes[field] = value
-    if not changes:
-        raise HTTPException(status_code=400, detail="No editable fields provided")
-    with open(CATALOG_PATH, "w", encoding="utf-8") as f:
-        json.dump(GLOBAL_CATALOG, f, indent=2, ensure_ascii=False)
-    _audit("catalog.edit", f"{app_id}: {changes}")
-    new_version = increment_catalog_version()
-    return {"status": "updated", "app_id": app_id, "changes": changes, "new_catalog_version": new_version}
-
-@app.post("/admin/catalog/apps")
-async def admin_add_app(request: Request):
-    """Admin adds an app to the global catalog."""
-    require_admin(request)
-    body = await request.json()
-    is_stack = body.get("is_stack", False) or body.get("type") == "stack"
-    app_entry = {
-        "id": body.get("id"),
-        "name": body.get("name"),
-        "description": body.get("description", ""),
-        "image": body.get("image", ""),
-        "container_port": body.get("container_port"),
-        "volumes": body.get("volumes", []),
-        "env": body.get("env", []),
-        "category": body.get("category", "other"),
-        "min_ram_mb": body.get("min_ram_mb", 256),
-        # New apps are published immediately (visible to clients) and premium
-        # (paid-only) by default; admin can unpublish or mark free any time.
-        "published": True,
-        "free_tier": bool(body.get("free_tier", False)),
-    }
-    
-    if is_stack:
-        app_entry["type"] = "stack"
-        app_entry["is_stack"] = True
-        if body.get("compose_url"):
-            app_entry["compose_url"] = body["compose_url"]
-        if body.get("services"):
-            app_entry["services"] = body["services"]
-        app_entry["image"] = ""  # Stacks don't need an image
-    
-    # Extra ports (setup/secondary ports) -> published on random host ports by the agent
-    extra_ports = body.get("extra_ports") or body.get("extraPorts") or []
-    if isinstance(extra_ports, dict):
-        extra_ports = list(extra_ports.keys())
-    if isinstance(extra_ports, (list, tuple)):
-        ep = {}
-        for p in extra_ports:
-            p = str(p).strip()
-            if p and p.isdigit():
-                ep[p] = "auto"
-        extra_ports = ep
-    if extra_ports:
-        app_entry["extra_ports"] = extra_ports
-
-    if not app_entry["id"] or not app_entry["name"]:
-        raise HTTPException(status_code=400, detail="id and name are required")
-    if not is_stack and not app_entry.get("image"):
-        raise HTTPException(status_code=400, detail="image is required for non-stack apps")
-    
-    # Check for duplicate
-    for existing in GLOBAL_CATALOG.get("apps", []):
-        if existing["id"] == app_entry["id"]:
-            raise HTTPException(status_code=409, detail=f"App '{app_entry['id']}' already exists")
-    
-    GLOBAL_CATALOG.setdefault("apps", []).append(app_entry)
-    
-    # Persist to disk
-    with open(CATALOG_PATH, "w", encoding="utf-8") as f:
-        json.dump(GLOBAL_CATALOG, f, indent=2, ensure_ascii=False)
-    
-    new_version = increment_catalog_version()
-    _audit("catalog.add", app_entry["id"])
-    
-    return {"status": "added", "app_id": app_entry["id"], "new_catalog_version": new_version}
-
-@app.delete("/admin/catalog/apps/{app_id}")
-async def admin_remove_app(app_id: str, request: Request):
-    """Admin removes an app from the global catalog."""
-    require_admin(request)
-    before = len(GLOBAL_CATALOG.get("apps", []))
-    GLOBAL_CATALOG["apps"] = [a for a in GLOBAL_CATALOG.get("apps", []) if a["id"] != app_id]
-    after = len(GLOBAL_CATALOG["apps"])
-    
-    if before == after:
-        raise HTTPException(status_code=404, detail=f"App '{app_id}' not found")
-    
-    with open(CATALOG_PATH, "w", encoding="utf-8") as f:
-        json.dump(GLOBAL_CATALOG, f, indent=2, ensure_ascii=False)
-    
-    new_version = increment_catalog_version()
-    _audit("catalog.remove", app_id)
-    return {"status": "removed", "app_id": app_id, "new_catalog_version": new_version}
-
-@app.post("/admin/catalog/apps/{app_id}/free")
-async def admin_toggle_free(app_id: str, request: Request):
-    """Admin: mark/unmark an app as free-tier. Persists to catalog.json and bumps version."""
-    require_admin(request)
-    body = await request.json()
-    is_free = bool(body.get("free", True))
-    app = next((a for a in GLOBAL_CATALOG.get("apps", []) if a.get("id") == app_id), None)
-    if not app:
-        raise HTTPException(status_code=404, detail="App not found")
-    app["free_tier"] = is_free
-    with open(CATALOG_PATH, "w", encoding="utf-8") as f:
-        json.dump(GLOBAL_CATALOG, f, indent=2, ensure_ascii=False)
-    _audit("catalog.free", f"{app_id} -> {'free' if is_free else 'paid-only'}")
-    new_version = increment_catalog_version()
-    free_count = sum(1 for a in GLOBAL_CATALOG.get("apps", []) if a.get("free_tier"))
-    return {"status": "ok", "app_id": app_id, "free": is_free,
-            "free_count": free_count, "new_catalog_version": new_version}
-
-@app.post("/admin/licenses")
-async def admin_create_license(request: Request):
-    """Admin: manually create a license key."""
-    require_admin(request)
-    body = await request.json()
-    email = body.get("email", "").strip()
-    tier = body.get("tier", "pro")
-    if not email or "@" not in email:
-        raise HTTPException(status_code=400, detail="Valid email required")
-    key = generate_license_key()
-    db = get_db()
-    db.execute("INSERT INTO licenses (key, email, tier, status) VALUES (?, ?, ?, 'active')", (key, email, tier))
-    db.commit()
-    db.close()
-    _audit("license.created", f"{tier} {email} key={key[:16]}...")
-    return {"status": "ok", "key": key, "email": email, "tier": tier}
-
-@app.post("/admin/licenses/{license_key}/revoke")
-async def admin_revoke_license(license_key: str, request: Request):
-    """Revoke a license - agents using it drop to free immediately."""
-    require_admin(request)
-    db = get_db()
-    db.execute("UPDATE licenses SET status='revoked' WHERE key=?", (license_key,))
-    db.execute("UPDATE agents SET plan='free' WHERE license_key=?", (license_key,))
-    db.commit()
-    db.close()
-    _audit("license.revoked", license_key[:16])
-    return {"status": "ok", "key": license_key, "revoked": True}
-
-@app.post("/admin/licenses/{license_key}/activate")
-async def admin_activate_license(license_key: str, request: Request):
-    """Re-activate a license."""
-    require_admin(request)
-    db = get_db()
-    db.execute("UPDATE licenses SET status='active' WHERE key=?", (license_key,))
-    db.commit()
-    db.close()
-    _audit("license.activated", license_key[:16])
-    return {"status": "ok", "key": license_key, "active": True}
-
-@app.post("/admin/catalog/apps/{app_id}/disable")
-async def admin_toggle_disabled(app_id: str, request: Request):
-    """Admin: disable or re-enable an app for EVERYONE (free + paid).
-
-    Backwards-compatible alias for publish/unpublish: disabled == unpublished.
-    """
-    require_admin(request)
-    body = await request.json()
-    disabled = bool(body.get("disabled", True))
-    app = next((a for a in GLOBAL_CATALOG.get("apps", []) if a.get("id") == app_id), None)
-    if not app:
-        raise HTTPException(status_code=404, detail="App not found")
-    app["disabled"] = disabled
-    app["published"] = not disabled
-    with open(CATALOG_PATH, "w", encoding="utf-8") as f:
-        json.dump(GLOBAL_CATALOG, f, indent=2, ensure_ascii=False)
-    _audit("catalog.disable", f"{app_id} -> {'disabled' if disabled else 'enabled'}")
-    new_version = increment_catalog_version()
-    return {"status": "ok", "app_id": app_id, "disabled": disabled,
-            "published": app["published"], "new_catalog_version": new_version}
-
-@app.post("/admin/catalog/apps/{app_id}/publish")
-async def admin_toggle_published(app_id: str, request: Request):
-    """Admin: publish or unpublish an app. Unpublished apps are NOT sent to any client.
-
-    Body: {"published": true|false}
-    """
-    require_admin(request)
-    body = await request.json()
-    published = bool(body.get("published", True))
-    app = next((a for a in GLOBAL_CATALOG.get("apps", []) if a.get("id") == app_id), None)
-    if not app:
-        raise HTTPException(status_code=404, detail="App not found")
-    app["published"] = published
-    app["disabled"] = not published
-    with open(CATALOG_PATH, "w", encoding="utf-8") as f:
-        json.dump(GLOBAL_CATALOG, f, indent=2, ensure_ascii=False)
-    _audit("catalog.publish", f"{app_id} -> {'published' if published else 'unpublished'}")
-    new_version = increment_catalog_version()
-    return {"status": "ok", "app_id": app_id, "published": published,
-            "new_catalog_version": new_version}
-
-@app.post("/admin/catalog/apps/{app_id}/education")
-async def admin_update_education(app_id: str, request: Request):
-    """Admin updates education data (video_url, etc.) for an app."""
-    require_admin(request)
-    data = await request.json()
-    
-    # Find and update the app in the global catalog
-    for a in GLOBAL_CATALOG.get("apps", []):
-        if a["id"] == app_id:
-            if "education" not in a:
-                a["education"] = {}
-            for key, val in data.items():
-                a["education"][key] = val
-            # Persist to disk (same pattern as admin_add_app)
-            with open(CATALOG_PATH, "w", encoding="utf-8") as f:
-                json.dump(GLOBAL_CATALOG, f, indent=2, ensure_ascii=False)
-            new_version = increment_catalog_version()
-            return {"status": "updated", "app_id": app_id, "new_catalog_version": new_version}
-    
-    return {"error": "App not found"}, 404
-
-@app.post("/admin/catalog/publish")
-async def admin_publish_catalog(request: Request):
-    require_admin(request)
-    """Force publish a new catalog version (agents will pick it up)."""
-    new_version = increment_catalog_version()
-    return {"status": "published", "new_catalog_version": new_version}
-
-@app.post("/admin/agents/{agent_id}/touch")
-async def admin_touch_agent(agent_id: str):
-    """Mark an agent as online (for testing without real agent)."""
-    db = get_db()
-    db.execute("UPDATE agents SET status='online', last_seen=datetime('now') WHERE id=?", (agent_id,))
-    db.commit()
-    db.close()
-    return {"status": "touched", "agent_id": agent_id}
-
-@app.post("/admin/agents/{agent_id}/plan")
-async def admin_set_agent_plan(agent_id: str, request: Request):
-    """Admin: set an agent's plan (free/paid)."""
-    require_admin(request)
-    body = await request.json()
-    plan = body.get("plan", "free")
-    if plan not in ("free", "paid"):
-        raise HTTPException(status_code=400, detail="Plan must be free or paid")
-    set_agent_plan(agent_id, plan)
-    return {"status": "ok", "agent_id": agent_id, "plan": plan}
-
-
-
-@app.post("/api/agent/subscription")
-async def agent_subscription_status(request: Request):
-    """Agent checks its subscription status — shows plan, grace period, license info."""
-    body = await request.json()
-    agent_id = body.get("agent_id")
-    api_key = body.get("api_key")
-
-    if not verify_agent(agent_id, api_key):
-        raise HTTPException(status_code=401, detail="Invalid auth")
-
-    db = get_db()
-    agent = db.execute("SELECT plan, license_key FROM agents WHERE id=?", (agent_id,)).fetchone()
-    if not agent:
-        db.close()
-        raise HTTPException(status_code=404, detail="Agent not found")
-
-    result = {
-        "agent_id": agent_id,
-        "plan": agent["plan"] or "free",
-        "license_key": agent["license_key"] or "",
-    }
-
-    if agent["license_key"]:
-        lic = db.execute("SELECT status, grace_ends_at, email FROM licenses WHERE key=?", (agent["license_key"],)).fetchone()
-        if lic:
-            result["license_status"] = lic["status"]
-            result["grace_ends_at"] = lic["grace_ends_at"] or ""
-            result["email"] = lic["email"] or ""
-            if lic["status"] == "grace_period" and lic["grace_ends_at"]:
-                from datetime import datetime
-                try:
-                    grace_end = datetime.fromisoformat(lic["grace_ends_at"])
-                    remaining = (grace_end - datetime.utcnow()).days
-                    result["grace_days_remaining"] = max(0, remaining)
-                except Exception:
-                    result["grace_days_remaining"] = 0
-    db.close()
-    return JSONResponse(result)
-
-@app.post("/api/agent/ping")
-async def agent_ping(request: Request):
-    """Simple ping endpoint for agent connectivity test."""
-    body = await request.json() if request.headers.get("content-type") == "application/json" else {}
-    return {
-        "status": "pong",
-        "server_time": datetime.utcnow().isoformat(),
-        "catalog_version": get_catalog_version(),
-        "catalog_apps": len(GLOBAL_CATALOG.get("apps", [])),
-    }
-
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-# BACKGROUND: Mark stale agents as offline
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-
-def stale_agent_watcher():
-    while True:
-        try:
-            db = get_db()
-            cutoff = (datetime.utcnow() - timedelta(seconds=AGENT_TIMEOUT_SECONDS)).isoformat()
-            db.execute("UPDATE agents SET status='offline' WHERE last_seen < ? AND status='online'", (cutoff,))
-            db.commit()
-            db.close()
-        except Exception as e:
-            print(f"[stale_watcher] Error: {e}")
-        time.sleep(60)
-
-threading.Thread(target=stale_agent_watcher, daemon=True).start()
-
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-# STRIPE / PROVISIONING (existing)
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-
-COOLIFY_URL = os.getenv("COOLIFY_URL", "http://169.58.9.191:8000")
-COOLIFY_TOKEN = os.getenv("COOLIFY_TOKEN", "")
-STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
-STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
-DOMAIN = os.getenv("DOMAIN", "appvault.airepoindex.com")
-STRIPE_PRICE_PRO = os.getenv("STRIPE_PRICE_PRO", "price_xxx_pro")
-STRIPE_PRICE_PRO_YEARLY = os.getenv("STRIPE_PRICE_PRO_YEARLY", "price_xxx_pro_yearly")
-# Starter/Power tiers deprecated — kept for backward compat (not in checkout)
-STRIPE_PRICE_STARTER = os.getenv("STRIPE_PRICE_STARTER", "price_xxx_starter")
-STRIPE_PRICE_POWER = os.getenv("STRIPE_PRICE_POWER", "price_xxx_power")
-SMTP_HOST = os.getenv("SMTP_HOST", "")
-SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
-SMTP_USER = os.getenv("SMTP_USER", "")
-SMTP_PASS = os.getenv("SMTP_PASS", "")
-MAIL_FROM = os.getenv("MAIL_FROM", "AppVault <no-reply@airepoindex.com>")
-INSTALL_URL = os.getenv("INSTALL_URL", "https://144.217.89.129/install.sh")
-
-def send_email(to, subject, html):
-    if not SMTP_HOST:
-        try:
-            with open("/data/emails.log", "a") as f:
-                f.write(f"{time.strftime('%Y-%m-%dT%H:%M:%S')} TO={to} SUBJECT={subject}\n{html}\n---\n")
-        except Exception:
-            pass
-        _audit("email.logged", f"to={to} subject={subject} (SMTP not configured)")
-        return False
-    import smtplib
-    from email.mime.text import MIMEText
-    from email.mime.multipart import MIMEMultipart
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = subject
-    msg["From"] = MAIL_FROM
-    msg["To"] = to
-    msg.attach(MIMEText(html, "html"))
-    try:
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=20) as s:
-            s.starttls()
-            if SMTP_USER:
-                s.login(SMTP_USER, SMTP_PASS)
-            s.sendmail(MAIL_FROM, [to], msg.as_string())
-        _audit("email.sent", f"to={to} subject={subject}")
-        return True
-    except Exception as e:
-        _audit("email.error", f"to={to} {e}")
-        return False
-
-async def provision_coolify(instance_id: str, email: str, tier: str) -> Optional[str]:
-    """Deploy AppVault on Coolify and return the URL."""
-    import httpx
-    subdomain = email.split("@")[0].lower().replace(".", "-").replace("_", "-")
-    subdomain = f"{subdomain}-{instance_id[:6]}"
-    url = f"https://{subdomain}.{DOMAIN}"
-    
-    env = {
-        "API_KEY": str(uuid.uuid4()).replace("-", "")[:32],
-        "ADMIN_ENABLED": "false",
-        "ADMIN_EMAIL": email,
-        "HEIMDALL_PORT": "8085",
-        "APP_MANAGER_PORT": "8086",
-    }
-    # Dynamic: FREE_LIMIT = number of apps the admin marked free (no hardcoded count)
-    free_count = sum(1 for a in GLOBAL_CATALOG.get("apps", []) if a.get("free_tier"))
-    env["FREE_LIMIT"] = str(free_count)
-    
-    headers = {"Authorization": f"Bearer {COOLIFY_TOKEN}"}
-    
-    async with httpx.AsyncClient() as client:
-        try:
-            payload = {
-                "project_uuid": "uuc85ypiss34ajm4qcjfeekx",
-                "environment_name": "production",
-                "application_type": "django",
-                "application_name": f"appvault-{instance_id[:8]}",
-                "application_fqdn": url,
-                "domains": url,
-                "git_repository": "https://github.com/Sectutor/appvault.git",
-                "git_branch": "master",
-                "build_pack": "dockercompose",
-                "docker_compose_domains": {url: "app-manager"},
-                "ports_exposes": "8085,8086",
-                "env": env,
-            }
-            resp = await client.post(f"{COOLIFY_URL}/api/v1/applications", json=payload, headers=headers, timeout=30)
-            if resp.status_code == 201:
-                await client.post(f"{COOLIFY_URL}/api/v1/deploy", json={"uuid": "uuc85ypiss34ajm4qcjfeekx", "force": True}, headers=headers, timeout=30)
-                return url
-        except Exception as e:
-            print(f"Provisioning error: {e}")
-    return None
-
-# --- Stripe subscription lifecycle (added 2026-08-04) ---
-
-def _set_license_status(sub_id, status):
-    """Set license status by subscription id; downgrade agents when revoked."""
-    db = get_db()
-    rows = db.execute("SELECT key FROM licenses WHERE stripe_subscription_id = ?", (sub_id,)).fetchall()
-    keys = []
-    for r in rows:
-        keys.append(r["key"])
-        db.execute("UPDATE licenses SET status=? WHERE key=?", (status, r["key"]))
-        if status != "active":
-            db.execute("UPDATE agents SET plan='free' WHERE license_key=?", (r["key"],))
-    db.commit()
-    db.close()
-    return keys
-
-
-async def _handle_checkout_completed(session):
-    email = session.get("customer_email") or session.get("customer_details", {}).get("email")
-    metadata = session.get("metadata", {})
-    instance_id = metadata.get("instance_id")
-    agent_id = metadata.get("agent_id")
-    tier = metadata.get("tier", "starter")
-    customer_id = session.get("customer", "") or ""
-    subscription_id = session.get("subscription", "") or ""
-
-    # License key was pre-generated at checkout creation (status='pending').
-    # Look it up by instance_id first; fall back to agent binding, then generate a fresh one.
-    license_key = metadata.get("license_key", "")
-    db = get_db()
-    lic = None
-    if not license_key and instance_id:
-        inst = db.execute("SELECT license_key FROM instances WHERE id = ?", (instance_id,)).fetchone()
-        if inst and inst["license_key"]:
-            license_key = inst["license_key"]
-    if license_key:
-        lic = db.execute("SELECT * FROM licenses WHERE key = ?", (license_key,)).fetchone()
-    if not lic:
-        license_key = generate_license_key()
-        try:
-            db.execute(
-                "INSERT OR REPLACE INTO licenses (key, email, tier, status, stripe_session_id, stripe_customer_id, stripe_subscription_id) "
-                "VALUES (?, ?, ?, 'active', ?, ?, ?)",
-                (license_key, email, tier, session.get("id", ""), customer_id, subscription_id),
-            )
-        except Exception:
-            pass
-
-    if email:
-        # Activate the pre-generated pending license
-        db.execute(
-            "UPDATE licenses SET email=?, tier=?, status='active', stripe_session_id=?, stripe_customer_id=?, stripe_subscription_id=?, activated_at=datetime('now') WHERE key=?",
-            (email, tier, session.get("id", ""), customer_id, subscription_id, license_key),
-        )
-        # Auto-bind license to agent (agent-initiated checkout)
-        if agent_id:
-            db.execute("UPDATE licenses SET bound_agent_id=? WHERE key=?", (agent_id, license_key))
-            db.execute("UPDATE agents SET plan='paid', license_key=? WHERE id=?", (license_key, agent_id))
-            _audit("agent.upgraded", f"agent {agent_id[:8]} -> paid key={license_key[:16]}")
-        if instance_id:
-            db.execute(
-                "UPDATE instances SET status='paid', license_key=?, stripe_session_id=?, stripe_customer_id=?, stripe_subscription_id=?, updated_at=datetime('now') WHERE id=?",
-                (license_key, session.get("id", ""), customer_id, subscription_id, instance_id),
-            )
-        db.commit()
-        db.close()
-        _audit("license.issued", f"{tier} -> {email} key={license_key[:16]}...")
-
-        subject = "Your AppVault license is ready"
-        dash_link = "https://" + DOMAIN + "/dashboard?t=" + _make_dashboard_token(license_key)
-        html = (
-            "<p>Hi,</p><p>Your AppVault <b>" + tier + "</b> plan is active. Here's your license key:</p>"
-            '<p style="font-family:monospace;font-size:18px;background:#f1f5f9;padding:12px;border-radius:8px;"><b>' + license_key + "</b></p>"
-            "<p>Deploy AppVault on your own VPS in one line:</p>"
-            "<p><code>curl -fsSL " + INSTALL_URL + " | sudo bash -s -- --license " + license_key + "</code></p>"
-            "<p>Then open the app's <b>Security</b> tab and join your Tailscale network.</p>"
-            '<p>Manage your subscription: <a href="' + dash_link + '">' + dash_link + "</a></p>"
-            '<p>Need more servers? Each server needs its own license — buy another at <a href="https://' + DOMAIN + '/#pricing">' + DOMAIN + "/#pricing</a></p>"
-            "<p>Questions? Just reply to this email.</p>"
-        )
-        send_email(email, subject, html)
-
-
-async def _handle_subscription_updated(sub):
-    from datetime import datetime, timedelta
-    sub_id = sub.get("id", "")
-    status = sub.get("status", "")
-    if not sub_id:
-        return
-    if status == "canceled":
-        # Start 14-day grace period (same logic as subscription_deleted)
-        grace_end = (datetime.utcnow() + timedelta(days=14)).isoformat()
-        db = get_db()
-        rows = db.execute("SELECT key FROM licenses WHERE stripe_subscription_id=? AND status='active'", (sub_id,)).fetchall()
-        for r in rows:
-            db.execute("UPDATE licenses SET status='grace_period', canceled_at=datetime('now'), grace_ends_at=? WHERE key=?", (grace_end, r["key"]))
-        db.commit()
-        db.close()
-        _audit("license.grace_period", f"subscription updated {sub_id} grace_until={grace_end}")
-    if status in ("unpaid", "past_due", "incomplete_expired"):
-        keys = _set_license_status(sub_id, "revoked")
-        if keys:
-            _audit("license.revoked", f"subscription {sub_id} ({status}) keys={[k[:16] for k in keys]}")
-    else:
-        keys = _set_license_status(sub_id, "active")
-        if keys:
-            _audit("license.activated", f"subscription {sub_id} ({status})")
-
-
-async def _handle_subscription_deleted(sub):
-    """Subscription canceled — start 14-day grace period instead of immediate revoke.
-
-    During grace period:
-    - License status = 'grace_period', grace_ends_at = now + 14 days
-    - Agent plan stays 'paid' (get_agent_plan checks grace_ends_at)
-    - Agent keeps getting premium updates
-    After grace period:
-    - Next agent sync/catalog check sees grace_ends_at passed
-    - get_agent_plan downgrades agent to 'free'
-    - Premium installs/updates blocked, running containers untouched
-    """
-    from datetime import datetime, timedelta
-    sub_id = sub.get("id", "")
-    if not sub_id:
-        return
-    grace_end = (datetime.utcnow() + timedelta(days=14)).isoformat()
-    db = get_db()
-    rows = db.execute("SELECT key FROM licenses WHERE stripe_subscription_id=? AND status='active'", (sub_id,)).fetchall()
-    keys = []
-    for r in rows:
-        keys.append(r["key"])
-        db.execute("UPDATE licenses SET status='grace_period', canceled_at=datetime('now'), grace_ends_at=? WHERE key=?", (grace_end, r["key"]))
-    db.commit()
-    db.close()
-    if keys:
-        _audit("license.grace_period", f"subscription {sub_id} grace_until={grace_end} keys={[k[:16] for k in keys]}")
-
-
-async def _handle_invoice_paid(inv):
-    sub_id = inv.get("subscription", "")
-    if sub_id:
-        _set_license_status(sub_id, "active")
-        _audit("license.renewed", f"invoice paid subscription={sub_id}")
-
-
-async def _handle_invoice_failed(inv):
-    sub_id = inv.get("subscription", "")
-    customer = inv.get("customer", "")
-    print(f"[stripe] invoice.payment_failed subscription={sub_id} customer={customer}", flush=True)
-    _audit("invoice.failed", f"subscription={sub_id} customer={customer}")
-    # Stripe retries automatically; customer.subscription.updated revokes on unpaid.
-
-
-@app.post("/api/webhook")
-async def stripe_webhook(request: Request):
-    """Handle Stripe events: checkout, subscription lifecycle, invoices."""
-    import json as json_lib
-    payload = await request.body()
-    sig_header = request.headers.get("stripe-signature")
-
-    if STRIPE_WEBHOOK_SECRET:
-        try:
-            import stripe
-            stripe.Webhook.construct_event(payload, sig_header, STRIPE_WEBHOOK_SECRET)
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=str(e))
-
-    try:
-        event = json_lib.loads(payload)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Invalid payload: {str(e)}")
-    etype = event["type"]
-    obj = event["data"]["object"]
-
-    if etype == "checkout.session.completed":
-        await _handle_checkout_completed(obj)
-    elif etype == "customer.subscription.updated":
-        await _handle_subscription_updated(obj)
-    elif etype == "customer.subscription.deleted":
-        await _handle_subscription_deleted(obj)
-    elif etype == "invoice.payment_succeeded":
-        await _handle_invoice_paid(obj)
-    elif etype == "invoice.payment_failed":
-        await _handle_invoice_failed(obj)
-    else:
-        print(f"[stripe] Unhandled event type: {etype}", flush=True)
-
-    return JSONResponse({"status": "ok"})
-
-
-@app.post("/api/agent/billing-portal")
-async def agent_billing_portal(request: Request):
-    """Agent creates a Stripe Customer Portal session to manage its subscription."""
-    import stripe
-    stripe.api_key = STRIPE_SECRET_KEY
-    body = await request.json()
-    agent_id = body.get("agent_id")
-    api_key = body.get("api_key")
-
-    if not verify_agent(agent_id, api_key):
-        raise HTTPException(status_code=401, detail="Invalid auth")
-
-    # Get the Stripe customer ID from the agent's license
-    db = get_db()
-    agent = db.execute("SELECT license_key FROM agents WHERE id=?", (agent_id,)).fetchone()
-    if not agent or not agent["license_key"]:
-        db.close()
-        raise HTTPException(status_code=400, detail="No license found")
-
-    lic = db.execute("SELECT stripe_customer_id FROM licenses WHERE key=?", (agent["license_key"],)).fetchone()
-    db.close()
-
-    if not lic or not lic["stripe_customer_id"]:
-        raise HTTPException(status_code=400, detail="No subscription found for this license")
-
-    try:
-        session = stripe.billing_portal.Session.create(
-            customer=lic["stripe_customer_id"],
-            return_url=f"https://{DOMAIN}/dashboard",
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Billing portal creation failed: {str(e)}")
-    return JSONResponse({"url": session.url})
-
-@app.post("/api/billing-portal")
-async def billing_portal(request: Request):
-    """Create a Stripe Customer Portal session (requires a valid license key)."""
-    import stripe
-    stripe.api_key = STRIPE_SECRET_KEY
-    body = await request.json()
-    key = (body.get("license_key") or "").strip() or request.session.get("license_key", "")
-    if not key:
-        raise HTTPException(status_code=400, detail="license_key is required")
-
-    db = get_db()
-    lic = db.execute("SELECT * FROM licenses WHERE key = ?", (key,)).fetchone()
-    db.close()
-    if not lic or lic["status"] != "active":
-        raise HTTPException(status_code=403, detail="Invalid or inactive license")
-
-    customer_id = (lic["stripe_customer_id"] or "").strip()
-    if not customer_id:
-        try:
-            customers = stripe.Customer.list(email=lic["email"], limit=1)
-            if customers.data:
-                customer_id = customers.data[0].id
-        except Exception:
-            customer_id = ""
-    if not customer_id:
-        raise HTTPException(status_code=404, detail="No Stripe customer found for this license")
-
-    try:
-        portal = stripe.billing_portal.Session.create(
-            customer=customer_id,
-            return_url=f"https://{DOMAIN}/dashboard?k={key}",
-        )
-        _audit("portal.created", lic["email"])
-        return JSONResponse({"url": portal.url})
-    except Exception as e:
-        print(f"[stripe] Portal creation failed: {e}", flush=True)
-        raise HTTPException(status_code=500, detail=f"Portal session creation failed: {str(e)}")
-@app.get("/")
-async def landing(request: Request):
-    ctx = _landing_ctx(request)
-    return templates.TemplateResponse(request, "landing.html", ctx)
-
-@app.get("/pricing", response_class=HTMLResponse)
-async def pricing_page(request: Request):
-    ctx = _landing_ctx(request)
-    return templates.TemplateResponse(request, "landing.html", ctx)
-
-def _landing_ctx(request: Request):
-    """Build landing page context: visible (non-hidden) catalog apps with rich fields."""
-    apps = [a for a in GLOBAL_CATALOG.get("apps", []) if not a.get("hidden")]
-    return {
-        "request": request,
-        "catalog": {"apps": apps},
-        "catalog_json": json.dumps({"apps": apps}, ensure_ascii=False),
-    }
-
-@app.get("/dashboard")
-async def dashboard(request: Request, k: str = None, t: str = None):
-    """License-key authenticated dashboard: session cookie + short-lived signed link."""
-    ctx = {"request": request, "license": None, "instances": [], "error": None}
-
-    # Legacy raw-key links: validate, set session, redirect to a clean URL.
-    if k:
-        db = get_db()
-        lic = db.execute("SELECT * FROM licenses WHERE key = ?", (k,)).fetchone()
-        db.close()
-        if lic and lic["status"] == "active":
-            request.session["license_key"] = k
-            return RedirectResponse("/dashboard", status_code=302)
-        ctx["error"] = "Invalid or inactive license key."
-        return templates.TemplateResponse(request, "dashboard.html", ctx)
-
-    if t:
-        key = _read_dashboard_token(t)
-        if not key:
-            ctx["error"] = "This link has expired. Enter your license key below."
-            return templates.TemplateResponse(request, "dashboard.html", ctx)
-    else:
-        key = request.session.get("license_key", "")
-
-    if not key:
-        return templates.TemplateResponse(request, "dashboard.html", ctx)
-
-    db = get_db()
-    lic = db.execute("SELECT * FROM licenses WHERE key = ?", (key,)).fetchone()
-    if not lic or lic["status"] != "active":
-        db.close()
-        request.session.pop("license_key", None)
-        ctx["error"] = "Invalid or inactive license key."
-        return templates.TemplateResponse(request, "dashboard.html", ctx)
-    request.session["license_key"] = key
-    licenses = db.execute("SELECT * FROM licenses WHERE email = ? ORDER BY created_at DESC", (lic["email"],)).fetchall()
-    instances = db.execute("SELECT * FROM instances WHERE email = ?", (lic["email"],)).fetchall()
-    db.close()
-    ctx["license"] = lic
-    ctx["licenses"] = licenses
-    ctx["instances"] = instances
-    ctx["install_url"] = INSTALL_URL
-    return templates.TemplateResponse(request, "dashboard.html", ctx)
-
-
-@app.post("/api/dashboard/login")
-async def dashboard_login(request: Request):
-    """Exchange a license key for a session (key entry form)."""
-    body = await request.json()
-    key = (body.get("license_key") or "").strip()
-    if not key:
-        raise HTTPException(status_code=400, detail="license_key is required")
-    db = get_db()
-    lic = db.execute("SELECT * FROM licenses WHERE key = ?", (key,)).fetchone()
-    db.close()
-    if not lic or lic["status"] != "active":
-        raise HTTPException(status_code=403, detail="Invalid or inactive license key")
-    request.session["license_key"] = key
-    _audit("dashboard.login", lic["email"])
-    return JSONResponse({"ok": True})
-
-@app.post("/api/checkout")
-async def create_checkout(request: Request):
-    """Create Stripe Checkout session. Tiers: pro (monthly/yearly).
-    Generates the license key UP FRONT (status=pending) so the post-payment
-    /acknowledge page can display it immediately. The webhook activates it
-    and emails it after payment lands.
-    """
-    import stripe
-    stripe.api_key = STRIPE_SECRET_KEY
-    body = await request.json()
-    tier = body.get("tier", "pro")
-    billing = body.get("billing", "monthly")  # monthly | yearly
-    email = body.get("email", "")  # optional - Stripe collects it on their page
-
-    # Resolve price: only "pro" tier is purchasable; yearly uses annual price
-    if tier == "pro" and billing == "yearly":
-        price_id = STRIPE_PRICE_PRO_YEARLY
-    elif tier == "pro":
-        price_id = STRIPE_PRICE_PRO
-    else:
-        price_id = STRIPE_PRICE_PRO
-
-    if not price_id or price_id.startswith("price_xxx"):
-        raise HTTPException(status_code=503, detail="Checkout not configured yet (missing Stripe price)")
-
-    instance_id = str(uuid.uuid4())
-    license_key = generate_license_key()
-    db = get_db()
-    # Pending license + instance row created BEFORE payment so the ack page can show the key
-    db.execute(
-        "INSERT OR REPLACE INTO licenses (key, email, tier, status, instance_id) VALUES (?, ?, ?, 'pending', ?)",
-        (license_key, email, tier, instance_id),
-    )
-    db.execute("INSERT INTO instances (id, email, tier, status, license_key) VALUES (?, ?, ?, 'pending', ?)",
-               (instance_id, email, f"{tier}-{billing}", license_key))
-    db.commit()
-    db.close()
-
-    try:
-        session = stripe.checkout.Session.create(
-            payment_method_types=["card"],
-            line_items=[{"price": price_id, "quantity": 1}],
-            mode="subscription",
-            success_url=f"http://{DOMAIN}/acknowledge?instance={instance_id}&src=web",
-            cancel_url=f"http://{DOMAIN}",
-            customer_email=email or None,
-            metadata={"instance_id": instance_id, "tier": tier, "billing": billing, "license_key": license_key, "email": email},
-        )
-    except Exception as e:
-        print(f"[stripe] Checkout session creation failed: {e}", flush=True)
-        raise HTTPException(status_code=500, detail=f"Checkout session creation failed: {str(e)}")
-    _audit("checkout.created", f"{tier}-{billing}")
-    return JSONResponse({"url": session.url})
-
-@app.post("/api/agent/checkout")
-async def agent_checkout(request: Request):
-    """Agent-initiated checkout - agent pays to upgrade itself to Pro.
-
-    The agent's agent_id is passed through Stripe metadata so the webhook
-    can auto-bind the license to the specific agent after payment.
-    Generates the license key UP FRONT (status=pending) so the post-payment
-    /acknowledge page can display it immediately with an "Activate on my
-    device" button that returns the user to the client with the key.
-    """
-    import stripe
-    stripe.api_key = STRIPE_SECRET_KEY
-    body = await request.json()
-    agent_id = body.get("agent_id")
-    api_key = body.get("api_key")
-    billing = body.get("billing", "monthly")  # monthly | yearly
-    return_url = body.get("return_url") or f"http://{DOMAIN}"
-    cancel_url = body.get("cancel_url") or f"http://{DOMAIN}"
-
-    if not verify_agent(agent_id, api_key):
-        raise HTTPException(status_code=401, detail="Invalid auth")
-
-    # Get agent's existing email (from license or agent record)
-    db = get_db()
-    agent = db.execute("SELECT license_key FROM agents WHERE id=?", (agent_id,)).fetchone()
-    email = ""
-    if agent and agent["license_key"]:
-        lic = db.execute("SELECT email FROM licenses WHERE key=?", (agent["license_key"],)).fetchone()
-        if lic:
-            email = lic["email"]
-    db.close()
-
-    # Resolve price
-    if billing == "yearly":
-        price_id = STRIPE_PRICE_PRO_YEARLY
-    else:
-        price_id = STRIPE_PRICE_PRO
-
-    if not price_id or price_id.startswith("price_xxx"):
-        raise HTTPException(status_code=503, detail="Checkout not configured yet (missing Stripe price)")
-
-    instance_id = str(uuid.uuid4())
-    license_key = generate_license_key()
-    db = get_db()
-    # Pending license created upfront, bound to the agent, instance tracked
-    db.execute(
-        "INSERT OR REPLACE INTO licenses (key, email, tier, status, bound_agent_id, instance_id) VALUES (?, ?, 'pro', 'pending', ?, ?)",
-        (license_key, email, agent_id, instance_id),
-    )
-    db.execute("INSERT INTO instances (id, email, tier, status, license_key) VALUES (?, ?, 'pro', 'pending', ?)",
-               (instance_id, email, license_key))
-    db.commit()
-    db.close()
-
-    try:
-        session = stripe.checkout.Session.create(
-            payment_method_types=["card"],
-            line_items=[{"price": price_id, "quantity": 1}],
-            mode="subscription",
-            success_url=f"http://{DOMAIN}/acknowledge?instance={instance_id}&src=client&agent={agent_id}",
-            cancel_url=cancel_url,
-            customer_email=email or None,
-            metadata={"agent_id": agent_id, "instance_id": instance_id, "tier": "pro", "billing": billing, "license_key": license_key, "email": email, "return_url": return_url},
-        )
-    except Exception as e:
-        print(f"[stripe] Agent checkout session creation failed: {e}", flush=True)
-        raise HTTPException(status_code=500, detail=f"Checkout session creation failed: {str(e)}")
-    _audit("agent.checkout", f"agent {agent_id[:8]} billing={billing}")
-    return JSONResponse({"url": session.url})
-
-@app.get("/acknowledge")
-async def acknowledge(request: Request, instance: str = "", src: str = "web", agent: str = ""):
-    """Post-payment acknowledgment page.
-
-    Workflow 1 (src=web, buy from website): shows the license key and the
-    user copies it to activate themselves. STOP - no auto-activation.
-
-    Workflow 2 (src=client, buy from the client app): shows payment details,
-    the key, instructions, and an "Activate on my device" button that opens
-    the client settings page (http://localhost:8085) with the key so it
-    auto-activates that client copy.
-    """
-    ctx = {
-        "request": request,
-        "license_key": "",
-        "email": "",
-        "tier": "pro",
-        "billing": "monthly",
-        "src": src,
-        "agent": agent,
-        "client_url": f"http://localhost:8085",
-        "error": "",
-        "paid": False,
-    }
-
-    if not instance:
-        ctx["error"] = "Missing checkout reference."
-        return templates.TemplateResponse(request, "acknowledge.html", ctx)
-
-    db = get_db()
-    lic = None
-    inst = db.execute("SELECT * FROM instances WHERE id = ?", (instance,)).fetchone()
-    if inst and inst["license_key"]:
-        lic = db.execute("SELECT * FROM licenses WHERE key = ?", (inst["license_key"],)).fetchone()
-    db.close()
-
-    if not lic:
-        ctx["error"] = "License not found. If you just paid, it may take a moment - check your email."
-        return templates.TemplateResponse(request, "acknowledge.html", ctx)
-
-    ctx["license_key"] = lic["key"]
-    ctx["email"] = lic["email"] or ""
-    ctx["tier"] = lic["tier"] or "pro"
-    ctx["billing"] = (inst["tier"] or "").split("-")[-1] if inst else "monthly"
-    ctx["paid"] = lic["status"] == "active"
-
-    return templates.TemplateResponse(request, "acknowledge.html", ctx)
-
-
-@app.get("/api/status/{instance_id}")
-async def check_status(instance_id: str):
-    db = get_db()
-    row = db.execute("SELECT * FROM instances WHERE id = ?", (instance_id,)).fetchone()
-    db.close()
-    if not row:
-        raise HTTPException(status_code=404, detail="Instance not found")
-    return {"id": row["id"], "status": row["status"], "url": row["url"], "tier": row["tier"], "created_at": row["created_at"]}
-
-@app.get("/api/license/{license_key}")
-async def check_license(license_key: str):
-    """Public license verification."""
-    db = get_db()
-    row = db.execute("SELECT key, email, tier, status, created_at FROM licenses WHERE key = ?", (license_key,)).fetchone()
-    db.close()
-    if not row:
-        raise HTTPException(status_code=404, detail="License not found")
-    return dict(row)
-
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-# AUTO-IMPORT APP FROM GITHUB
-# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-
-GITHUB_API = "https://api.github.com"
-CONTAINER_REGISTRIES = {
-    "ghcr.io": "ghcr.io/%s/%s:latest",
-    "docker.io": "docker.io/%s/%s:latest",
-}
-
-def parse_docker_compose_services(content):
-    """Parse a docker-compose.yml and extract service info."""
-    import yaml
-    try:
-        compose = yaml.safe_load(content)
-    except:
-        return []
-    
-    services = []
-    for name, svc in (compose.get("services", {}) or {}).items():
-        info = {"name": name, "ports": [], "image": "", "env": [], "volumes": [], "build": False}
-        
-        # Detect ports
-        ports = svc.get("ports", [])
-        for p in ports:
-            if isinstance(p, str) and ":" in p:
-                host_port, container_port = p.split(":")[0], p.split(":")[1]
-                info["ports"].append({"host": host_port.strip(), "container": container_port.strip()})
-            elif isinstance(p, (int, str)):
-                info["ports"].append({"host": str(p), "container": str(p)})
-        
-        # Detect image or build
-        if svc.get("image"):
-            info["image"] = svc["image"]
-        if svc.get("build"):
-            info["build"] = True
-        
-        # Detect env vars (from environment: section)
-        env_dict = svc.get("environment", {}) or {}
-        if isinstance(env_dict, dict):
-            for k, v in env_dict.items():
-                if v:
-                    info["env"].append(f"{k}={v}")
-        
-        # Detect volumes
-        vols = svc.get("volumes", []) or []
-        for v in vols:
-            if isinstance(v, str) and ":" in v:
-                info["volumes"].append(v)
-        
-        # Detect profiles (optional services)
-        profiles = svc.get("profiles", []) or []
-        if profiles:
-            info["profiles"] = profiles
-            info["optional"] = True
-        
-        services.append(info)
-    
-    return services
-
-@app.post("/admin/catalog/auto-import")
-async def admin_auto_import(request: Request):
-    """
-    Auto-detect app configuration from a GitHub repo URL or Docker image name.
-    Accepts: {"url": "https://github.com/user/repo"} or {"image": "user/app:tag"}
-    Returns a generated catalog entry that can be reviewed and added.
-    """
-    body = await request.json()
-    url = body.get("url", "")
-    image_name = body.get("image", "")
-    
-    result = {"source_url": url or "", "image": image_name or "", "is_stack": False}
-    user_repo = None
-    
-    if url and "github.com" in url:
-        parts = url.rstrip("/").split("/")
-        if len(parts) >= 2:
-            user_repo = "/".join(parts[-2:])
-    
-    # Step 1: Check if this is a docker-compose stack first
-    is_stack = False
-    services = []
-    if user_repo and url:
-        try:
-            # Check for docker-compose.yml in the repo
-            api = f"{GITHUB_API}/repos/{user_repo}/contents/docker-compose.yml"
-            req = urllib.request.Request(api, headers={"User-Agent": "AppVault"})
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                data = json.loads(resp.read())
-                if data.get("content"):
-                    import base64
-                    compose_content = base64.b64decode(data["content"]).decode()
-                    services = parse_docker_compose_services(compose_content)
-                    if services:
-                        is_stack = True
-                        result["is_stack"] = True
-                        result["services"] = services
-        except:
-            pass
-    
-    # Step 2: Try to pull a pre-built image (if not a stack)
-    if not is_stack and image_name:
-        try:
-            r = subprocess.run(
-                ["docker", "pull", image_name],
-                capture_output=True, text=True, timeout=120
-            )
-            if r.returncode != 0:
-                alt_image = image_name.replace("ghcr.io/", "docker.io/")
-                r = subprocess.run(
-                    ["docker", "pull", alt_image],
-                    capture_output=True, text=True, timeout=120
-                )
-                if r.returncode == 0:
-                    image_name = alt_image
-                    result["image"] = alt_image
-                else:
-                    if "/" in image_name:
-                        parts = image_name.split("/")
-                        simple = "/".join(parts[-2:]) if len(parts) >= 2 else parts[-1]
-                        r = subprocess.run(
-                            ["docker", "pull", simple],
-                            capture_output=True, text=True, timeout=120
-                        )
-                        if r.returncode == 0:
-                            image_name = simple
-                            result["image"] = simple
-                        else:
-                            return {"error": f"Image '{image_name}' not found anywhere"}, 404
-                    else:
-                        return {"error": f"Image '{image_name}' not found"}, 404
-        except subprocess.TimeoutExpired:
-            return {"error": "Image pull timed out (>120s)"}, 408
-    
-    # Step 3: Build the entry (stack or single image)
-    if is_stack:
-        # Stack mode: use docker-compose info
-        # Use the first service's main port for the launch URL
-        main_port = "3000"
-        all_ports = []
-        all_env = []
-        all_volumes = []
-        for svc in services:
-            for p in svc.get("ports", []):
-                all_ports.append(p["host"])
-                if not main_port or main_port == "3000":
-                    main_port = p["host"]
-            all_env.extend(svc.get("env", []))
-            all_volumes.extend(svc.get("volumes", []))
-        
-        ports = [int(p) for p in all_ports if p.isdigit()] or [3000]
-        result["container_port"] = ports[0]
-        result["detected_ports"] = all_ports
-        result["env"] = all_env
-        result["volumes"] = all_volumes
-        result["compose_url"] = f"https://raw.githubusercontent.com/{user_repo}/main/docker-compose.yml"
-        config = {}  # No image to inspect for stacks
-    else:
-        # Single image mode: inspect the image
-        try:
-            r = subprocess.run(
-                ["docker", "image", "inspect", image_name],
-                capture_output=True, text=True, timeout=10
-            )
-            if r.returncode != 0:
-                return {"error": "Failed to inspect image"}, 500
-            img = json.loads(r.stdout)[0]
-        except:
-            return {"error": "Failed to parse image metadata"}, 500
-        
-        config = img.get("Config", {})
-        
-        exposed_ports = config.get("ExposedPorts", {})
-        ports = []
-        for p in exposed_ports.keys():
-            port_num = p.split("/")[0]
-            if port_num.isdigit():
-                ports.append(int(port_num))
-        
-        if not ports:
-            ports = [80, 3000, 8080, 5000, 8000, 20128]
-        
-        main_port = ports[0]
-        result["container_port"] = main_port
-        result["detected_ports"] = ports
-        
-        env = config.get("Env", [])
-        useful_env = []
-        for e in env:
-            if "=" in e:
-                key = e.split("=")[0]
-                val = e.split("=", 1)[1]
-                skip_patterns = ["PATH=", "NODE_", "YARN_", "NPM_", "DEBIAN_", "HOME=", 
-                               "LANG=", "TERM=", "TZ=", "LC_", "PYTHON", "JAVA_",
-                               "SSL_", "GPG_", "APK_", "NGINX_"]
-                if not any(key.startswith(p.rstrip("*").rstrip("=")) for p in skip_patterns):
-                    if not any(placeholder in val.lower() for placeholder in 
-                             ["your_", "changeme", "example.com", "your-domain"]):
-                        useful_env.append(e)
-        result["env"] = useful_env
-        
-        vols_config = config.get("Volumes", {})
-        result["volumes"] = list(vols_config.keys())
-    
-    # Step 7: Determine app name and ID
-    repo_short = image_name.split("/")[-1].split(":")[0] if "/" in image_name else image_name.split(":")[0]
-    app_id = repo_short.lower().replace("_", "-").replace(".", "")
-    app_name = repo_short.replace("-", " ").title()
-    
-    # Try to get better name from GitHub API
-    if url and "github.com" in url:
-        try:
-            parts = url.rstrip("/").split("/")
-            user, repo = parts[-2], parts[-1]
-            api_url = f"{GITHUB_API}/repos/{user}/{repo}"
-            req = urllib.request.Request(api_url, headers={"User-Agent": "AppVault"})
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                gh_data = json.loads(resp.read())
-                # Use the repo name, not description
-                if gh_data.get("name"):
-                    app_name = gh_data["name"].replace("-", " ").replace("_", " ").title()
-                result["description"] = (gh_data.get("description", "") or "")[:200]
-                result["github_stars"] = gh_data.get("stargazers_count", 0)
-                result["docs_url"] = f"{url}#readme"
-        except:
-            pass
-    
-    # Fix ID for stacks (no image name to derive from)
-    if is_stack and not app_id and user_repo:
-        app_id = user_repo.split("/")[-1].lower()
-    result["id"] = app_id
-    result["name"] = app_name
-    result["category"] = auto_detect_category(app_name, result.get("description", ""), ports)
-    result["min_ram_mb"] = auto_detect_ram(config)
-    
-    # Step 8: Generate education data
-    result["education"] = {
-        "docs_url": result.get("docs_url") or (f"https://github.com/{'/'.join(image_name.split('/')[:2])}#readme" if url else ""),
-        "quick_start": f"{app_name} runs on port {main_port}. After install, open the URL and follow the app's setup wizard." if ports else f"{app_name} has been installed and is running.",
-        "setup_steps": [
-            f"Open http://localhost:{main_port}/ in your browser",
-            "Follow the on-screen setup wizard",
-            "Configure the app for your needs"
-        ]
-    }
-    
-    return result
-
-def auto_detect_category(name, description, ports):
-    """Guess the best category based on name, description, and ports."""
-    text = (name + " " + description).lower()
-    
-    if any(w in text for w in ["ai", "llm", "agent", "chat", "gpt", "llama", "ollama", "openai", "model"]):
-        return "ai"
-    if any(w in text for w in ["database", "db", "postgres", "mysql", "mariadb", "redis", "sql"]):
-        return "database"
-    if any(w in text for w in ["media", "video", "music", "photo", "movie", "tv", "stream", "podcast", "jellyfin"]):
-        return "media"
-    if any(w in text for w in ["automation", "workflow", "n8n", "node-red", "zapier", "trigger"]):
-        return "automation"
-    if any(w in text for w in ["git", "dev", "code", "ide", "vscode", "server", "portainer", "ci/cd", "docker"]):
-        return "development"
-    if any(w in text for w in ["network", "proxy", "vpn", "dns", "router", "firewall", "adblock", "pihole", "traefik"]):
-        return "networking"
-    if any(w in text for w in ["wiki", "doc", "note", "book", "blog", "cms", "wordpress", "file", "cloud", "sync"]):
-        return "productivity"
-    if any(w in text for w in ["password", "vault", "auth", "identity", "sso"]):
-        return "networking"
-    
-    return "productivity"  # Default
-
-def auto_detect_ram(config):
-    """Estimate minimum RAM based on image layers and base OS."""
-    # Default to 256MB, which covers most small web apps
-    return 256
-
-@app.get("/health")
-async def health():
-    db = get_db()
-    online = db.execute("SELECT COUNT(*) as cnt FROM agents WHERE status='online'").fetchone()["cnt"]
-    db.close()
-    return {"status": "ok", "agents_online": online, "catalog_version": get_catalog_version(), "catalog_apps": len(GLOBAL_CATALOG.get("apps", []))}
-
