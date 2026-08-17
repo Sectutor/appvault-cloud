@@ -1,2 +1,8 @@
 __pycache__/
 buzz-stack/
+# live state - never commit
+data/
+*.log
+*.log.*
+static/catalog.json.backup-*
+static/catalog.json.bak-*

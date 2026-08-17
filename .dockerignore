@@ -1,0 +1,11 @@
+data/
+*.log
+*.log.*
+static/catalog.json.backup*
+static/catalog.json.bak*
+__pycache__/
+.git/
+*.pyc
+server.err.log
+server.log
+shot_*.png
