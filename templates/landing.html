@@ -217,10 +217,112 @@
         <span>🔧 GitLab</span>
         <span>📖 BookStack</span>
     </div>
-    <div class="install-cmd">
-      <strong>Windows (PowerShell):</strong> PS&gt; irm https://raw.githubusercontent.com/Sectutor/appvault-agent/main/install.ps1 | iex<br>
-      <strong>macOS / Linux:</strong> $ bash -c "$(curl -fsSL https://raw.githubusercontent.com/Sectutor/appvault-agent/main/install.sh)"
+    <style>
+        .install-box-wrap {
+            max-width: 760px; width: 100%; margin: 0 auto 24px;
+            background: #111827; border: 1px solid #1e293b; border-radius: 16px;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.5); overflow: hidden;
+            text-align: left;
+        }
+        .install-tabs {
+            display: flex; background: #0f172a; border-bottom: 1px solid #1e293b; padding: 4px 8px 0;
+            gap: 4px; overflow-x: auto;
+        }
+        .install-tab-btn {
+            padding: 10px 18px; border: none; background: transparent; color: #94a3b8;
+            font-size: 13px; font-weight: 600; cursor: pointer; border-top-left-radius: 8px; border-top-right-radius: 8px;
+            display: flex; align-items: center; gap: 8px; transition: all 0.2s;
+        }
+        .install-tab-btn:hover { color: #f8fafc; background: rgba(255,255,255,0.04); }
+        .install-tab-btn.active {
+            color: #38bdf8; background: #111827; border-bottom: 2px solid #38bdf8;
+        }
+        .install-panel {
+            padding: 20px 24px; display: none;
+        }
+        .install-panel.active { display: block; }
+        .cmd-snippet {
+            display: flex; align-items: center; justify-content: space-between;
+            background: #090d16; border: 1px solid #1e293b; border-radius: 10px;
+            padding: 12px 16px; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+            font-size: 13.5px; color: #38bdf8; overflow-x: auto; gap: 12px;
+        }
+        .cmd-snippet code { white-space: nowrap; }
+        .copy-cmd-btn {
+            background: #1e293b; border: 1px solid #334155; color: #e2e8f0;
+            padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600;
+            cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+        }
+        .copy-cmd-btn:hover { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
+        .install-hint {
+            margin-top: 10px; font-size: 12px; color: #64748b; line-height: 1.5;
+        }
+    </style>
+
+    <div class="install-box-wrap">
+        <div class="install-tabs">
+            <button class="install-tab-btn active" onclick="switchInstallTab('win', this)">🪟 Windows (Desktop / Server)</button>
+            <button class="install-tab-btn" onclick="switchInstallTab('linux', this)">🐧 Linux / VPS (Ubuntu, Debian, Contabo, Hostinger)</button>
+            <button class="install-tab-btn" onclick="switchInstallTab('mac', this)">🍎 macOS (Apple Silicon / Intel)</button>
+        </div>
+
+        <!-- WINDOWS TAB -->
+        <div class="install-panel active" id="tab-win">
+            <div class="cmd-snippet">
+                <code>irm https://appvault.airepoindex.com/install.ps1 | iex</code>
+                <button class="copy-cmd-btn" onclick="copySnippet('irm https://appvault.airepoindex.com/install.ps1 | iex', this)">📋 Copy</button>
+            </div>
+            <div class="install-hint">
+                ⚡ <strong>PowerShell (Admin)</strong>: Automatically configures WSL2, Docker Desktop, Desktop App Launcher, and starts the App Store on port <code>8085</code>.
+            </div>
+        </div>
+
+        <!-- LINUX TAB -->
+        <div class="install-panel" id="tab-linux">
+            <div class="cmd-snippet">
+                <code>curl -fsSL https://appvault.airepoindex.com/install.sh | bash</code>
+                <button class="copy-cmd-btn" onclick="copySnippet('curl -fsSL https://appvault.airepoindex.com/install.sh | bash', this)">📋 Copy</button>
+            </div>
+            <div class="install-hint">
+                🔒 <strong>Remote Server / VPS</strong>: Invisible deployment with Caddy HTTPS, automated Zero-Trust Tailscale mesh, and lockout-proof firewall.
+            </div>
+        </div>
+
+        <!-- MACOS TAB -->
+        <div class="install-panel" id="tab-mac">
+            <div class="cmd-snippet">
+                <code>curl -fsSL https://appvault.airepoindex.com/install.sh | bash</code>
+                <button class="copy-cmd-btn" onclick="copySnippet('curl -fsSL https://appvault.airepoindex.com/install.sh | bash', this)">📋 Copy</button>
+            </div>
+            <div class="install-hint">
+                🍎 <strong>Terminal</strong>: Deploys the local containerized Agent and App Store with automatic volume mounts.
+            </div>
+        </div>
     </div>
+
+    <script>
+    function switchInstallTab(tabId, btn) {
+        document.querySelectorAll('.install-tab-btn').forEach(function(b){ b.classList.remove('active'); });
+        document.querySelectorAll('.install-panel').forEach(function(p){ p.classList.remove('active'); });
+        btn.classList.add('active');
+        var p = document.getElementById('tab-' + tabId);
+        if (p) p.classList.add('active');
+    }
+    function copySnippet(text, btn) {
+        navigator.clipboard.writeText(text).then(function(){
+            var old = btn.textContent;
+            btn.textContent = '✓ Copied!';
+            btn.style.background = '#22c55e';
+            btn.style.color = '#fff';
+            setTimeout(function(){
+                btn.textContent = old;
+                btn.style.background = '';
+                btn.style.color = '';
+            }, 2000);
+        });
+    }
+    </script>
+
     <p style="font-size:13px;color:#64748b;margin-bottom:20px;">Works on Windows, Mac &amp; Linux. Everything stays up to date. After installing, apply your license key (Settings &rarr; License) to unlock unlimited installs.</p>
     <div class="stats">
         <span>⭐ <strong>4.9/5</strong> rating</span>
