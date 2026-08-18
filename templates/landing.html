@@ -269,8 +269,8 @@
         <!-- WINDOWS TAB -->
         <div class="install-panel active" id="tab-win">
             <div class="cmd-snippet">
-                <code>irm https://appvault.airepoindex.com/install.ps1 | iex</code>
-                <button class="copy-cmd-btn" onclick="copySnippet('irm https://appvault.airepoindex.com/install.ps1 | iex', this)">📋 Copy</button>
+                <code>irm https://raw.githubusercontent.com/Sectutor/appvault-agent/main/install.ps1 | iex</code>
+                <button class="copy-cmd-btn" onclick="copySnippet('irm https://raw.githubusercontent.com/Sectutor/appvault-agent/main/install.ps1 | iex', this)">📋 Copy</button>
             </div>
             <div class="install-hint">
                 ⚡ <strong>PowerShell (Admin)</strong>: Automatically configures WSL2, Docker Desktop, Desktop App Launcher, and starts the App Store on port <code>8085</code>.
@@ -379,7 +379,7 @@
             <div class="step">
                 <div class="num">1</div>
                 <h3>Run the install command</h3>
-                <p>Open PowerShell (Windows), Terminal (Mac/Linux) and run the one-liner above. AppVault downloads and sets itself up.</p>
+                <p>Open PowerShell (Windows), Terminal (Mac/Linux) and run the one-liner above. AppVault downloads and sets itself up. Free users get 10 apps — upgrade to Pro for all 70+ apps and premium AI agents.</p>
             </div>
             <div class="step">
                 <div class="num">2</div>
@@ -404,17 +404,54 @@
     <div class="container">
         <div class="pro-banner">
             <h2>🔓 Unlock Everything with Pro</h2>
-            <p class="section-sub">AppVault Self-Host Pro — On your own machine, full catalog. Per-server subscription.</p>
-            <div class="price">$19<span>/month</span> <span style="font-size:0.9rem;color:#94a3b8;">or $149/year</span></div>
-            <ul class="features-list">
-                <li>Unlimited installs (40+ apps)</li>
-                <li>Import any GitHub repo</li>
-                <li>AI-powered app importer</li>
-                <li>Priority updates</li>
-                <li>Premium AI apps unlocked</li>
-                <li>Email support</li>
-            </ul>
-            <a href="#pricing" class="btn-primary">🚀 Buy Self-Host Pro — $19/mo</a>
+            <p class="section-sub">Three tiers. One click install. No cloud dependency.</p>
+            <div style="display:flex;gap:20px;flex-wrap:wrap;justify-content:center;margin:30px 0;">
+                <!-- Free Tier -->
+                <div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:24px;flex:1;min-width:200px;max-width:280px;">
+                    <h3 style="color:#e2e8f0;margin-bottom:8px;">Free</h3>
+                    <div class="price" style="font-size:36px;font-weight:700;color:#e2e8f0;">$0</div>
+                    <p style="color:#94a3b8;font-size:14px;margin:12px 0;">Try 10 apps. No account needed.</p>
+                    <ul style="list-style:none;padding:0;margin:16px 0;color:#94a3b8;font-size:14px;line-height:2;">
+                        <li>✓ 10 starter apps</li>
+                        <li>✓ One-click install</li>
+                        <li>✓ Auto-updates</li>
+                        <li>✗ Premium AI agents</li>
+                        <li>✗ Unlimited installs</li>
+                        <li>✗ Import custom apps</li>
+                    </ul>
+                    <a href="#" class="btn-primary" style="background:#334155;color:#e2e8f0;display:block;text-align:center;padding:10px;border-radius:8px;text-decoration:none;">Start Free</a>
+                </div>
+                <!-- Pro Desktop -->
+                <div style="background:#1e293b;border:2px solid #6366f1;border-radius:12px;padding:24px;flex:1;min-width:200px;max-width:280px;transform:scale(1.05);">
+                    <h3 style="color:#e2e8f0;margin-bottom:8px;">Pro Desktop ⚡</h3>
+                    <div class="price" style="font-size:36px;font-weight:700;color:#e2e8f0;">$19<span style="font-size:16px;color:#94a3b8;">/year intro</span></div>
+                    <p style="color:#94a3b8;font-size:14px;margin:12px 0;">Then $49/year. One machine.</p>
+                    <ul style="list-style:none;padding:0;margin:16px 0;color:#94a3b8;font-size:14px;line-height:2;">
+                        <li>✓ All 70+ apps</li>
+                        <li>✓ Premium AI agents</li>
+                        <li>✓ Unlimited installs</li>
+                        <li>✓ Import custom apps</li>
+                        <li>✓ Auto-updates</li>
+                        <li>✓ Email support</li>
+                    </ul>
+                    <a href="#pricing" class="btn-primary" style="display:block;text-align:center;padding:10px;border-radius:8px;text-decoration:none;">🚀 Buy Pro — $19/yr</a>
+                </div>
+                <!-- Pro Remote -->
+                <div style="background:#1e293b;border:1px solid #334155;border-radius:12px;padding:24px;flex:1;min-width:200px;max-width:280px;">
+                    <h3 style="color:#e2e8f0;margin-bottom:8px;">Pro Remote 🌐</h3>
+                    <div class="price" style="font-size:36px;font-weight:700;color:#e2e8f0;">$19<span style="font-size:16px;color:#94a3b8;">/month</span></div>
+                    <p style="color:#94a3b8;font-size:14px;margin:12px 0;">Managed VPS. Up to 3 users.</p>
+                    <ul style="list-style:none;padding:0;margin:16px 0;color:#94a3b8;font-size:14px;line-height:2;">
+                        <li>✓ Everything in Pro Desktop</li>
+                        <li>✓ Managed VPS (we host)</li>
+                        <li>✓ Tailscale remote access</li>
+                        <li>✓ Share with 3 users</li>
+                        <li>✓ Zero local install</li>
+                        <li>✓ Priority support</li>
+                    </ul>
+                    <a href="#pricing" class="btn-primary" style="background:#334155;color:#e2e8f0;display:block;text-align:center;padding:10px;border-radius:8px;text-decoration:none;">Contact Us</a>
+                </div>
+            </div>
             <p class="fineprint">🔒 Secure checkout · 30-day money-back guarantee · <a href="#" style="color:#64748b;">Terms apply</a></p>
         </div>
     </div>
