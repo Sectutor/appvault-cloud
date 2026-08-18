@@ -620,23 +620,8 @@
 </footer>
 
 <script>
-function toggleBilling() {
-    var sw = document.getElementById('billingSwitch');
-    var isYearly = sw.classList.toggle('active');
-    document.getElementById('saveBadge').classList.toggle('hidden', !isYearly);
-    var monthlyEls = document.querySelectorAll('.price-monthly');
-    var yearlyEls = document.querySelectorAll('.price-yearly');
-    monthlyEls.forEach(function(el) { el.classList.toggle('hidden', isYearly); });
-    yearlyEls.forEach(function(el) { el.classList.toggle('hidden', !isYearly); });
-    var btnLabel = document.querySelector('.btn-price');
-    if (btnLabel) btnLabel.textContent = isYearly ? '$149/yr' : '$19/mo';
-    document.querySelectorAll('.billing-label').forEach(function(el) {
-        el.classList.toggle('active-label', (isYearly && el.classList.contains('yearly')) || (!isYearly && el.classList.contains('monthly')));
-    });
-}
 function startCheckout(tier) {
-    var yearly = document.getElementById('billingSwitch').classList.contains('active');
-    var billing = yearly ? 'yearly' : 'monthly';
+    var billing = 'monthly';
 // EMAIL REMOVED - Stripe collects it
 // VALIDATION REMOVED
     fetch('/api/checkout', {
