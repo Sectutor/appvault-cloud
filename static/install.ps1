@@ -5,6 +5,8 @@
 # ==============================================================================
 
 $ErrorActionPreference = "Stop"
+# Windows PowerShell 5.1 defaults to TLS 1.0/1.1, which modern HTTPS servers reject.
+try { [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12 } catch {}
 $STEP = 0
 
 function Step($msg) {
@@ -102,12 +104,12 @@ $features = @(
 foreach ($f in $features) {
     # Use dism.exe — Get-WindowsOptionalFeature is Windows PowerShell 5.1 only
     # and fails with "Class not registered" under PowerShell 7.
-    $out = & dism.exe /online /Get-FeatureInfo /FeatureName:$($f.Name) 2>$null | Out-String
+    try { $out = & dism.exe /online /Get-FeatureInfo /FeatureName:$($f.Name) 2>$null | Out-String } catch { $out = "" }
     if ($out -match "State\s*:\s*Enabled") {
         Success "$($f.Label) — already enabled"
     } else {
         Warn "$($f.Label) — not enabled, installing..."
-        & dism.exe /online /Enable-Feature /FeatureName:$($f.Name) /All /NoRestart 2>$null | Out-Null
+        try { & dism.exe /online /Enable-Feature /FeatureName:$($f.Name) /All /NoRestart 2>$null | Out-Null } catch {}
         $needsReboot = $true
         Success "$($f.Label) — installed (reboot pending)"
     }
@@ -117,8 +119,14 @@ foreach ($f in $features) {
 # STEP 5: Install WSL kernel update if needed
 # ═══════════════════════════════════════════
 Step "Setting WSL2 as default and RAM safety limits"
-wsl --set-default-version 2 2>$null
-if ($LASTEXITCODE -eq 0) {
+try {
+    wsl --set-default-version 2 2>$null
+    $wslDefault2 = ($LASTEXITCODE -eq 0)
+} catch {
+    # PS 5.1 turns redirected native stderr into a terminating error
+    $wslDefault2 = $false
+}
+if ($wslDefault2) {
     Success "WSL2 set as default"
 } else {
     Warn "WSL kernel update may be needed."
@@ -159,7 +167,7 @@ $dockerCandidates = @(
     "$env:LOCALAPPDATA\Docker\Docker\resources\bin\docker.exe",
     (Get-Command docker -ErrorAction SilentlyContinue).Source
 ) | Where-Object { $_ -and (Test-Path $_) }
-$docker = if ($dockerCandidates) { $dockerCandidates[0] } else { "docker" }
+$docker = if ($dockerCandidates) { @($dockerCandidates)[0] } else { "docker" }
 $dockerDesktopExe = @(
     "$env:ProgramFiles\Docker\Docker\Docker Desktop.exe",
     "$env:LOCALAPPDATA\Docker\Docker\Docker Desktop.exe"
@@ -193,7 +201,7 @@ if ($dockerExists) {
         "$env:LOCALAPPDATA\Docker\Docker\resources\bin\docker.exe",
         (Get-Command docker -ErrorAction SilentlyContinue).Source
     ) | Where-Object { $_ -and (Test-Path $_) }
-    $docker = if ($dockerCandidates) { $dockerCandidates[0] } else { "docker" }
+    $docker = if ($dockerCandidates) { @($dockerCandidates)[0] } else { "docker" }
     if ($dockerCandidates) {
         Success "Docker Desktop installed: $(& $docker --version)"
     } else {
@@ -203,9 +211,9 @@ if ($dockerExists) {
 }
 
 # ═══════════════════════════════════════════
-# STEP 8: Start Docker if not running
+# STEP 8: Check Docker is accessible
 # ═══════════════════════════════════════════
-Step "Starting Docker"
+Step "Checking Docker"
 $dockerOK = $false
 try {
     $info = & $docker info 2>&1
@@ -213,70 +221,27 @@ try {
 } catch {}
 
 if (-not $dockerOK) {
-    Write-Host "  Docker daemon not reachable — attempting to start..." -ForegroundColor Yellow
+    Write-Host "  Docker daemon not responding — checking Docker Desktop..." -ForegroundColor Yellow
     
-    # Method 1: Start Docker Desktop service directly (works from elevated session)
+    $ddProcess = Get-Process "Docker Desktop" -ErrorAction SilentlyContinue
+    if ($ddProcess) {
+        Write-Host "  Docker Desktop process is running. The elevated session may not see the user-mode daemon." -ForegroundColor Yellow
+        Write-Host "  Attempting to proceed anyway (Docker often works despite this)..." -ForegroundColor Yellow
+    }
+    
+    # Try starting the Docker Desktop service
     $dockerService = Get-Service -Name "Docker Desktop Service" -ErrorAction SilentlyContinue
     if ($dockerService -and $dockerService.Status -ne "Running") {
-        Write-Host "  Starting Docker Desktop Service..." -ForegroundColor Yellow
-        try {
-            Start-Service -Name "Docker Desktop Service" -ErrorAction Stop
-            Start-Sleep -Seconds 10
-        } catch {
-            Write-Host "  Could not start service directly: $($_.Exception.Message)" -ForegroundColor Yellow
-        }
+        try { Start-Service -Name "Docker Desktop Service" -ErrorAction Stop } catch {}
+        Start-Sleep -Seconds 5
     }
     
-    # Method 2: If service didn't help, try launching Docker Desktop GUI
-    try {
-        $info = & $docker info 2>&1
-        $dockerOK = $LASTEXITCODE -eq 0
-    } catch {}
+    # Update WSL kernel if needed
+    try { wsl --update 2>$null | Out-Null } catch {}
     
-    if (-not $dockerOK) {
-        # Check if Docker Desktop process is running
-        $ddProcess = Get-Process "Docker Desktop" -ErrorAction SilentlyContinue
-        if ($ddProcess) {
-            Write-Host "  Docker Desktop is running but daemon not responding. Restarting..." -ForegroundColor Yellow
-            Stop-Process -Name "Docker Desktop" -Force -ErrorAction SilentlyContinue
-            Start-Sleep -Seconds 5
-        }
-        
-        # Try to find and start Docker Desktop
-        if (-not $dockerDesktopExe) {
-            $dockerDesktopExe = @(
-                "$env:ProgramFiles\Docker\Docker\Docker Desktop.exe",
-                "$env:LOCALAPPDATA\Docker\Docker\Docker Desktop.exe",
-                (Get-ItemProperty "HKLM:\SOFTWARE\Docker Inc.\Docker Desktop" -ErrorAction SilentlyContinue).AppPath
-            ) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
-        }
-        
-        if ($dockerDesktopExe -and (Test-Path $dockerDesktopExe)) {
-            Write-Host "  Starting Docker Desktop..." -ForegroundColor Yellow
-            Start-Process $dockerDesktopExe
-        } else {
-            Write-Host "  Docker Desktop GUI not found. Please start it manually from the Start menu." -ForegroundColor Yellow
-        }
-        
-        # Update WSL kernel (common cause of daemon not starting)
-        Write-Host "  Updating WSL kernel..." -ForegroundColor Yellow
-        try { wsl --update 2>$null | Out-Null } catch {}
-    }
-    
-    Write-Host "  Waiting for the Docker engine (up to 5 minutes)..." -ForegroundColor Yellow
-    Write-Host "  ⚠️  If a dialog appears (license, WSL update, sign-in), accept it — the installer keeps waiting." -ForegroundColor Yellow
-    
-    $maxWait = 300
-    $waited = 0
-    while ($waited -lt $maxWait) {
-        try {
-            & $docker info 2>&1 | Out-Null
-            if ($LASTEXITCODE -eq 0) { break }
-        } catch {}
-        Start-Sleep -Seconds 3
-        $waited += 3
-        if ($waited % 30 -eq 0) { Write-Host "  ... still waiting ($waited seconds)" -ForegroundColor Yellow }
-    }
+    # Don't wait — try to proceed. If Docker truly isn't working,
+    # the next step (pulling images) will fail with a clear error.
+    Write-Host "  Proceeding with installation..." -ForegroundColor Yellow
 }
 
 try {
@@ -284,10 +249,10 @@ try {
     if ($LASTEXITCODE -eq 0) {
         Success "Docker is running"
     } else {
-        Fail "Docker failed to start. Launch Docker Desktop manually, accept the license, and rerun this installer."
+        Write-Host "  Docker daemon not responding in this session — will try anyway..." -ForegroundColor Yellow
     }
 } catch {
-    Fail "Docker failed to start. Launch Docker Desktop manually, accept the license, and rerun this installer."
+    Write-Host "  Docker CLI not accessible — will try anyway..." -ForegroundColor Yellow
 }
 
 # ═══════════════════════════════════════════
@@ -295,8 +260,25 @@ try {
 # ═══════════════════════════════════════════
 Step "Starting AppVault Agent"
 Write-Host "  Pulling AppVault images..."
-& $docker pull ghcr.io/sectutor/appvault-agent:latest 2>&1 | Out-Null
-& $docker pull ghcr.io/sectutor/appvault-releases:v69 2>&1 | Out-Null
+
+# Windows PowerShell 5.1 turns redirected native stderr into a terminating
+# error when $ErrorActionPreference="Stop", and docker writes to stderr
+# whenever the daemon isn't up yet. Relax EAP around the docker calls and
+# check $LASTEXITCODE explicitly instead.
+if (-not (Test-Path $docker) -and -not (Get-Command $docker -ErrorAction SilentlyContinue)) {
+    Fail "Docker CLI not found ($docker) — install Docker Desktop and rerun this installer."
+}
+$dockerEAP = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
+
+& $docker pull ghcr.io/sectutor/appvault-agent:latest 2>$null
+$pullExit = $LASTEXITCODE
+& $docker pull ghcr.io/sectutor/appvault-releases:v69 2>$null
+if ($pullExit -eq 0) { $pullExit = $LASTEXITCODE }
+if ($pullExit -ne 0) {
+    $ErrorActionPreference = $dockerEAP
+    Fail "Could not pull the AppVault images (docker exit code $pullExit). Make sure Docker Desktop is running, then run this installer again."
+}
 
 # Create data directory
 mkdir "$env:USERPROFILE\.appvault\data" -Force | Out-Null
@@ -335,6 +317,7 @@ Write-Host "  Starting AppVault Agent on port 8086..."
   -e AGENT_NAME="$env:COMPUTERNAME-agent" `
   -e STORAGE_PATH=/data `
   ghcr.io/sectutor/appvault-agent:latest
+$agentRunExit = $LASTEXITCODE
 
 Write-Host "  Starting App Store on port 8085..."
 if (& $docker ps -a --filter "name=^/appvault-heimdall$" --format '{{.Names}}' 2>$null | Select-String -Quiet "appvault-heimdall") {
@@ -355,6 +338,12 @@ Remove-Item "$env:USERPROFILE\.appvault\heimdall-config\www" -Recurse -Force -Er
   -e PGID=1000 `
   -e TZ=Etc/UTC `
   ghcr.io/sectutor/appvault-releases:v69
+$storeRunExit = $LASTEXITCODE
+
+$ErrorActionPreference = $dockerEAP
+
+if ($agentRunExit -ne 0) { Fail "Could not start the AppVault Agent container (docker exit code $agentRunExit)." }
+if ($storeRunExit -ne 0) { Fail "Could not start the App Store container (docker exit code $storeRunExit)." }
 
 # Register auto-start scheduled task so containers launch on Windows boot
 Step "Configuring Windows Startup Task"
