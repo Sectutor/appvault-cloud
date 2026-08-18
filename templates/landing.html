@@ -474,66 +474,64 @@
         <p class="section-sub">Free to start. Pro unlocks everything on your own server. Managed coming soon.</p>
         <div class="billing-toggle">
             <span class="billing-label monthly active-label">Monthly</span>
-            <div class="switch" id="billingSwitch" onclick="toggleBilling()"></div>
-            <span class="billing-label yearly">Yearly</span>
-            <span class="save hidden" id="saveBadge" style="color:#22c55e;font-weight:600;font-size:0.8rem;">Save 35%</span>
-        </div>
-        <div class="pricing-grid">
-            <div class="plan">
-                <h3>Free</h3>
-                <div class="price">$0</div>
-                <div class="subprice">Self-hosted, forever</div>
-                <p style="font-size:0.88rem;color:#94a3b8;margin-bottom:16px;">Run AppVault on your own machine. Full catalog visible — install limit set by admin.</p>
-                <ul>
-                    <li>Full app catalog (40+ apps)</li>
-                    <li>Admin-regulated install limit</li>
-                    <li>Auto Docker setup</li>
-                    <li>Community support</li>
-                    <li class="disabled">Unlimited installs</li>
-                    <li class="disabled">Priority support</li>
-                </ul>
-                <a href="#install" class="btn-outline btn" style="display:inline-block;text-align:center;border-color:#334155;">Download Free</a>
-            </div>
-            <div class="plan featured">
-                <div class="badge">BEST VALUE</div>
-                <h3>Self-Host Pro</h3>
-                <div class="price">
-                    <span class="price-monthly">$19</span><span class="price-yearly hidden">$149</span>
+            <section id="pricing" style="background:#0f172a;">
+                <div class="container">
+                    <h2>💳 Pricing</h2>
+                    <p class="section-sub">Three tiers. One click install. No cloud dependency.</p>
+                    <div class="pricing-grid">
+                        <!-- Free Tier -->
+                        <div class="plan">
+                            <h3>Free</h3>
+                            <div class="price">$0</div>
+                            <div class="subprice">Self-hosted, forever</div>
+                            <p style="font-size:0.88rem;color:#94a3b8;margin-bottom:16px;">Try 10 apps. No account needed.</p>
+                            <ul>
+                                <li>10 starter apps</li>
+                                <li>One-click install</li>
+                                <li>Auto Docker setup</li>
+                                <li>Auto-updates</li>
+                                <li class="disabled">Premium AI agents</li>
+                                <li class="disabled">Unlimited installs</li>
+                            </ul>
+                            <a href="#install" class="btn-outline btn" style="display:inline-block;text-align:center;border-color:#334155;">Download Free</a>
+                        </div>
+                        <!-- Pro Desktop (featured) -->
+                        <div class="plan featured">
+                            <div class="badge">BEST VALUE</div>
+                            <h3>Pro Desktop ⚡</h3>
+                            <div class="price">$19<span style="font-size:1rem;color:#94a3b8;">/year intro</span></div>
+                            <div class="subprice">Then $49/year · One machine</div>
+                            <p style="font-size:0.88rem;color:#94a3b8;margin-bottom:16px;">All 70+ apps + premium AI agents. Lifetime license option available.</p>
+                            <ul>
+                                <li>All 70+ apps</li>
+                                <li>Premium AI agents</li>
+                                <li>Unlimited installs</li>
+                                <li>Import any GitHub repo</li>
+                                <li>AI-powered app importer</li>
+                                <li>Priority email support</li>
+                            </ul>
+                            <button type="button" class="btn-primary btn" style="display:inline-block;text-align:center;cursor:pointer;" onclick="startCheckout('pro-desktop')">🚀 Buy Pro Desktop — $19/yr</button>
+                        </div>
+                        <!-- Pro Remote -->
+                        <div class="plan">
+                            <h3>Pro Remote 🌐</h3>
+                            <div class="price">$19<span style="font-size:1rem;color:#94a3b8;">/month</span></div>
+                            <div class="subprice">Managed VPS · Up to 3 users</div>
+                            <p style="font-size:0.88rem;color:#94a3b8;margin-bottom:16px;">We host everything. Access from anywhere via Tailscale.</p>
+                            <ul>
+                                <li>Everything in Pro Desktop</li>
+                                <li>Managed VPS (we host)</li>
+                                <li>Tailscale remote access</li>
+                                <li>Share with up to 3 users</li>
+                                <li>Zero local install</li>
+                                <li>Priority support</li>
+                            </ul>
+                            <button type="button" class="btn-outline btn" style="display:inline-block;text-align:center;border-color:#334155;cursor:pointer;" onclick="startCheckout('pro-remote')">Contact Us</button>
+                        </div>
+                    </div>
+                    <p style="text-align:center;margin-top:20px;color:#64748b;font-size:14px;">🔒 Secure checkout · 30-day money-back guarantee</p>
                 </div>
-                <div class="subprice">
-                    <span class="price-monthly">per month</span><span class="price-yearly hidden">per year</span>
-                </div>
-                <p style="font-size:0.88rem;color:#94a3b8;margin-bottom:16px;">Unlimited installs on your own server. One license per server.</p>
-                <ul>
-                    <li>Unlimited installs</li>
-                    <li>Import any GitHub repo</li>
-                    <li>AI-powered app importer</li>
-                    <li>Security tab + Tailscale</li>
-                    <li>Auto-updates</li>
-                    <li>Priority email support</li>
-                </ul>
-                <button type="button" class="btn-primary btn" style="display:inline-block;text-align:center;cursor:pointer;" onclick="startCheckout('pro')">🚀 Buy Pro — <span class="btn-price">$19/mo</span></button>
-            </div>
-            <div class="plan" style="opacity:0.7;">
-                <h3>Managed</h3>
-                <div class="price">—</div>
-                <div class="subprice">Coming soon</div>
-                <p style="font-size:0.88rem;color:#94a3b8;margin-bottom:16px;">We host and manage AppVault for you on a private VPS. Join the waitlist.</p>
-                <ul>
-                    <li>Hosted on private VPS</li>
-                    <li>Tailnet-secured</li>
-                    <li>Backups + monitoring</li>
-                    <li>Setup + support</li>
-                    <li class="disabled">Available Q4 2026</li>
-                </ul>
-                <a href="#faq" class="btn-outline btn" style="display:inline-block;text-align:center;border-color:#334155;">Join Waitlist</a>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section style="background:#0f172a;">
-    <div class="container">
+            </section>
         <h2>❤️ Loved by users</h2>
         <p class="section-sub">Real people, real results. Join thousands who've ditched the command line for good.</p>
         <div class="testimonials">
