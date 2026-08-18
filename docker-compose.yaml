@@ -19,6 +19,13 @@ services:
       - AGENT_POLL_SECONDS=30
       - AGENT_TIMEOUT_SECONDS=300
       - DOMAIN=appvault.airepoindex.com
+      # SMTP2GO — license email delivery. Set these in the server env / Coolify
+      # UI (never commit the password): SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS
+      - SMTP_HOST=${SMTP_HOST:-mail.smtp2go.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - MAIL_FROM=${MAIL_FROM:-AppVault <no-reply@airepoindex.com>}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.appvault.rule=Host(`appvault.airepoindex.com`) || Host(`fu1crnjv7udjcxc96zufhor0.169.58.9.191.sslip.io`)"
