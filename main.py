@@ -2062,3 +2062,129 @@ async def health():
     online = db.execute("SELECT COUNT(*) as cnt FROM agents WHERE status='online'").fetchone()["cnt"]
     db.close()
     return {"status": "ok", "agents_online": online, "catalog_version": get_catalog_version(), "catalog_apps": len(GLOBAL_CATALOG.get("apps", []))}
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# News & Tips - central-managed announcements, tutorials and tips.
+# The operator writes posts in the admin console (/admin/news); the public
+# /api/news feed is polled by every connected agent and merged into each
+# store's "News & Tips" page + RSS, so ALL users see them on their frontend.
+# ─────────────────────────────────────────────────────────────────────────
+
+def _init_news_table():
+    try:
+        db = get_db()
+        db.execute("""CREATE TABLE IF NOT EXISTS news_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            category TEXT DEFAULT 'announcement',
+            priority TEXT DEFAULT 'normal',
+            body TEXT DEFAULT '',
+            status TEXT DEFAULT 'published',
+            author TEXT DEFAULT 'Admin',
+            created TEXT DEFAULT (datetime('now')),
+            updated TEXT DEFAULT (datetime('now')),
+            published_at TEXT
+        )""")
+        db.commit()
+        db.close()
+    except Exception as e:
+        print(f"[news] init failed: {e}")
+
+_init_news_table()
+
+@app.get("/api/news")
+async def public_news():
+    """Public feed — every agent polls this (no auth) and merges posts into
+    its store's News & Tips page. Only published posts are exposed."""
+    db = get_db()
+    rows = db.execute(
+        "SELECT id, title, category, priority, body, author, created, updated, published_at "
+        "FROM news_items WHERE status='published' "
+        "ORDER BY priority DESC, published_at DESC, id DESC"
+    ).fetchall()
+    db.close()
+    return {"status": "ok", "posts": [dict(r) for r in rows]}
+
+@app.get("/admin/news", response_class=HTMLResponse)
+async def admin_news_page(request: Request):
+    """Admin: manage News & Tips posts (list + composer)."""
+    if not request.session.get("admin"):
+        return RedirectResponse("/login?next=/admin/news", status_code=302)
+    require_admin(request)
+    db = get_db()
+    rows = db.execute(
+        "SELECT * FROM news_items ORDER BY priority DESC, created DESC, id DESC").fetchall()
+    db.close()
+    edit = None
+    edit_id = request.query_params.get("edit", "")
+    if edit_id:
+        try:
+            edit = next((dict(r) for r in rows if r["id"] == int(edit_id)), None)
+        except Exception:
+            edit = None
+    return templates.TemplateResponse(request, "admin_news.html", {
+        "request": request,
+        "posts": [dict(r) for r in rows],
+        "edit": edit,
+    })
+
+@app.post("/admin/news")
+async def admin_news_save(request: Request):
+    """Admin: create or update a news/tips post."""
+    require_admin(request)
+    form = await request.form()
+    title = (form.get("title") or "").strip()
+    if not title:
+        raise HTTPException(status_code=400, detail="title required")
+    nid = (form.get("id") or "").strip()
+    category = (form.get("category") or "announcement").strip().lower()[:30]
+    priority = (form.get("priority") or "normal").strip().lower()
+    if priority not in ("normal", "high"):
+        priority = "normal"
+    status = (form.get("status") or "published").strip().lower()
+    if status not in ("draft", "published"):
+        status = "published"
+    body = (form.get("body") or "").strip()
+    author = (form.get("author") or "Admin").strip()[:80]
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    db = get_db()
+    if nid:
+        try:
+            nid = int(nid)
+        except Exception:
+            db.close()
+            raise HTTPException(status_code=400, detail="bad id")
+        row = db.execute("SELECT published_at FROM news_items WHERE id=?", (nid,)).fetchone()
+        if not row:
+            db.close()
+            raise HTTPException(status_code=404, detail="post not found")
+        pub = row["published_at"]
+        if status == "published" and not pub:
+            pub = now
+        db.execute(
+            "UPDATE news_items SET title=?, category=?, priority=?, body=?, author=?, "
+            "status=?, updated=?, published_at=? WHERE id=?",
+            (title, category, priority, body, author, status, now, pub, nid))
+    else:
+        pub = now if status == "published" else None
+        cur = db.execute(
+            "INSERT INTO news_items (title, category, priority, body, author, status, created, updated, published_at) "
+            "VALUES (?,?,?,?,?,?,?,?,?)",
+            (title, category, priority, body, author, status, now, now, pub))
+        nid = cur.lastrowid
+    db.commit()
+    db.close()
+    _audit("news.save", f"id={nid} title={title[:40]}")
+    return RedirectResponse("/admin/news", status_code=303)
+
+@app.post("/admin/news/{nid}/delete")
+async def admin_news_delete(nid: int, request: Request):
+    """Admin: delete a news/tips post."""
+    require_admin(request)
+    db = get_db()
+    db.execute("DELETE FROM news_items WHERE id=?", (nid,))
+    db.commit()
+    db.close()
+    _audit("news.delete", f"id={nid}")
+    return RedirectResponse("/admin/news", status_code=303)

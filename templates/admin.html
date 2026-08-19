@@ -107,6 +107,7 @@ select, input { padding: 6px 10px; border-radius: 6px; border: 1px solid #334155
   <button onclick="switchTab('jobs')">📋 Job Queue</button>
   <button onclick="switchTab('catalog')">📦 Catalog</button>
 <button onclick="switchTab('licenses')">🔑 Licenses</button>
+  <button onclick="switchTab('news')">📢 News & Tips</button>
 </div>
 
 <!-- AGENTS SECTION -->
@@ -744,5 +745,8 @@ async function toggleLicense(key, action) {
 }
 
 </script>
+<div id="tab-news" class="section">
+  <iframe src="/admin/news" style="width:100%; height:80vh; border:none;"></iframe>
+</div>
 </body>
 </html>

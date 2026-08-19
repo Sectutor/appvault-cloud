@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AppVault Admin — News & Tips</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, "Segoe UI", Roboto, sans-serif; background: #0b0f19; color: #e2e8f0; }
+    .wrap { max-width: 1000px; margin: 0 auto; padding: 24px 20px 60px; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    h1 { font-size: 20px; margin: 0; }
+    .muted { color: #94a3b8; font-size: 12.5px; }
+    a { color: #38bdf8; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .card { background: #111827; border: 1px solid #1f2937; border-radius: 12px; padding: 18px 20px; margin-bottom: 20px; }
+    h2 { font-size: 15px; margin: 0 0 12px; color: #f8fafc; }
+    label { display: block; font-size: 12px; color: #94a3b8; margin: 10px 0 4px; }
+    input[type=text], select, textarea {
+      width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #334155;
+      background: #0b0f19; color: #f1f5f9; font-size: 13px; font-family: inherit;
+    }
+    textarea { min-height: 110px; resize: vertical; }
+    .row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    @media (max-width: 700px) { .row { grid-template-columns: 1fr; } }
+    .btn {
+      display: inline-block; padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer;
+      font-size: 13px; font-weight: 600; background: #38bdf8; color: #062033; margin-top: 14px;
+    }
+    .btn:hover { filter: brightness(1.1); }
+    .btn-danger { background: #ef4444; color: #fff; padding: 4px 10px; font-size: 11px; margin: 0; }
+    .btn-small { padding: 4px 10px; font-size: 11px; margin: 0; background: #334155; color: #e2e8f0; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; color: #94a3b8; font-weight: 600; padding: 8px 10px; border-bottom: 1px solid #1f2937; font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; }
+    td { padding: 10px; border-bottom: 1px solid #1a2332; vertical-align: top; }
+    tr:hover td { background: rgba(56,189,248,0.04); }
+    .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 600; }
+    .pill-normal { background: rgba(148,163,184,0.15); color: #cbd5e1; }
+    .pill-high { background: rgba(250,204,21,0.15); color: #fbbf24; }
+    .pill-draft { background: rgba(100,116,139,0.2); color: #94a3b8; }
+    .pill-published { background: rgba(34,197,94,0.15); color: #22c55e; }
+    .empty { color: #64748b; font-size: 13px; padding: 20px; text-align: center; }
+    .actions { display: flex; gap: 6px; }
+    .rich-toolbar {
+      border: 1px solid #334155;
+      background: #0b0f19;
+      padding: 8px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .rich-toolbar button {
+      background: #1e293b;
+      color: #e2e8f0;
+      border: none;
+      border-radius: 4px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 13px;
+      line-height: 1;
+    }
+    .rich-toolbar button:hover {
+      background: #334155;
+    }
+    .rich-editor {
+      border: 1px solid #334155;
+      background: #0b0f19;
+      color: #e2e8f0;
+      padding: 12px;
+      border-radius: 6px;
+      min-height: 120px;
+      overflow-y: auto;
+      position: relative;
+    }
+    .rich-editor:focus {
+      outline: 2px solid #38bdf8;
+    }
+    .rich-editor[placeholder]:empty:before {
+      content: attr(placeholder);
+      color: #64748b;
+      position: absolute;
+      top: 12px;
+      left: 12px;
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>📢 News & Tips</h1>
+      <div class="muted">Posts you write here appear in the <b>News & Tips</b> page + RSS of <b>every</b> connected AppVault store. High-priority posts also show as a banner.</div>
+    </div>
+    <a href="/admin">← Back to Admin</a>
+  </header>
+
+  <div class="card">
+    <h2>{{ '✏️ Edit post' if edit else '➕ New post' }}</h2>
+    <form method="POST" action="/admin/news" id="news-form">
+      {% if edit %}<input type="hidden" name="id" value="{{ edit.id }}">{% endif %}
+      <label>Title *</label>
+      <input type="text" name="title" required value="{{ edit.title if edit else '' }}" placeholder="e.g. New app available: ComfyUI">
+      <div class="row">
+        <div>
+          <label>Category</label>
+          <select name="category">
+            {% for c in ['announcement', 'update', 'how-to', 'tip'] %}
+            <option value="{{ c }}" {% if edit and edit.category == c %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label>Priority</label>
+          <select name="priority">
+            <option value="normal" {% if not edit or edit.priority == 'normal' %}selected{% endif %}>normal</option>
+            <option value="high" {% if edit and edit.priority == 'high' %}selected{% endif %}>high (banner)</option>
+          </select>
+        </div>
+        <div>
+          <label>Status</label>
+          <select name="status">
+            <option value="published" {% if not edit or edit.status == 'published' %}selected{% endif %}>published</option>
+            <option value="draft" {% if edit and edit.status == 'draft' %}selected{% endif %}>draft</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Author</label>
+          <input type="text" name="author" value="{{ edit.author if edit else 'Admin' }}">
+        </div>
+      </div>
+      <label>Body (HTML supported - use toolbar for formatting)</label>
+      <div id="nm-rich-toolbar" class="rich-toolbar">
+        <button onmousedown="document.execCommand('bold', false, null);" title="Bold">B</button>
+        <button onmousedown="document.execCommand('italic', false, null);" title="Italic">I</button>
+        <button onmousedown="document.execCommand('underline', false, null);" title="Underline">U</button>
+        <button onmousedown="document.execCommand('insertUnorderedList', false, null);" title="Bulleted list">• List</button>
+        <button onmousedown="document.execCommand('insertOrderedList', false, null);" title="Numbered list">1. List</button>
+        <button onmousedown="document.execCommand('justifyLeft', false, null);" title="Left align">Align Left</button>
+        <button onmousedown="document.execCommand('justifyCenter', false, null);" title="Center align">Align Center</button>
+        <button onmousedown="document.execCommand('justifyRight', false, null);" title="Right align">Align Right</button>
+      </div>
+      <textarea name="body" id="nm-body" placeholder="What's new? Write the post body…" style="display: none;"></textarea>
+      <div id="nm-body-rich" class="rich-editor" placeholder="What's new? Write the post body…" contenteditable="true"></div>
+      <input type="hidden" name="body" id="nm-body-hidden">
+      <button class="btn" type="submit">{{ '💾 Save changes' if edit else '🚀 Publish' }}</button>
+      {% if edit %}<a href="/admin/news" style="margin-left:10px;font-size:13px;">Cancel edit</a>{% endif %}
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>🗂 All posts ({{ posts|length }})</h2>
+    {% if posts %}
+    <table>
+      <tr><th>Title</th><th>Cat</th><th>Priority</th><th>Status</th><th>Author</th><th>Published</th><th></th></tr>
+      {% for p in posts %}
+      <tr>
+        <td><b>{{ p.title }}</b><br><span class="muted">{{ (p.body or '')[:70] }}</span></td>
+        <td>{{ p.category }}</td>
+        <td><span class="pill {{ 'pill-high' if p.priority == 'high' else 'pill-normal' }}">{{ p.priority }}</span></td>
+        <td><span class="pill {{ 'pill-published' if p.status == 'published' else 'pill-draft' }}">{{ p.status }}</span></td>
+        <td>{{ p.author }}</td>
+        <td class="muted">{{ (p.published_at or '—')[:10] }}</td>
+        <td>
+          <div class="actions">
+            <a class="btn btn-small" href="/admin/news?edit={{ p.id }}">Edit</a>
+            <form method="POST" action="/admin/news/{{ p.id }}/delete" onsubmit="return confirm('Delete this post?');">
+              <button class="btn btn-danger" type="submit">🗑</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% else %}
+    <div class="empty">No posts yet — write your first announcement above.</div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  // Sync rich editor content to hidden input on form submit and on input events
+  const newsForm = document.getElementById('news-form');
+  const richEditor = document.getElementById('nm-body-rich');
+  const hiddenInput = document.getElementById('nm-body-hidden');
+  const visibleTextarea = document.getElementById('nm-body');
+
+  if (newsForm && richEditor && hiddenInput && visibleTextarea) {
+    // Update hidden input and visible textarea when editor changes
+    richEditor.addEventListener('input', () => {
+      const content = richEditor.innerHTML;
+      hiddenInput.value = content;
+      visibleTextarea.value = content;
+    });
+    // Also update on submit to be safe
+    newsForm.addEventListener('submit', () => {
+      const content = richEditor.innerHTML;
+      hiddenInput.value = content;
+      visibleTextarea.value = content;
+    });
+  }
+
+  // When editing an existing post, load its body into the rich editor
+  document.addEventListener('DOMContentLoaded', () => {
+    // Look for the original textarea that would have been rendered by the server
+    // In edit mode, the server renders a textarea with name="body" containing the current body
+    const bodyTextarea = document.querySelector("textarea[name='body']");
+    if (bodyTextarea) {
+      // Copy the textarea content to our rich editor
+      richEditor.innerHTML = bodyTextarea.value;
+      hiddenInput.value = bodyTextarea.value;
+      visibleTextarea.value = bodyTextarea.value;
+      // Hide the original textarea (we're replacing it with our rich editor)
+      bodyTextarea.style.display = 'none';
+    }
+  });
+</script>
+</body>
+</html>
