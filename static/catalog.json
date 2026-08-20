@@ -1,4 +1,4 @@
-﻿{
+{
   "apps": [
     {
       "id": "central-mariadb",
@@ -5234,7 +5234,8 @@
           404
         ]
       },
-      "boot_timeout": 120
+      "boot_timeout": 120,
+      "disabled": true
     },
     {
       "id": "buzz",
