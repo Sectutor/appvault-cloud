@@ -257,6 +257,8 @@ def init_db():
         db.execute("ALTER TABLE agents ADD COLUMN plan TEXT DEFAULT 'free'")
     if "license_key" not in cols:
         db.execute("ALTER TABLE agents ADD COLUMN license_key TEXT DEFAULT ''")
+    if "telemetry" not in cols:
+        db.execute("ALTER TABLE agents ADD COLUMN telemetry TEXT DEFAULT '{}'")
     # Migration: stripe customer/subscription ids on licenses + instances
     lcols = [r[1] for r in db.execute("PRAGMA table_info(licenses)").fetchall()]
     if "stripe_customer_id" not in lcols:
@@ -536,8 +538,18 @@ async def agent_heartbeat(request: Request):
     # Refresh plan — handles grace period expiration on the agent record
     current_plan = get_agent_plan(agent_id)
     
+    telemetry = body.get("telemetry")
+    if isinstance(telemetry, dict):
+        telemetry = json.dumps(telemetry, ensure_ascii=False)[:4000]
+    else:
+        telemetry = ""
+    
     db = get_db()
-    db.execute("UPDATE agents SET status='online', last_seen=datetime('now') WHERE id=?", (agent_id,))
+    if telemetry:
+        db.execute("UPDATE agents SET status='online', last_seen=datetime('now'), telemetry=? WHERE id=?",
+                   (telemetry, agent_id))
+    else:
+        db.execute("UPDATE agents SET status='online', last_seen=datetime('now') WHERE id=?", (agent_id,))
     db.commit()
     db.close()
     return {"status": "ok", "server_time": datetime.utcnow().isoformat(), "plan": current_plan}
@@ -719,9 +731,17 @@ async def admin_panel(request: Request):
     """).fetchall()
     db.close()
     
+    def _parse_tel(a):
+        a = dict(a)
+        try:
+            a["telemetry"] = json.loads(a.get("telemetry") or "{}") if a.get("telemetry") else {}
+        except Exception:
+            a["telemetry"] = {}
+        return a
+    
     return templates.TemplateResponse(request, "admin.html", {
         "request": request,
-        "agents": [dict(a) for a in agents],
+        "agents": [_parse_tel(a) for a in agents],
         "jobs": [dict(j) for j in jobs],
         "catalog": GLOBAL_CATALOG,
         "licenses": [dict(l) for l in licenses],

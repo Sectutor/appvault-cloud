@@ -116,14 +116,18 @@ select, input { padding: 6px 10px; border-radius: 6px; border: 1px solid #334155
     <h2>Connected Agents</h2>
     {% if agents %}
     <table>
-      <tr><th>Agent ID</th><th>Name</th><th>OS</th><th>Docker</th><th>Status</th><th>Last Seen</th><th>Actions</th></tr>
+      <tr><th>Agent ID</th><th>Name</th><th>OS</th><th>Status</th><th>🧠 Memory</th><th>⚠️ Err/24h</th><th>🎯 Missions</th><th>💳 Tokens 7d</th><th>Last Seen</th><th>Actions</th></tr>
       {% for a in agents %}
+      {% set tel = a.telemetry or {} %}
       <tr>
         <td><code style="color:#38bdf8;font-size:12px;">{{ a.id[:12] }}…</code></td>
         <td>{{ a.name }}</td>
         <td>{{ a.os }}</td>
-        <td>{{ a.docker_version }}</td>
         <td><span class="agent-dot {{ a.status }}"></span><span class="badge badge-{{ a.status }}">{{ a.status }}</span></td>
+        <td>{{ tel.memory if tel.memory is not none else '—' }}</td>
+        <td>{{ tel.errors_24h if tel.errors_24h is not none else '—' }}</td>
+        <td>{{ tel.missions if tel.missions is not none else '—' }}</td>
+        <td>{{ (tel.tokens_7d or 0)|int }} <span class="muted">(${{ '%.2f'|format(tel.cost_7d or 0) }})</span></td>
         <td>{{ a.last_seen or 'never' }}</td>
         <td>
           <a href="/admin/agents/{{ a.id }}" style="color:#38bdf8;text-decoration:none;">Details</a>
