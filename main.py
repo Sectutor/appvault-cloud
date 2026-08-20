@@ -246,6 +246,19 @@ def init_db():
             event_type TEXT,
             processed_at TEXT DEFAULT (datetime('now'))
         );
+        CREATE TABLE IF NOT EXISTS service_requests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            company TEXT DEFAULT '',
+            service_type TEXT NOT NULL,
+            description TEXT NOT NULL,
+            budget TEXT DEFAULT '',
+            timeline TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now')),
+            status TEXT DEFAULT 'new',
+            notes TEXT DEFAULT ''
+        );
     """)
     # Ensure at least one catalog version exists
     row = db.execute("SELECT COUNT(*) as cnt FROM catalog_versions").fetchone()
@@ -1536,6 +1549,35 @@ async def serve_install_sh():
 async def pricing_page(request: Request):
     ctx = _landing_ctx(request)
     return templates.TemplateResponse(request, "landing.html", ctx)
+
+@app.get("/services/request", response_class=HTMLResponse)
+async def service_request_page(request: Request):
+    ctx = _landing_ctx(request)
+    return templates.TemplateResponse(request, "service_request.html", ctx)
+
+@app.post("/api/services/request")
+async def api_service_request(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    name = (body.get("name") or "").strip()
+    email = (body.get("email") or "").strip()
+    service_type = (body.get("service_type") or "").strip()
+    description = (body.get("description") or "").strip()
+    company = (body.get("company") or "").strip()
+    budget = (body.get("budget") or "").strip()
+    timeline = (body.get("timeline") or "").strip()
+    if not name or not email or not service_type or not description:
+        return JSONResponse({"status": "error", "detail": "name, email, service_type and description are required"}, status_code=400)
+    db = get_db()
+    db.execute(
+        "INSERT INTO service_requests (name, email, company, service_type, description, budget, timeline) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (name, email, company, service_type, description, budget, timeline),
+    )
+    db.commit()
+    _audit("public", "service.request", f"{service_type} from {email}")
+    return JSONResponse({"status": "ok"})
 
 def _landing_ctx(request: Request):
     """Build landing page context: visible (non-hidden) catalog apps with rich fields."""

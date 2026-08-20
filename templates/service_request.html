@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Build with AppVault — Custom AI Services</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0e1a;
+            color: #e2e8f0;
+            line-height: 1.6;
+        }
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+        nav {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 24px; background: #0f172a; border-bottom: 1px solid #1e293b;
+        }
+        nav .logo { font-size: 20px; font-weight: 700; background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        nav .links { display: flex; gap: 20px; align-items: center; }
+        nav .links a { color: #94a3b8; text-decoration: none; font-size: 14px; transition: color 0.2s; }
+        nav .links a:hover { color: #e2e8f0; }
+        nav .btn-nav { padding: 8px 20px; border-radius: 8px; background: linear-gradient(135deg, #38bdf8, #818cf8); color: #fff; font-weight: 600; font-size: 13px; text-decoration: none; }
+
+        .hero {
+            padding: 80px 24px 60px; text-align: center;
+            background: radial-gradient(ellipse at 50% 0%, #1a1f3a 0%, #0a0e1a 70%);
+        }
+        .hero h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; margin-bottom: 16px; background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .hero p { font-size: 1.1rem; color: #94a3b8; max-width: 650px; margin: 0 auto 12px; }
+        .hero .proof { font-style: italic; color: #64748b; margin-top: 20px; font-size: 0.95rem; }
+        .hero .proof strong { color: #38bdf8; }
+
+        .services-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px; margin: 40px auto; max-width: 1000px;
+        }
+        .service-card {
+            background: #111827; border: 1px solid #1e293b; border-radius: 14px;
+            padding: 28px; text-align: left; transition: border-color 0.2s;
+        }
+        .service-card:hover { border-color: #38bdf8; }
+        .service-card .icon { font-size: 2rem; margin-bottom: 12px; }
+        .service-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 6px; color: #f1f5f9; }
+        .service-card p { font-size: 0.85rem; color: #94a3b8; line-height: 1.6; }
+
+        .form-wrap {
+            max-width: 720px; margin: 0 auto 60px; padding: 0 24px;
+        }
+        .form-card {
+            background: #111827; border: 1px solid #1e293b; border-radius: 16px;
+            padding: 36px;
+        }
+        .form-card h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 6px; }
+        .form-card .sub { color: #94a3b8; font-size: 0.9rem; margin-bottom: 24px; }
+        .field { margin-bottom: 18px; }
+        .field label { display: block; font-size: 0.8rem; font-weight: 600; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .field input, .field select, .field textarea {
+            width: 100%; padding: 12px 14px; background: #0f172a; border: 1px solid #1e293b;
+            border-radius: 10px; color: #e2e8f0; font-size: 0.95rem; font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: #38bdf8; }
+        .field textarea { min-height: 120px; resize: vertical; }
+        .field .hint { font-size: 0.78rem; color: #64748b; margin-top: 4px; }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .btn-submit {
+            width: 100%; padding: 14px; border: none; border-radius: 10px;
+            background: linear-gradient(135deg, #38bdf8, #818cf8); color: #fff;
+            font-weight: 700; font-size: 1rem; cursor: pointer; transition: transform 0.2s;
+        }
+        .btn-submit:hover { transform: translateY(-2px); }
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .form-msg {
+            margin-top: 14px; padding: 12px; border-radius: 8px; font-size: 0.9rem;
+            display: none;
+        }
+        .form-msg.ok { display: block; background: rgba(34,197,94,0.1); border: 1px solid #22c55e; color: #22c55e; }
+        .form-msg.err { display: block; background: rgba(239,68,68,0.1); border: 1px solid #ef4444; color: #ef4444; }
+
+        footer { border-top: 1px solid #1e293b; padding: 30px 24px; text-align: center; }
+        footer .links { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-bottom: 12px; }
+        footer .links a { color: #94a3b8; text-decoration: none; font-size: 13px; }
+        footer .links a:hover { color: #e2e8f0; }
+        footer p { color: #475569; font-size: 0.82rem; }
+
+        @media (max-width: 640px) {
+            .row { grid-template-columns: 1fr; }
+            nav .links { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="logo">⚡ AppVault</div>
+    <div class="links">
+        <a href="/#features">Features</a>
+        <a href="/#apps">Apps</a>
+        <a href="/pricing">Pricing</a>
+        <a href="/services/request" class="btn-nav">Build with us →</a>
+    </div>
+</nav>
+
+<section class="hero">
+    <div class="container">
+        <h1>We build AI agents for your stack</h1>
+        <p>Tell us what you need. We ship a working solution — in days, not months.</p>
+        <p style="font-size:0.95rem;color:#64748b;">Security · Content · Compliance · Automation · Social · Data</p>
+        <div class="proof">"AppVault shipped our compliance agent in <strong>48 hours</strong>" — CISOvault</div>
+    </div>
+</section>
+
+<section>
+    <div class="container">
+        <h2 style="text-align:center;font-size:1.6rem;font-weight:700;margin-bottom:8px;">What we build</h2>
+        <p style="text-align:center;color:#94a3b8;margin-bottom:24px;">Every engagement starts with a 30-minute call and ends with a deployed agent.</p>
+        <div class="services-grid">
+            <div class="service-card">
+                <div class="icon">🛡️</div>
+                <h3>Security Assessment Pipelines</h3>
+                <p>Automated recon → scan → report agents. DOMAIN expose checks, port sweeps, CMS detection, auth scans. Built on AppVault's agentic OS.</p>
+            </div>
+            <div class="service-card">
+                <div class="icon">📢</div>
+                <h3>Content + Social Automation</h3>
+                <p>Signal → brief → approval → publish. Multi-channel (Telegram, Discord, X, LinkedIn). Your brand voice, automated.</p>
+            </div>
+            <div class="service-card">
+                <div class="icon">🤖</div>
+                <h3>Multi-Agent Crews</h3>
+                <p>CrewAI-powered crews for research, outreach, and ops. Each agent has a role, memory, and tools. Coordinate 5–20 agents on your workflow.</p>
+            </div>
+            <div class="service-card">
+                <div class="icon">📋</div>
+                <h3>Compliance + Governance</h3>
+                <p>NIS2, ISO 27001, GDPR readiness agents. Automated evidence collection, policy checks, and audit-ready reports.</p>
+            </div>
+            <div class="service-card">
+                <div class="icon">🔌</div>
+                <h3>Custom Tool Integrations</h3>
+                <p>Connect your stack: CRM, ticketing, SIEM, spreadsheets. We wire the APIs so your agent talks to what you already use.</p>
+            </div>
+            <div class="service-card">
+                <div class="icon">📊</div>
+                <h3>Data + Analytics Agents</h3>
+                <p> scrape, transform, analyze. From SEC EDGAR filings to competitive intel — automated ingestion with human-in-the-loop approval.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section style="background:#0f172a;">
+    <div class="container">
+        <div class="form-wrap">
+            <div class="form-card">
+                <h2>Tell us what you need</h2>
+                <p class="sub">No commitment. We reply within 24 hours with a scope + timeline.</p>
+                <form id="service-form" onsubmit="submitServiceRequest(event)">
+                    <div class="row">
+                        <div class="field">
+                            <label for="sr-name">Your name *</label>
+                            <input type="text" id="sr-name" name="name" required placeholder="Jane Smith">
+                        </div>
+                        <div class="field">
+                            <label for="sr-email">Work email *</label>
+                            <input type="email" id="sr-email" name="email" required placeholder="jane@company.com">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="field">
+                            <label for="sr-company">Company</label>
+                            <input type="text" id="sr-company" name="company" placeholder="Acme Corp">
+                        </div>
+                        <div class="field">
+                            <label for="sr-type">Service type *</label>
+                            <select id="sr-type" name="service_type" required>
+                                <option value="">Select one…</option>
+                                <option value="security-pipeline">Security Assessment Pipeline</option>
+                                <option value="content-social">Content + Social Automation</option>
+                                <option value="multi-agent-crew">Multi-Agent Crew</option>
+                                <option value="compliance">Compliance + Governance</option>
+                                <option value="tool-integration">Custom Tool Integration</option>
+                                <option value="data-analytics">Data + Analytics Agent</option>
+                                <option value="other">Other / Not sure yet</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="sr-desc">Describe what you need *</label>
+                        <textarea id="sr-desc" name="description" required placeholder="e.g. We need an agent that monitors our external attack surface daily, generates a report, and posts alerts to our Slack channel…"></textarea>
+                        <div class="hint">The more context, the better. Include tools, data sources, and desired outcomes.</div>
+                    </div>
+                    <div class="row">
+                        <div class="field">
+                            <label for="sr-budget">Budget range</label>
+                            <select id="sr-budget" name="budget">
+                                <option value="">Select range…</option>
+                                <option value="<5k">&lt; $5,000</option>
+                                <option value="5k-15k">$5,000 – $15,000</option>
+                                <option value="15k-50k">$15,000 – $50,000</option>
+                                <option value="50k+">$50,000+</option>
+                                <option value="retainer">Monthly retainer</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="sr-timeline">Timeline</label>
+                            <select id="sr-timeline" name="timeline">
+                                <option value="">Select…</option>
+                                <option value="asap">ASAP</option>
+                                <option value="1-2weeks">1–2 weeks</option>
+                                <option value="1month">~1 month</option>
+                                <option value="flexible">Flexible</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-submit" id="sr-submit">Send request →</button>
+                    <div class="form-msg" id="sr-msg"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div class="links">
+        <a href="/#features">Features</a>
+        <a href="/#apps">Apps</a>
+        <a href="/pricing">Pricing</a>
+        <a href="/services/request">Services</a>
+        <a href="/admin">Admin</a>
+    </div>
+    <p>AppVault · Your one-click AI app store · © 2026</p>
+</footer>
+
+<script>
+function submitServiceRequest(e) {
+    e.preventDefault();
+    var btn = document.getElementById('sr-submit');
+    var msg = document.getElementById('sr-msg');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    msg.className = 'form-msg';
+    msg.style.display = 'none';
+
+    var form = document.getElementById('service-form');
+    var data = {
+        name: form.querySelector('[name="name"]').value.trim(),
+        email: form.querySelector('[name="email"]').value.trim(),
+        company: form.querySelector('[name="company"]').value.trim(),
+        service_type: form.querySelector('[name="service_type"]').value,
+        description: form.querySelector('[name="description"]').value.trim(),
+        budget: form.querySelector('[name="budget"]').value,
+        timeline: form.querySelector('[name="timeline"]').value,
+    };
+
+    fetch('/api/services/request', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data),
+    }).then(function(r){ return r.json(); }).then(function(d) {
+        btn.disabled = false;
+        btn.textContent = 'Send request →';
+        if (d.status === 'ok') {
+            msg.textContent = '✅ Request sent! We\'ll reply within 24 hours.';
+            msg.className = 'form-msg ok';
+            form.reset();
+        } else {
+            msg.textContent = '❌ ' + (d.detail || 'Something went wrong. Try again.');
+            msg.className = 'form-msg err';
+        }
+    }).catch(function() {
+        btn.disabled = false;
+        btn.textContent = 'Send request →';
+        msg.textContent = '❌ Network error. Try again.';
+        msg.className = 'form-msg err';
+    });
+}
+</script>
+
+</body>
+</html>
