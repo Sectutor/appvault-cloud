@@ -1580,7 +1580,7 @@ async def api_service_request(request: Request):
             (name, email, company, service_type, description, budget, timeline),
         )
         db.commit()
-        _audit("public", "service.request", f"{service_type} from {email}")
+        _audit("service.request", f"{service_type} from {email}")
         return JSONResponse({"status": "ok"})
     except Exception as e:
         import traceback; traceback.print_exc()
