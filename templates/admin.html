@@ -383,7 +383,17 @@ async function toggleDisabled(appId, makeDisabled) {
   try {
     const r = await fetch('/admin/catalog/apps/' + appId + '/disable', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'}
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({disabled: makeDisabled})
+    });
+    const d = await r.json();
+    if (d.status !== 'ok') { showToast('Error: ' + (d.detail || 'failed'), 'error'); return; }
+    showToast((makeDisabled ? '🚫 ' + appId + ' unpublished - hidden from all clients' : '📢 ' + appId + ' published - clients will see it') + ' (catalog v' + d.new_catalog_version + ')', 'success');
+    setTimeout(() => location.reload(), 1000);
+  } catch(err) {
+    showToast('Error: ' + err.message, 'error');
+  }
+}
 
 // Uninstall an app (stops containers but keeps in catalog)
 async function uninstallApp(appId) {
@@ -404,16 +414,6 @@ async function uninstallApp(appId) {
     showToast('❌ ' + err.message, 'error');
   }
 }
-,
-      body: JSON.stringify({disabled: makeDisabled})
-    });
-    const d = await r.json();
-    if (d.status !== 'ok') { showToast('Error: ' + (d.detail || 'failed'), 'error'); return; }
-    showToast((makeDisabled ? '🚫 ' + appId + ' unpublished - hidden from all clients' : '📢 ' + appId + ' published - clients will see it') + ' (catalog v' + d.new_catalog_version + ')', 'success');
-    setTimeout(() => location.reload(), 1000);
-  } catch(err) {
-    showToast('Error: ' + err.message, 'error');
-  }
 }
 
 document.getElementById('pushJobForm').addEventListener('submit', async (e) => {
