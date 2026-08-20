@@ -39,7 +39,8 @@
           "email": "admin@example.com",
           "password": "admin"
         }
-      }
+      },
+      "app_type": "official"
     },
     {
       "id": "central-postgres",
@@ -94,7 +95,8 @@
             "central-postgres-db-data:/var/lib/postgresql/data"
           ]
         }
-      ]
+      ],
+      "app_type": "official"
     },
     {
       "id": "owncloud",
@@ -169,7 +171,8 @@
       },
       "boot_timeout": 300,
       "min_mem_mb": 1024,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "app_type": "official"
     },
     {
       "id": "n8n",
@@ -273,7 +276,8 @@
       },
       "boot_timeout": 240,
       "min_mem_mb": 512,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "app_type": "official"
     },
     {
       "id": "pihole",
@@ -353,7 +357,8 @@
         ],
         "date": "2026-08-06",
         "url": "http://localhost:50382/admin/login"
-      }
+      },
+      "app_type": "official"
     },
     {
       "id": "openwebui",
@@ -429,7 +434,8 @@
         ],
         "date": "2026-08-06",
         "url": "http://localhost:50436/"
-      }
+      },
+      "app_type": "official"
     },
     {
       "id": "omniroute",
@@ -494,7 +500,8 @@
         "openai-proxy",
         "deepseek",
         "claude"
-      ]
+      ],
+      "app_type": "official"
     },
     {
       "id": "crewai-studio",
@@ -587,7 +594,8 @@
             "crewai-studio-db-data:/var/lib/postgresql/data"
           ]
         }
-      ]
+      ],
+      "app_type": "official"
     },
     {
       "id": "hermes-agent",
@@ -643,7 +651,8 @@
       },
       "boot_timeout": 120,
       "min_mem_mb": 512,
-      "min_disk_gb": 1
+      "min_disk_gb": 1,
+      "app_type": "official"
     },
     {
       "id": "crewai-runner",
@@ -698,7 +707,8 @@
       },
       "boot_timeout": 120,
       "min_mem_mb": 512,
-      "min_disk_gb": 1
+      "min_disk_gb": 1,
+      "app_type": "official"
     },
     {
       "id": "litellm",
@@ -755,7 +765,8 @@
       },
       "boot_timeout": 120,
       "min_mem_mb": 512,
-      "min_disk_gb": 1
+      "min_disk_gb": 1,
+      "app_type": "official"
     },
     {
       "id": "memory-mcp",
@@ -810,7 +821,8 @@
       },
       "boot_timeout": 60,
       "min_mem_mb": 256,
-      "min_disk_gb": 1
+      "min_disk_gb": 1,
+      "app_type": "official"
     },
     {
       "id": "adguard",
@@ -887,7 +899,8 @@
         "date": "2026-08-06",
         "url": "http://localhost:56689/install.html"
       },
-      "web_path": "/install.html"
+      "web_path": "/install.html",
+      "app_type": "official"
     },
     {
       "id": "wordpress",
@@ -1051,7 +1064,8 @@
       },
       "boot_timeout": 240,
       "min_mem_mb": 1024,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "app_type": "official"
     },
     {
       "id": "nextcloud",
@@ -1133,7 +1147,8 @@
       },
       "boot_timeout": 300,
       "min_mem_mb": 1024,
-      "min_disk_gb": 5
+      "min_disk_gb": 5,
+      "app_type": "official"
     },
     {
       "id": "onlyoffice",
@@ -1212,7 +1227,8 @@
         ],
         "date": "2026-08-06",
         "url": "http://localhost:51208/welcome/"
-      }
+      },
+      "app_type": "official"
     },
     {
       "id": "gitlab",
@@ -1287,7 +1303,8 @@
       },
       "boot_timeout": 300,
       "min_mem_mb": 512,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "app_type": "official"
     },
     {
       "id": "bookstack",
@@ -1363,7 +1380,8 @@
       },
       "boot_timeout": 240,
       "min_mem_mb": 1024,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "app_type": "official"
     },
     {
       "id": "paperless",
@@ -1456,7 +1474,8 @@
             "paperless-db-data:/var/lib/postgresql/data"
           ]
         }
-      ]
+      ],
+      "app_type": "official"
     },
     {
       "id": "jellyfin",
@@ -1538,7 +1557,8 @@
         ],
         "date": "2026-08-06",
         "url": "http://localhost:53117/web/"
-      }
+      },
+      "app_type": "official"
     },
     {
       "id": "navidrome",
@@ -1615,7 +1635,8 @@
         ],
         "date": "2026-08-06",
         "url": "http://localhost:53254/app/"
-      }
+      },
+      "app_type": "official"
     },
     {
       "id": "kavita",
@@ -1694,7 +1715,8 @@
         ],
         "date": "2026-08-06",
         "url": "http://localhost:62517/"
-      }
+      },
+      "app_type": "official"
     },
     {
       "id": "photoprism",
@@ -1769,7 +1791,8 @@
       },
       "boot_timeout": 240,
       "min_mem_mb": 1024,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "app_type": "official"
     },
     {
       "id": "immich",
@@ -1858,7 +1881,8 @@
             "immich-db-data:/var/lib/postgresql/data"
           ]
         }
-      ]
+      ],
+      "app_type": "official"
     },
     {
       "id": "immich-machine-learning",
@@ -1897,7 +1921,8 @@
           "email": "admin@example.com",
           "password": "admin"
         }
-      }
+      },
+      "app_type": "official"
     },
     {
       "id": "wireguard",
@@ -1977,7 +2002,8 @@
       "boot_timeout": 180,
       "min_mem_mb": 1024,
       "min_disk_gb": 2,
-      "web_ui": false
+      "web_ui": false,
+      "app_type": "official"
     },
     {
       "id": "vaultwarden",
@@ -2052,7 +2078,8 @@
         ],
         "date": "2026-08-06",
         "url": "http://localhost:62371/"
-      }
+      },
+      "app_type": "official"
     },
     {
       "id": "nginx-proxy-manager",
@@ -2131,7 +2158,8 @@
         ],
         "date": "2026-08-06",
         "url": "http://localhost:62650/"
-      }
+      },
+      "app_type": "official"
     },
     {
       "id": "traefik",
@@ -2210,7 +2238,8 @@
         ],
         "date": "2026-08-06",
         "url": "http://localhost:62490/dashboard/"
-      }
+      },
+      "app_type": "official"
     },
     {
       "id": "uptime-kuma",
@@ -2274,7 +2303,8 @@
       },
       "boot_timeout": 180,
       "min_mem_mb": 1024,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "app_type": "official"
     },
     {
       "id": "portainer",
@@ -2353,7 +2383,8 @@
         ],
         "date": "2026-08-06",
         "url": "http://localhost:62541/"
-      }
+      },
+      "app_type": "official"
     },
     {
       "id": "dozzle",
@@ -2426,7 +2457,8 @@
         ],
         "date": "2026-08-06",
         "url": "http://localhost:62572/"
-      }
+      },
+      "app_type": "official"
     },
     {
       "id": "code-server",
@@ -2507,7 +2539,8 @@
         ],
         "date": "2026-08-06",
         "url": "http://localhost:62739/login"
-      }
+      },
+      "app_type": "official"
     },
     {
       "id": "gitea",
@@ -2586,7 +2619,8 @@
         ],
         "date": "2026-08-06",
         "url": "http://localhost:62747/"
-      }
+      },
+      "app_type": "official"
     },
     {
       "id": "stirling-pdf",
@@ -2668,7 +2702,8 @@
         ],
         "date": "2026-08-06",
         "url": "http://localhost:62779/"
-      }
+      },
+      "app_type": "official"
     },
     {
       "id": "excalidraw",
@@ -2740,7 +2775,8 @@
         "date": "2026-08-06",
         "url": "http://localhost:62800/"
       },
-      "volumes": []
+      "volumes": [],
+      "app_type": "official"
     },
     {
       "id": "drawio",
@@ -2813,7 +2849,8 @@
         ],
         "date": "2026-08-06",
         "url": "http://localhost:62830/"
-      }
+      },
+      "app_type": "official"
     },
     {
       "id": "9router",
@@ -2890,7 +2927,8 @@
         ],
         "date": "2026-08-06",
         "url": "http://localhost:62978/login"
-      }
+      },
+      "app_type": "official"
     },
     {
       "id": "openmaic",
@@ -2935,7 +2973,8 @@
         ".env.local"
       ],
       "needs_certification": true,
-      "certification_status": "pending"
+      "certification_status": "pending",
+      "app_type": "official"
     },
     {
       "id": "openship",
@@ -3003,7 +3042,8 @@
       },
       "boot_timeout": 300,
       "min_mem_mb": 1024,
-      "min_disk_gb": 3
+      "min_disk_gb": 3,
+      "app_type": "official"
     },
     {
       "id": "documenso",
@@ -3085,7 +3125,8 @@
             "documenso-db-data:/var/lib/postgresql/data"
           ]
         }
-      ]
+      ],
+      "app_type": "official"
     },
     {
       "id": "appflowy",
@@ -3127,7 +3168,8 @@
         }
       },
       "needs_certification": true,
-      "certification_status": "pending"
+      "certification_status": "pending",
+      "app_type": "official"
     },
     {
       "id": "central-redis",
@@ -3164,7 +3206,8 @@
           "email": "admin@example.com",
           "password": "admin"
         }
-      }
+      },
+      "app_type": "official"
     },
     {
       "id": "twenty",
@@ -3240,7 +3283,8 @@
       },
       "boot_timeout": 300,
       "min_mem_mb": 1024,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "app_type": "official"
     },
     {
       "id": "shieldsign",
@@ -3307,7 +3351,8 @@
           "email": "admin@example.com",
           "password": "admin"
         }
-      }
+      },
+      "app_type": "official"
     },
     {
       "id": "anythingllm",
@@ -3384,7 +3429,8 @@
         ],
         "date": "2026-08-06",
         "url": "http://localhost:57331/"
-      }
+      },
+      "app_type": "official"
     },
     {
       "id": "searxng",
@@ -3458,7 +3504,8 @@
         ],
         "date": "2026-08-06",
         "url": "http://localhost:57293/"
-      }
+      },
+      "app_type": "official"
     },
     {
       "id": "central-mongo",
@@ -3497,7 +3544,8 @@
           "email": "admin@example.com",
           "password": "admin"
         }
-      }
+      },
+      "app_type": "official"
     },
     {
       "id": "dify",
@@ -3571,7 +3619,8 @@
       "min_mem_mb": 2048,
       "min_disk_gb": 3,
       "needs_certification": true,
-      "certification_status": "pending"
+      "certification_status": "pending",
+      "app_type": "official"
     },
     {
       "id": "librechat",
@@ -3648,7 +3697,8 @@
       },
       "boot_timeout": 300,
       "min_mem_mb": 2048,
-      "min_disk_gb": 3
+      "min_disk_gb": 3,
+      "app_type": "official"
     },
     {
       "id": "comfyui",
@@ -3715,7 +3765,8 @@
       },
       "boot_timeout": 300,
       "min_mem_mb": 2048,
-      "min_disk_gb": 3
+      "min_disk_gb": 3,
+      "app_type": "official"
     },
     {
       "id": "openhands",
@@ -3789,7 +3840,8 @@
         ],
         "date": "2026-08-06",
         "url": "http://localhost:59684/"
-      }
+      },
+      "app_type": "official"
     },
     {
       "id": "khoj",
@@ -3857,7 +3909,8 @@
       },
       "boot_timeout": 300,
       "min_mem_mb": 2048,
-      "min_disk_gb": 3
+      "min_disk_gb": 3,
+      "app_type": "official"
     },
     {
       "id": "wg-easy",
@@ -3930,7 +3983,8 @@
       },
       "boot_timeout": 180,
       "min_mem_mb": 1024,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "app_type": "official"
     },
     {
       "id": "mattermost",
@@ -4021,7 +4075,8 @@
             "mattermost-db-data:/var/lib/postgresql/data"
           ]
         }
-      ]
+      ],
+      "app_type": "official"
     },
     {
       "id": "baserow",
@@ -4114,7 +4169,8 @@
             "baserow-db-data:/var/lib/postgresql/data"
           ]
         }
-      ]
+      ],
+      "app_type": "official"
     },
     {
       "id": "umami",
@@ -4204,7 +4260,8 @@
             "umami-db-data:/var/lib/postgresql/data"
           ]
         }
-      ]
+      ],
+      "app_type": "official"
     },
     {
       "id": "ghost",
@@ -4281,7 +4338,8 @@
         ],
         "date": "2026-08-06",
         "url": "http://localhost:61351/"
-      }
+      },
+      "app_type": "official"
     },
     {
       "id": "directus",
@@ -4374,7 +4432,8 @@
             "directus-db-data:/var/lib/postgresql/data"
           ]
         }
-      ]
+      ],
+      "app_type": "official"
     },
     {
       "id": "formbricks",
@@ -4443,7 +4502,8 @@
       "min_mem_mb": 1024,
       "min_disk_gb": 2,
       "needs_certification": true,
-      "certification_status": "pending"
+      "certification_status": "pending",
+      "app_type": "official"
     },
     {
       "id": "chatwoot",
@@ -4516,7 +4576,8 @@
       "min_mem_mb": 1024,
       "min_disk_gb": 2,
       "needs_certification": true,
-      "certification_status": "pending"
+      "certification_status": "pending",
+      "app_type": "official"
     },
     {
       "id": "plane",
@@ -4589,7 +4650,8 @@
       "min_mem_mb": 1024,
       "min_disk_gb": 2,
       "needs_certification": true,
-      "certification_status": "pending"
+      "certification_status": "pending",
+      "app_type": "official"
     },
     {
       "id": "outline",
@@ -4685,7 +4747,8 @@
             "outline-db-data:/var/lib/postgresql/data"
           ]
         }
-      ]
+      ],
+      "app_type": "official"
     },
     {
       "id": "listmonk",
@@ -4969,7 +5032,8 @@
       },
       "boot_timeout": 120,
       "min_mem_mb": 512,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "app_type": "official"
     },
     {
       "id": "affine",
@@ -5036,7 +5100,8 @@
       },
       "boot_timeout": 180,
       "min_mem_mb": 1024,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "app_type": "official"
     },
     {
       "id": "odoo",
@@ -5096,7 +5161,8 @@
           "Install the apps you need from the Apps menu (CRM, Sales, Inventory, Accounting...)",
           "Set up your company details under Settings"
         ]
-      }
+      },
+      "app_type": "official"
     },
     {
       "id": "ods",
@@ -5135,7 +5201,8 @@
           "password": "admin"
         },
         "setup_steps": "1. Install from the store. 2. Open the dashboard. 3. Add OpenWebUI (store) for chat + Ollama (store) for local models."
-      }
+      },
+      "app_type": "official"
     },
     {
       "id": "planka",
@@ -5235,7 +5302,8 @@
         ]
       },
       "boot_timeout": 120,
-      "disabled": true
+      "disabled": true,
+      "app_type": "official"
     },
     {
       "id": "buzz",
@@ -5335,7 +5403,8 @@
             "buzz-db-data:/var/lib/postgresql/data"
           ]
         }
-      ]
+      ],
+      "app_type": "official"
     },
     {
       "id": "appvault-premium-agents",
@@ -5376,7 +5445,8 @@
         "crewai",
         "memory"
       ],
-      "is_stack": true
+      "is_stack": true,
+      "app_type": "official"
     }
   ]
 }

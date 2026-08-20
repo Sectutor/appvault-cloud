@@ -935,6 +935,32 @@ async def admin_remove_app(app_id: str, request: Request):
     _audit("catalog.remove", app_id)
     return {"status": "removed", "app_id": app_id, "new_catalog_version": new_version}
 
+@app.post("/admin/catalog/apps/{app_id}/uninstall")
+async def admin_uninstall_app(app_id: str, request: Request):
+    """Admin uninstalls an app from agents (stops containers, removes volumes) but keeps in catalog."""
+    require_admin(request)
+    
+    db = get_db()
+    agent = db.execute("SELECT id FROM agents WHERE status = 'online' LIMIT 1").fetchone()
+    db.close()
+    
+    if not agent:
+        return {'status': 'ok', 'message': 'No online agents', 'uninstalled': False}
+    
+    agent_id = agent['id']
+    try:
+        job_db = get_db()
+        job_db.execute(
+            "INSERT INTO agent_jobs (agent_id, action, app_id, params) VALUES (?, ?, ?, ?)",
+            (agent_id, 'uninstall', app_id, '{}')
+        )
+        job_db.commit()
+        job_db.close()
+        return {'status': 'ok', 'agent_id': agent_id[:8] + '...', 'app_id': app_id, 'action': 'uninstall queued'}
+    except Exception as e:
+        return {'status': 'error', 'detail': str(e)}
+
+
 @app.post("/admin/catalog/apps/{app_id}/free")
 async def admin_toggle_free(app_id: str, request: Request):
     """Admin: mark/unmark an app as free-tier. Persists to catalog.json and bumps version."""

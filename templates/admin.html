@@ -283,7 +283,7 @@ select, input { padding: 6px 10px; border-radius: 6px; border: 1px solid #334155
           <button id="dis-{{ app.id }}" class="btn btn-restart" onclick="toggleDisabled('{{ app.id }}', true)">Unpublish</button>
           {% endif %}
         </td>
-        <td><button class="btn btn-uninstall" onclick="removeApp('{{ app.id }}')">Remove</button></td>
+        <td><button class="btn btn-uninstall" onclick="uninstallApp('{{ app.id }}')">Uninstall</button></td>
       </tr>
       {% endfor %}
     </table>
@@ -383,7 +383,28 @@ async function toggleDisabled(appId, makeDisabled) {
   try {
     const r = await fetch('/admin/catalog/apps/' + appId + '/disable', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      headers: {'Content-Type': 'application/json'}
+
+// Uninstall an app (stops containers but keeps in catalog)
+async function uninstallApp(appId) {
+  if (!confirm('Uninstall ' + appId + '? This will stop and remove all containers/volumes for this app.')) return;
+  try {
+    const r = await fetch('/admin/catalog/apps/' + appId + '/uninstall', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'}
+    });
+    const d = await r.json();
+    if (d.status === 'ok') {
+      showToast('🗑 ' + appId + ' uninstall queued on ' + d.agent_id, 'success');
+      setTimeout(() => location.reload(), 1500);
+    } else {
+      showToast('❌ ' + (d.detail || 'Failed'), 'error');
+    }
+  } catch(err) {
+    showToast('❌ ' + err.message, 'error');
+  }
+}
+,
       body: JSON.stringify({disabled: makeDisabled})
     });
     const d = await r.json();
