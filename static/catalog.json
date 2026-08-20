@@ -2820,7 +2820,7 @@
       "name": "9Router",
       "description": "Unlimited FREE AI coding. Connect Claude Code, Codex, Cursor, Cline, Copilot, Antigravity to FREE Claude/GPT/Gemini via 40+ providers. Auto-fallback, RTK -40% tokens, never hit limits.",
       "image": "ghcr.io/decolua/9router:latest",
-      "container_port": 20128,
+      "container_port": 20129,
       "volumes": [],
       "env": [
         "PORT=20128",
@@ -2867,7 +2867,7 @@
       ],
       "emoji": "🔀",
       "healthcheck": {
-        "port": 20128,
+        "port": 20129,
         "path": "/",
         "expect": [
           200,
@@ -2897,7 +2897,7 @@
       "name": "OpenMAIC",
       "description": "",
       "image": "",
-      "container_port": 3010,
+      "container_port": 3014,
       "volumes": [],
       "env": [],
       "category": "ai",
@@ -2909,7 +2909,7 @@
       "hidden": true,
       "emoji": "🤖",
       "healthcheck": {
-        "port": 3010,
+        "port": 3014,
         "path": "/",
         "expect": [
           200,
@@ -2930,7 +2930,12 @@
           "email": "admin@example.com",
           "password": "admin"
         }
-      }
+      },
+      "env_files": [
+        ".env.local"
+      ],
+      "needs_certification": true,
+      "certification_status": "pending"
     },
     {
       "id": "openship",
@@ -3087,7 +3092,7 @@
       "name": "AppFlowy Cloud",
       "description": "Open-source Notion alternative - collaboration workspace",
       "image": "",
-      "container_port": 8000,
+      "container_port": 80,
       "volumes": [],
       "env": [],
       "category": "productivity",
@@ -3098,7 +3103,7 @@
       "hidden": true,
       "emoji": "📝",
       "healthcheck": {
-        "port": 8000,
+        "port": 80,
         "path": "/",
         "expect": [
           200,
@@ -3120,7 +3125,9 @@
           "email": "admin@example.com",
           "password": "admin"
         }
-      }
+      },
+      "needs_certification": true,
+      "certification_status": "pending"
     },
     {
       "id": "central-redis",
@@ -3497,7 +3504,7 @@
       "name": "Dify",
       "description": "Open-source LLM app platform — build Notion-AI-style workflows and AI support bots",
       "image": "",
-      "container_port": 3011,
+      "container_port": 80,
       "volumes": [],
       "env": [],
       "category": "ai",
@@ -3548,7 +3555,7 @@
       ],
       "emoji": "🧩",
       "healthcheck": {
-        "port": 3011,
+        "port": 80,
         "path": "/",
         "expect": [
           200,
@@ -3562,7 +3569,9 @@
       },
       "boot_timeout": 300,
       "min_mem_mb": 2048,
-      "min_disk_gb": 3
+      "min_disk_gb": 3,
+      "needs_certification": true,
+      "certification_status": "pending"
     },
     {
       "id": "librechat",
@@ -4432,7 +4441,9 @@
       },
       "boot_timeout": 180,
       "min_mem_mb": 1024,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "needs_certification": true,
+      "certification_status": "pending"
     },
     {
       "id": "chatwoot",
@@ -4503,7 +4514,9 @@
       },
       "boot_timeout": 180,
       "min_mem_mb": 1024,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "needs_certification": true,
+      "certification_status": "pending"
     },
     {
       "id": "plane",
@@ -4574,7 +4587,9 @@
       },
       "boot_timeout": 180,
       "min_mem_mb": 1024,
-      "min_disk_gb": 2
+      "min_disk_gb": 2,
+      "needs_certification": true,
+      "certification_status": "pending"
     },
     {
       "id": "outline",
@@ -5291,7 +5306,7 @@
       ],
       "emoji": "🐝",
       "healthcheck": {
-        "port": 3000,
+        "port": 80,
         "path": "/",
         "expect": [
           200,
@@ -5330,7 +5345,7 @@
       "requires_paid": true,
       "emoji": "🤖",
       "image": "ghcr.io/sectutor/appvault-agent:latest",
-      "container_port": 8095,
+      "container_port": 8096,
       "compose_url": "https://raw.githubusercontent.com/Sectutor/appvault-agent/main/docker-compose.agentic-windows.yml",
       "min_ram_mb": 4096,
       "min_disk_gb": 5,
@@ -5343,7 +5358,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Hermes+Agent"
       ],
       "healthcheck": {
-        "port": 8095,
+        "port": 8096,
         "path": "/",
         "expect": [
           200,
@@ -5359,7 +5374,8 @@
         "hermes",
         "crewai",
         "memory"
-      ]
+      ],
+      "is_stack": true
     }
   ]
 }
