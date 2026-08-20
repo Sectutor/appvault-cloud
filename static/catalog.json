@@ -436,7 +436,7 @@
       "name": "OmniRoute AI Gateway",
       "description": "Free MIT AI Gateway — unified API endpoint for 290+ providers & 500+ models with quota-aware auto-fallback & token compression.",
       "image": "diegosouzapw/omniroute:latest",
-      "container_port": 3000,
+      "container_port": 20128,
       "web_path": "/",
       "volumes": [
         "omniroute-data:/app/data"
@@ -445,8 +445,7 @@
         "DATA_DIR=/app/data",
         "JWT_SECRET=PrCNIm7eGWCK5MiHyoeUYFe2dS8rmauMnGY9hJUpn-U",
         "API_KEY_SECRET=gx90CER0TPbrVYhFDVwajGhYBuTH73qXq2Enzf0TWro",
-        "INITIAL_PASSWORD=CHANGEME",
-        "PORT=3000",
+        "INITIAL_PASSWORD=admin",
         "NODE_ENV=production",
         "HOSTNAME=0.0.0.0",
         "OMNIROUTE_MEMORY_MB=1024"
@@ -455,7 +454,7 @@
       "min_mem_mb": 1024,
       "min_disk_gb": 2,
       "healthcheck": {
-        "port": 3000,
+        "port": 20128,
         "path": "/",
         "expect": [
           200,
@@ -471,15 +470,15 @@
       "free_tier": true,
       "education": {
         "docs_url": "https://github.com/diegosouzapw/OmniRoute",
-        "quick_start": "OmniRoute is a free MIT AI Gateway supporting 290+ providers and 500+ models. The dashboard login is PASSWORD-ONLY — no username/email field. Use the password CHANGEME (all caps, set by INITIAL_PASSWORD).",
+        "quick_start": "OmniRoute is a free MIT AI Gateway supporting 290+ providers and 500+ models. Log in at the dashboard with username admin and password admin (set by INITIAL_PASSWORD).",
         "default_login": {
           "username": "admin",
           "email": "admin@example.com",
           "password": "admin"
         },
         "setup_steps": [
-          "Open http://localhost:PORT/ — it redirects to the login page",
-          "Enter the password CHANGEME (all caps, case-sensitive) — there is no username field",
+          "Open http://localhost:PORT/ — it redirects to /login",
+          "Log in with username: admin, password: admin",
           "Configure your AI model providers (OpenAI, Claude, Gemini, DeepSeek, etc.)",
           "Use http://localhost:PORT/v1 as your universal OpenAI-compatible endpoint"
         ]
