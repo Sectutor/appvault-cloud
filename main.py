@@ -1166,8 +1166,13 @@ def stale_agent_watcher():
     while True:
         try:
             db = get_db()
-            cutoff = (datetime.utcnow() - timedelta(seconds=AGENT_TIMEOUT_SECONDS)).isoformat()
-            db.execute("UPDATE agents SET status='offline' WHERE last_seen < ? AND status='online'", (cutoff,))
+            # SQL-side comparison avoids Python/SQLite datetime format mismatch
+            # (isoformat uses 'T', SQLite datetime('now') uses a space) that
+            # previously marked EVERY agent offline on every sweep.
+            db.execute(
+                "UPDATE agents SET status='offline' WHERE status='online' AND last_seen < datetime('now', ?)",
+                (f'-{AGENT_TIMEOUT_SECONDS} seconds',),
+            )
             db.commit()
             db.close()
         except Exception as e:
