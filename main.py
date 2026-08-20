@@ -1572,6 +1572,9 @@ async def api_service_request(request: Request):
         return JSONResponse({"status": "error", "detail": "name, email, service_type and description are required"}, status_code=400)
     db = get_db()
     db.execute(
+        "CREATE TABLE IF NOT EXISTS service_requests (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT NOT NULL, company TEXT DEFAULT '', service_type TEXT NOT NULL, description TEXT NOT NULL, budget TEXT DEFAULT '', timeline TEXT DEFAULT '', created_at TEXT DEFAULT (datetime('now')), status TEXT DEFAULT 'new', notes TEXT DEFAULT '')"
+    )
+    db.execute(
         "INSERT INTO service_requests (name, email, company, service_type, description, budget, timeline) VALUES (?, ?, ?, ?, ?, ?, ?)",
         (name, email, company, service_type, description, budget, timeline),
     )
