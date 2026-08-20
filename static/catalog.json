@@ -817,7 +817,7 @@
       "name": "AdGuard Home",
       "description": "Network-wide ad blocking and DNS filtering",
       "image": "adguard/adguardhome:latest",
-      "container_port": 3000,
+      "container_port": 3003,
       "volumes": [
         "adguard-data:/opt/adguardhome/work",
         "adguard-conf:/opt/adguardhome/conf"
@@ -863,7 +863,7 @@
       ],
       "emoji": "🛡️",
       "healthcheck": {
-        "port": 3000,
+        "port": 3003,
         "path": "/",
         "expect": [
           200,
@@ -1231,7 +1231,7 @@
         "gitlab-data:/var/opt/gitlab"
       ],
       "env": [
-        "GITLAB_OMNIBUS_CONFIG=external_url 'http://localhost'"
+        "GITLAB_OMNIBUS_CONFIG=external_url 'http://app-central-postgres'"
       ],
       "category": "development",
       "min_ram_mb": 4096,
@@ -1306,7 +1306,7 @@
         "DB_PASSWORD=bookstack",
         "DB_DATABASE=bookstackapp",
         "APP_KEY=base64:bdb3Swyj3nhkPIK2TwejdgiP+d8tFQb4cddyXVGSGaU=",
-        "APP_URL=http://localhost:9087"
+        "APP_URL=http://app-central-postgres:9087"
       ],
       "category": "productivity",
       "min_ram_mb": 256,
@@ -2514,7 +2514,7 @@
       "name": "Gitea",
       "description": "Lightweight self-hosted Git service",
       "image": "gitea/gitea:latest",
-      "container_port": 3000,
+      "container_port": 3008,
       "extra_ports": {
         "22": "2222"
       },
@@ -2564,7 +2564,7 @@
       ],
       "emoji": "🐙",
       "healthcheck": {
-        "port": 3000,
+        "port": 3008,
         "path": "/",
         "expect": [
           200,
@@ -2897,7 +2897,7 @@
       "name": "OpenMAIC",
       "description": "",
       "image": "",
-      "container_port": 3000,
+      "container_port": 3010,
       "volumes": [],
       "env": [],
       "category": "ai",
@@ -2909,7 +2909,7 @@
       "hidden": true,
       "emoji": "🤖",
       "healthcheck": {
-        "port": 3000,
+        "port": 3010,
         "path": "/",
         "expect": [
           200,
@@ -3005,7 +3005,7 @@
       "name": "Documenso",
       "description": "Open-source document signing platform (DocuSign alternative)",
       "image": "documenso/documenso:latest",
-      "container_port": 3000,
+      "container_port": 3004,
       "volumes": [
         "documenso-data:/app/data"
       ],
@@ -3044,7 +3044,7 @@
       ],
       "emoji": "✍️",
       "healthcheck": {
-        "port": 3000,
+        "port": 3004,
         "path": "/",
         "expect": [
           200,
@@ -3164,12 +3164,12 @@
       "name": "Twenty CRM",
       "description": "Open-source modern CRM. Beautiful, fast, and self-hosted.",
       "image": "twentycrm/twenty:latest",
-      "container_port": 3000,
+      "container_port": 3005,
       "volumes": [
         "twenty-data:/app/docker-data"
       ],
       "env": [
-        "SERVER_URL=http://localhost:3000",
+        "SERVER_URL=http://localhost:3005",
         "STORAGE_TYPE=local",
         "DISABLE_DB_MIGRATIONS=false",
         "DISABLE_CRON_JOBS_REGISTRATION=false",
@@ -3219,7 +3219,7 @@
       ],
       "emoji": "🤝",
       "healthcheck": {
-        "port": 3000,
+        "port": 3005,
         "path": "/",
         "expect": [
           200,
@@ -3240,7 +3240,7 @@
       "name": "ShieldSign Core",
       "description": "Enterprise e-signatures built for security (AGPL-3.0 fork of Documenso)",
       "image": "documenso/documenso:latest",
-      "container_port": 3000,
+      "container_port": 3002,
       "volumes": [
         "shieldsign-data:/app/data"
       ],
@@ -3249,11 +3249,9 @@
         "DB_NAME=shieldsign",
         "DB_USER=shieldsign",
         "DB_PASS=shieldsign",
-        "DATABASE_URL=postgresql://postgres:postgres@app-shieldsign-db:5432/shieldsign",
-        "NEXT_PRIVATE_DATABASE_URL=postgresql://postgres:postgres@app-shieldsign-db:5432/shieldsign",
-        "NEXT_PRIVATE_DIRECT_DATABASE_URL=postgresql://postgres:postgres@app-shieldsign-db:5432/shieldsign",
-        "NEXTAUTH_URL=http://localhost:3000",
-        "NEXT_PUBLIC_WEBAPP_URL=http://localhost:3000",
+        "DATABASE_URL=postgresql://shieldsign:shieldsign@app-central-postgres:5432/shieldsign",
+        "NEXTAUTH_URL=http://localhost:PORT",
+        "NEXT_PUBLIC_WEBAPP_URL=http://localhost:PORT",
         "NEXTAUTH_SECRET=Vo5RKlqLhhB_GEw3kvsh-w0oGK5NoHQjKF8EGg4_sEg"
       ],
       "category": "productivity",
@@ -3281,7 +3279,7 @@
       ],
       "emoji": "🛡️",
       "healthcheck": {
-        "port": 3000,
+        "port": 3002,
         "path": "/",
         "expect": [
           200,
@@ -3499,7 +3497,7 @@
       "name": "Dify",
       "description": "Open-source LLM app platform — build Notion-AI-style workflows and AI support bots",
       "image": "",
-      "container_port": 3000,
+      "container_port": 3011,
       "volumes": [],
       "env": [],
       "category": "ai",
@@ -3550,7 +3548,7 @@
       ],
       "emoji": "🧩",
       "healthcheck": {
-        "port": 3000,
+        "port": 3011,
         "path": "/",
         "expect": [
           200,
@@ -3715,7 +3713,7 @@
       "name": "OpenHands",
       "description": "AI software engineer in your browser — Copilot-grade dev agent you control (web UI)",
       "image": "ghcr.io/all-hands-ai/openhands:latest",
-      "container_port": 3000,
+      "container_port": 3009,
       "volumes": [
         "openhands-data:/root/.openhands"
       ],
@@ -3760,7 +3758,7 @@
       ],
       "emoji": "🖐️",
       "healthcheck": {
-        "port": 3000,
+        "port": 3009,
         "path": "/",
         "expect": [
           200,
@@ -3866,7 +3864,7 @@
         "wg-easy-data:/etc/wireguard"
       ],
       "env": [
-        "WG_HOST=localhost",
+        "WG_HOST=app-central-postgres",
         "PASSWORD=admin"
       ],
       "category": "networking",
@@ -4114,7 +4112,7 @@
       "name": "Umami",
       "description": "Privacy-friendly Google Analytics alternative — light, cookie-free, GDPR-friendly",
       "image": "ghcr.io/umami-software/umami:postgresql-latest",
-      "container_port": 3000,
+      "container_port": 3006,
       "volumes": [],
       "env": [
         "DATABASE_TYPE=postgresql",
@@ -4169,7 +4167,7 @@
       ],
       "emoji": "📈",
       "healthcheck": {
-        "port": 3000,
+        "port": 3006,
         "path": "/",
         "expect": [
           200,
@@ -4374,7 +4372,7 @@
       "name": "Formbricks",
       "description": "Open-source Typeform alternative — surveys, forms, and in-app feedback",
       "image": "",
-      "container_port": 3000,
+      "container_port": 3012,
       "volumes": [],
       "env": [],
       "category": "productivity",
@@ -4420,7 +4418,7 @@
       ],
       "emoji": "📋",
       "healthcheck": {
-        "port": 3000,
+        "port": 3012,
         "path": "/",
         "expect": [
           200,
@@ -4441,7 +4439,7 @@
       "name": "Chatwoot",
       "description": "Zendesk / Intercom alternative — support inbox with AI bots, for your whole team",
       "image": "",
-      "container_port": 3000,
+      "container_port": 3013,
       "volumes": [],
       "env": [],
       "category": "productivity",
@@ -4491,7 +4489,7 @@
       ],
       "emoji": "💬",
       "healthcheck": {
-        "port": 3000,
+        "port": 3013,
         "path": "/",
         "expect": [
           200,
@@ -4583,14 +4581,14 @@
       "name": "Outline",
       "description": "Confluence / Notion wiki alternative — fast, polished team knowledge base",
       "image": "outlinewiki/outline:latest",
-      "container_port": 3000,
+      "container_port": 3007,
       "volumes": [
         "outline-data:/var/lib/outline/data"
       ],
       "env": [
         "HOST=0.0.0.0",
         "FORCE_HTTPS=false",
-        "URL=http://localhost:3000",
+        "URL=http://localhost:3007",
         "SECRET_KEY=99c5340e9fff288d81587b663b5b98e17da7ede06f2f7cfbc42d55bbc1040b8b",
         "UTILS_SECRET=efa7fcfdcaad6812aca832f520d1bef36f7c8fd93077f2c62b5860249acd52b2",
         "DATABASE_URL=postgresql://postgres:postgres@app-outline-db:5432/outline?sslmode=disable",
@@ -4644,7 +4642,7 @@
       ],
       "emoji": "📘",
       "healthcheck": {
-        "port": 3000,
+        "port": 3007,
         "path": "/",
         "expect": [
           200,
