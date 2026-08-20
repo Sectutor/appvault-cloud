@@ -1558,29 +1558,33 @@ async def service_request_page(request: Request):
 @app.post("/api/services/request")
 async def api_service_request(request: Request):
     try:
-        body = await request.json()
-    except Exception:
-        body = {}
-    name = (body.get("name") or "").strip()
-    email = (body.get("email") or "").strip()
-    service_type = (body.get("service_type") or "").strip()
-    description = (body.get("description") or "").strip()
-    company = (body.get("company") or "").strip()
-    budget = (body.get("budget") or "").strip()
-    timeline = (body.get("timeline") or "").strip()
-    if not name or not email or not service_type or not description:
-        return JSONResponse({"status": "error", "detail": "name, email, service_type and description are required"}, status_code=400)
-    db = get_db()
-    db.execute(
-        "CREATE TABLE IF NOT EXISTS service_requests (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT NOT NULL, company TEXT DEFAULT '', service_type TEXT NOT NULL, description TEXT NOT NULL, budget TEXT DEFAULT '', timeline TEXT DEFAULT '', created_at TEXT DEFAULT (datetime('now')), status TEXT DEFAULT 'new', notes TEXT DEFAULT '')"
-    )
-    db.execute(
-        "INSERT INTO service_requests (name, email, company, service_type, description, budget, timeline) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (name, email, company, service_type, description, budget, timeline),
-    )
-    db.commit()
-    _audit("public", "service.request", f"{service_type} from {email}")
-    return JSONResponse({"status": "ok"})
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+        name = (body.get("name") or "").strip()
+        email = (body.get("email") or "").strip()
+        service_type = (body.get("service_type") or "").strip()
+        description = (body.get("description") or "").strip()
+        company = (body.get("company") or "").strip()
+        budget = (body.get("budget") or "").strip()
+        timeline = (body.get("timeline") or "").strip()
+        if not name or not email or not service_type or not description:
+            return JSONResponse({"status": "error", "detail": "name, email, service_type and description are required"}, status_code=400)
+        db = get_db()
+        db.execute(
+            "CREATE TABLE IF NOT EXISTS service_requests (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT NOT NULL, company TEXT DEFAULT '', service_type TEXT NOT NULL, description TEXT NOT NULL, budget TEXT DEFAULT '', timeline TEXT DEFAULT '', created_at TEXT DEFAULT (datetime('now')), status TEXT DEFAULT 'new', notes TEXT DEFAULT '')"
+        )
+        db.execute(
+            "INSERT INTO service_requests (name, email, company, service_type, description, budget, timeline) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (name, email, company, service_type, description, budget, timeline),
+        )
+        db.commit()
+        _audit("public", "service.request", f"{service_type} from {email}")
+        return JSONResponse({"status": "ok"})
+    except Exception as e:
+        import traceback; traceback.print_exc()
+        return JSONResponse({"status": "error", "detail": str(e)}, status_code=500)
 
 def _landing_ctx(request: Request):
     """Build landing page context: visible (non-hidden) catalog apps with rich fields."""
