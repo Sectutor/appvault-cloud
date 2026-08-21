@@ -2324,6 +2324,7 @@ async def admin_news_save(request: Request):
     db.commit()
     db.close()
     _audit("news.save", f"id={nid} title={title[:40]}")
+    threading.Thread(target=notify_agents_catalog_updated, daemon=True).start()
     return RedirectResponse("/admin/news", status_code=303)
 
 @app.post("/admin/news/{nid}/delete")
@@ -2335,4 +2336,5 @@ async def admin_news_delete(nid: int, request: Request):
     db.commit()
     db.close()
     _audit("news.delete", f"id={nid}")
+    threading.Thread(target=notify_agents_catalog_updated, daemon=True).start()
     return RedirectResponse("/admin/news", status_code=303)
