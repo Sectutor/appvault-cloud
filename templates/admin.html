@@ -80,6 +80,109 @@ select, input { padding: 6px 10px; border-radius: 6px; border: 1px solid #334155
 .dropdown a:hover, .dropdown button:hover { background: #1e293b; }
 .dropdown .logout { color: #f87171; }
 .dropdown .logout:hover { background: rgba(239,68,68,0.12); }
+
+/* ── Professional Catalog Tab Styles ── */
+.catalog-form-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  padding: 20px;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+  margin-bottom: 24px;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.form-group label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+}
+.form-group input, .form-group select {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #e2e8f0;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-group input:focus, .form-group select:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+}
+.catalog-table-container {
+  overflow-x: auto;
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+  background: #111827;
+  margin-top: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+.catalog-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.catalog-table th {
+  background: #0f172a;
+  padding: 12px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #1e293b;
+  text-align: left;
+}
+.catalog-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #1e293b;
+  vertical-align: middle;
+  color: #e2e8f0;
+}
+.catalog-table tr:last-child td {
+  border-bottom: none;
+}
+.catalog-table tr:hover td {
+  background: rgba(56,189,248,0.02);
+}
+.table-input {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #e2e8f0;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.table-input:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
+}
+.import-section {
+  padding: 20px;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+#import-add-chevron {
+  transition: transform 0.2s ease;
+  display: inline-block;
+}
+.chevron-open {
+  transform: rotate(90deg);
+}
 </style>
 </head>
 <body>
@@ -103,15 +206,15 @@ select, input { padding: 6px 10px; border-radius: 6px; border: 1px solid #334155
 </div>
 
 <div class="section-tabs">
-  <button class="active" onclick="switchTab('agents')">🤖 Agents</button>
+  <button class="active" onclick="switchTab('catalog')">📦 Catalog</button>
+  <button onclick="switchTab('agents')">🤖 Agents</button>
   <button onclick="switchTab('jobs')">📋 Job Queue</button>
-  <button onclick="switchTab('catalog')">📦 Catalog</button>
-<button onclick="switchTab('licenses')">🔑 Licenses</button>
+  <button onclick="switchTab('licenses')">🔑 Licenses</button>
   <button onclick="switchTab('news')">📢 News & Tips</button>
 </div>
 
 <!-- AGENTS SECTION -->
-<div id="tab-agents" class="section active">
+<div id="tab-agents" class="section">
   <div class="card">
     <h2>Connected Agents</h2>
     {% if agents %}
@@ -199,94 +302,163 @@ select, input { padding: 6px 10px; border-radius: 6px; border: 1px solid #334155
 </div>
 
 <!-- CATALOG SECTION -->
-<div id="tab-catalog" class="section">
+<div id="tab-catalog" class="section active">
   <div class="card">
-    <h2>Global Catalog <span style="font-size:12px;color:#64748b;">v{{ catalog_version }}</span></h2>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #1e293b; padding-bottom:12px;">
+      <h2 style="margin:0; display:flex; align-items:center; gap:8px;">📦 Global Catalog <span style="font-size:12px; background:#1e293b; padding:2px 8px; border-radius:12px; color:#94a3b8; font-weight:600; font-family:monospace;">v{{ catalog_version }}</span></h2>
+      <button class="btn btn-primary" onclick="publishCatalog()" style="display:flex; align-items:center; gap:6px; padding:8px 18px; font-size:13px; border-radius:8px;">📢 Publish New Version</button>
+    </div>
 
-    <div style="padding:16px;background:#0f172a;border-radius:8px;margin-bottom:16px;">
-      <h3 style="font-size:14px;font-weight:700;margin-bottom:8px;color:#f1f5f9;">🤖 Auto-Import from GitHub</h3>
-      <form id="autoImportForm" style="display:flex;gap:10px;align-items:end;">
-        <div style="flex:1;">
-          <label style="display:block;font-size:12px;color:#94a3b8;margin-bottom:4px;">GitHub URL or Docker Image</label>
-          <input id="importUrl" type="text" placeholder="https://github.com/user/repo  or  ghcr.io/user/app:latest" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:13px;">
+    <!-- Collapsible Import & Add App Panel -->
+    <div onclick="toggleImportAdd()" style="display:flex; align-items:center; padding:12px 16px; background:#0f172a; border:1px solid #1e293b; border-radius:10px; margin-bottom:20px; cursor:pointer; user-select:none; transition:background 0.2s;" onmouseover="this.style.background='#1e293b'" onmouseout="this.style.background='#0f172a'">
+      <span style="font-size:13px; font-weight:700; color:#f1f5f9; display:flex; align-items:center; gap:8px;">📥 Add & Import App Panel</span>
+      <span id="import-add-chevron" style="font-size:12px; color:#94a3b8; margin-left:auto;">▶</span>
+    </div>
+
+    <div id="import-add-content" style="display:none; margin-bottom:24px;">
+      <!-- Auto-Import Section -->
+      <div class="import-section">
+        <h3 style="font-size:14px;font-weight:700;margin-bottom:12px;color:#f1f5f9;display:flex;align-items:center;gap:6px;">🤖 Auto-Import from GitHub</h3>
+        <form id="autoImportForm" style="display:flex;gap:12px;align-items:end;">
+          <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+            <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;color:#94a3b8;letter-spacing:0.5px;">GitHub URL or Docker Image</label>
+            <input id="importUrl" type="text" placeholder="https://github.com/user/repo  or  ghcr.io/user/app:latest" style="width:100%;padding:10px 14px;border-radius:6px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:13px;outline:none;transition:border-color 0.2s;">
+          </div>
+          <button type="submit" class="btn btn-primary" id="importBtn" style="padding:10px 24px;height:41px;border-radius:6px;">🔍 Detect & Import</button>
+        </form>
+        <div id="importResult" style="display:none;margin-top:12px;padding:12px;background:#111827;border-radius:8px;border:1px solid #1e293b;"></div>
+      </div>
+      
+      <!-- Add App Form -->
+      <h3 style="font-size:14px;font-weight:700;margin:24px 0 12px;color:#f1f5f9;display:flex;align-items:center;gap:6px;">➕ Add App manually</h3>
+      <form id="addAppForm" class="catalog-form-container">
+        <div class="form-group">
+          <label>App ID</label>
+          <input id="appId" placeholder="my-app" required>
         </div>
-        <button type="submit" class="btn btn-primary" id="importBtn" style="padding:8px 20px;">🔍 Detect & Import</button>
+        <div class="form-group">
+          <label>Name</label>
+          <input id="appName" placeholder="My App" required>
+        </div>
+        <div class="form-group">
+          <label>Image</label>
+          <input id="appImage" placeholder="myapp/server:latest" required>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <input id="appDesc" placeholder="Description">
+        </div>
+        <div class="form-group">
+          <label>Port</label>
+          <input id="appPort" placeholder="8080" type="number">
+        </div>
+        <div class="form-group">
+          <label>Extra Ports (comma-sep)</label>
+          <input id="appExtraPorts" placeholder="e.g. 3000,8081 (setup/secondary)">
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="appCategory">
+            <option>ai</option>
+            <option>productivity</option>
+            <option>networking</option>
+            <option>development</option>
+            <option>media</option>
+            <option>automation</option>
+            <option>database</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tier</label>
+          <select id="appFree">
+            <option value="false">Premium (paid only)</option>
+            <option value="true">Free (all users)</option>
+          </select>
+        </div>
+        <div style="grid-column:1/-1; display:flex; justify-content:flex-end; margin-top:8px;">
+          <button type="submit" class="btn btn-primary" style="padding:10px 24px;border-radius:6px;">Add App to Catalog</button>
+        </div>
       </form>
-      <div id="importResult" style="display:none;margin-top:12px;padding:12px;background:#111827;border-radius:8px;border:1px solid #1e293b;"></div>
-    </div>
-    
-    <form id="addAppForm" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;padding:16px;background:#0f172a;border-radius:8px;">
-      <div><label style="font-size:12px;color:#94a3b8;">App ID</label><input id="appId" placeholder="my-app" required></div>
-      <div><label style="font-size:12px;color:#94a3b8;">Name</label><input id="appName" placeholder="My App" required></div>
-      <div><label style="font-size:12px;color:#94a3b8;">Image</label><input id="appImage" placeholder="myapp/server:latest" required></div>
-      <div><label style="font-size:12px;color:#94a3b8;">Description</label><input id="appDesc" placeholder="Description"></div>
-      <div><label style="font-size:12px;color:#94a3b8;">Port</label><input id="appPort" placeholder="8080" type="number"></div>
-      <div><label style="font-size:12px;color:#94a3b8;">Extra Ports (comma-sep)</label><input id="appExtraPorts" placeholder="e.g. 3000,8081 (setup/secondary)"></div>
-      <div><label style="font-size:12px;color:#94a3b8;">Category</label>
-        <select id="appCategory">
-          <option>ai</option><option>productivity</option><option>networking</option><option>development</option><option>media</option><option>automation</option><option>database</option>
-        </select>
-      </div>
-      <div><label style="font-size:12px;color:#94a3b8;">Tier</label>
-        <select id="appFree">
-          <option value="false">Premium (paid only)</option>
-          <option value="true">Free (all users)</option>
-        </select>
-      </div>
-      <div style="grid-column:1/-1;"><button type="submit" class="btn btn-primary">Add App to Catalog</button></div>
-    </form>
-
-    <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
-      <span style="color:#94a3b8;font-size:13px;">{{ catalog.apps|length }} apps in catalog · <b id="free-count" style="color:#fbbf24;">{{ catalog.apps|selectattr('free_tier','equalto',True)|list|length }} marked FREE</b> (free plan gets these unlocked; premium shown as locked)</span>
-      <button class="btn btn-primary" onclick="publishCatalog()">📢 Publish New Version</button>
     </div>
 
-    <table>
-      <tr><th>ID</th><th>Name</th><th>Image</th><th>Category</th><th>RAM</th><th>Video URL</th><th>Tier</th><th>Status</th><th></th></tr>
-      {% for app in catalog.apps %}
-      <tr>
-        <td><code style="color:#38bdf8;">{{ app.id }}</code></td>
-        <td>{{ app.name }}{% if app.extra_ports %}<span style="color:#fbbf24;font-size:11px;margin-left:6px;">+{{ app.extra_ports|join(',') }} ports</span>{% endif %}</td>
-        <td>
-          <form onsubmit="saveImage(event, '{{ app.id }}')" style="display:flex;gap:4px;">
-            <input id="img-{{ app.id }}" type="text" value="{{ app.image }}"
-                   style="padding:4px 8px;border-radius:4px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:11px;width:220px;font-family:monospace;"
-                   placeholder="image:tag">
-            <button type="submit" class="btn btn-install" style="padding:4px 10px;font-size:11px;">💾 Ship</button>
-          </form>
-        </td>
-        <td><span class="badge badge-online">{{ app.category }}</span></td>
-        <td>{{ app.min_ram_mb }}MB</td>
-        <td>
-          <form onsubmit="setVideo(event, '{{ app.id }}')" style="display:flex;gap:4px;">
-            <input id="vid-{{ app.id }}" type="url" placeholder="https://youtu.be/..." 
-                   value="{{ app.education.video_url if app.education and app.education.video_url else '' }}"
-                   style="padding:4px 8px;border-radius:4px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:11px;width:200px;">
-            <button type="submit" class="btn btn-primary" style="padding:4px 10px;font-size:11px;">Save</button>
-          </form>
-        </td>
-        <td>
-          {% if app.free_tier %}
-          <span class="badge badge-online">Free</span><br>
-          <button id="free-{{ app.id }}" class="btn btn-restart" onclick="toggleFree('{{ app.id }}', false)">Make Premium</button>
-          {% else %}
-          <span class="badge badge-pending">Premium</span><br>
-          <button id="free-{{ app.id }}" class="btn btn-install" onclick="toggleFree('{{ app.id }}', true)">Make Free</button>
-          {% endif %}
-        </td>
-        <td>
-          {% if app.disabled or app.get('published') == false %}
-          <span class="badge badge-offline">Unpublished</span><br>
-          <button id="dis-{{ app.id }}" class="btn btn-install" onclick="toggleDisabled('{{ app.id }}', false)">Publish</button>
-          {% else %}
-          <span class="badge badge-online">Published</span><br>
-          <button id="dis-{{ app.id }}" class="btn btn-restart" onclick="toggleDisabled('{{ app.id }}', true)">Unpublish</button>
-          {% endif %}
-        </td>
-        <td><button class="btn btn-uninstall" onclick="uninstallApp('{{ app.id }}')">Uninstall</button></td>
-      </tr>
-      {% endfor %}
-    </table>
+    <div style="margin-top:32px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;">
+      <span style="color:#94a3b8;font-size:13px;font-weight:500;">
+        📊 <b>{{ catalog.apps|length }}</b> apps in catalog · 
+        <b id="free-count" style="color:#fbbf24;">{{ catalog.apps|selectattr('free_tier','equalto',True)|list|length }} free</b> · 
+        <b style="color:#818cf8;">{{ catalog.apps|length - catalog.apps|selectattr('free_tier','equalto',True)|list|length }} premium</b>
+      </span>
+    </div>
+
+    <!-- Catalog Table -->
+    <div class="catalog-table-container">
+      <table class="catalog-table">
+        <thead>
+          <tr>
+            <th style="width: 100px;">ID</th>
+            <th style="width: 150px;">Name</th>
+            <th style="width: 290px;">Docker Image</th>
+            <th>Category</th>
+            <th>RAM</th>
+            <th style="width: 270px;">Video tutorial URL</th>
+            <th style="width: 140px;">Tier</th>
+            <th style="width: 140px;">Status</th>
+            <th style="width: 100px; text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for app in catalog.apps %}
+          <tr>
+            <td><code style="color:#38bdf8;font-family:monospace;font-weight:700;">{{ app.id }}</code></td>
+            <td>
+              <div style="font-weight:600;color:#f1f5f9;">{{ app.name }}</div>
+              {% if app.extra_ports %}
+              <div style="color:#fbbf24;font-size:10px;margin-top:2px;font-weight:500;">🔌 Ports: {{ app.extra_ports|join(',') }}</div>
+              {% endif %}
+            </td>
+            <td>
+              <form onsubmit="saveImage(event, '{{ app.id }}')" style="display:flex;gap:6px;align-items:center;">
+                <input id="img-{{ app.id }}" class="table-input" type="text" value="{{ app.image }}" style="width:200px;font-family:monospace;" placeholder="image:tag">
+                <button type="submit" class="btn btn-install" style="padding:5px 10px;font-size:11px;border-radius:4px;display:flex;align-items:center;gap:3px;">💾 Ship</button>
+              </form>
+            </td>
+            <td><span class="badge badge-online" style="text-transform:capitalize;">{{ app.category }}</span></td>
+            <td><span style="font-family:monospace;color:#94a3b8;">{{ app.min_ram_mb }} MB</span></td>
+            <td>
+              <form onsubmit="setVideo(event, '{{ app.id }}')" style="display:flex;gap:6px;align-items:center;">
+                <input id="vid-{{ app.id }}" class="table-input" type="url" placeholder="https://youtu.be/..." value="{{ app.education.video_url if app.education and app.education.video_url else '' }}" style="width:180px;">
+                <button type="submit" class="btn btn-primary" style="padding:5px 10px;font-size:11px;border-radius:4px;">Save</button>
+              </form>
+            </td>
+            <td>
+              <div style="display:flex;flex-direction:column;gap:6px;align-items:start;">
+                {% if app.free_tier %}
+                <span class="badge badge-online">Free</span>
+                <button id="free-{{ app.id }}" class="btn btn-restart" style="padding:3px 8px;font-size:10px;border-radius:4px;" onclick="toggleFree('{{ app.id }}', false)">Make Premium</button>
+                {% else %}
+                <span class="badge badge-pending">Premium</span>
+                <button id="free-{{ app.id }}" class="btn btn-install" style="padding:3px 8px;font-size:10px;border-radius:4px;" onclick="toggleFree('{{ app.id }}', true)">Make Free</button>
+                {% endif %}
+              </div>
+            </td>
+            <td>
+              <div style="display:flex;flex-direction:column;gap:6px;align-items:start;">
+                {% if app.disabled or app.get('published') == false %}
+                <span class="badge badge-offline">Unpublished</span>
+                <button id="dis-{{ app.id }}" class="btn btn-install" style="padding:3px 8px;font-size:10px;border-radius:4px;" onclick="toggleDisabled('{{ app.id }}', false)">Publish</button>
+                {% else %}
+                <span class="badge badge-online">Published</span>
+                <button id="dis-{{ app.id }}" class="btn btn-restart" style="padding:3px 8px;font-size:10px;border-radius:4px;" onclick="toggleDisabled('{{ app.id }}', true)">Unpublish</button>
+                {% endif %}
+              </div>
+            </td>
+            <td style="text-align: right;">
+              <button class="btn btn-uninstall" style="padding:5px 12px;font-size:11px;border-radius:4px;" onclick="uninstallApp('{{ app.id }}')">Uninstall</button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -726,15 +898,48 @@ document.getElementById('cloudForm').addEventListener('submit', async function(e
   }
 });
 
-// Load cloud status on tab switch
+// Load cloud status on tab switch and persist active tab name
 var origSwitchTab = switchTab;
 switchTab = function(name) {
   document.querySelectorAll('.section').forEach(function(s){ s.classList.remove('active'); });
   document.querySelectorAll('.section-tabs button').forEach(function(b){ b.classList.remove('active'); });
-  document.getElementById('tab-' + name).classList.add('active');
-  event.target.classList.add('active');
+  
+  var targetTab = document.getElementById('tab-' + name);
+  if (targetTab) {
+    targetTab.classList.add('active');
+  }
+  
+  var btn = document.querySelector('.section-tabs button[onclick*="switchTab(\'' + name + '\')"]') 
+         || document.querySelector('.section-tabs button[onclick*="switchTab(\"' + name + '\")"]');
+  if (btn) {
+    btn.classList.add('active');
+  } else if (window.event && window.event.target) {
+    window.event.target.classList.add('active');
+  }
+  
+  localStorage.setItem('admin_active_tab', name);
   if (name === 'cloud') loadCloudStatus();
 };
+
+// Restore active tab on load
+document.addEventListener('DOMContentLoaded', function() {
+  var activeTab = localStorage.getItem('admin_active_tab') || 'catalog';
+  setTimeout(function() {
+    if (typeof switchTab === 'function') switchTab(activeTab);
+  }, 10);
+});
+
+function toggleImportAdd() {
+  var content = document.getElementById('import-add-content');
+  var chevron = document.getElementById('import-add-chevron');
+  if (content.style.display === 'none') {
+    content.style.display = 'block';
+    chevron.classList.add('chevron-open');
+  } else {
+    content.style.display = 'none';
+    chevron.classList.remove('chevron-open');
+  }
+}
 
 async function publishCatalog() {
   try {

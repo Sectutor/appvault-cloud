@@ -328,6 +328,53 @@ def reload_catalog():
         GLOBAL_CATALOG = json.load(f)
     return len(GLOBAL_CATALOG.get("apps", []))
 
+def notify_agents_catalog_updated():
+    """Notify all online agents that the catalog has changed, so they sync immediately."""
+    try:
+        db = get_db()
+        agents = db.execute("SELECT id, ip_address, api_key FROM agents WHERE status = 'online'").fetchall()
+        db.close()
+    except Exception as e:
+        print(f"[central] Failed to query online agents for sync: {e}", flush=True)
+        return
+    
+    for agent in agents:
+        agent_id = agent["id"]
+        ip = agent["ip_address"]
+        api_key = agent["api_key"]
+        
+        candidates = []
+        if ip and ip != "unknown":
+            candidates.append(f"http://{ip}:8086/api/catalog/sync")
+            if ip in ("127.0.0.1", "localhost", "172.17.0.1", "172.18.0.1"):
+                candidates.append("http://appvault-agent:8086/api/catalog/sync")
+                candidates.append("http://localhost:8086/api/catalog/sync")
+                candidates.append("http://host.docker.internal:8086/api/catalog/sync")
+        else:
+            candidates.append("http://appvault-agent:8086/api/catalog/sync")
+            candidates.append("http://localhost:8086/api/catalog/sync")
+            
+        for url in candidates:
+            try:
+                req = urllib.request.Request(
+                    url,
+                    data=b"{}",
+                    headers={
+                        "X-Api-Key": api_key,
+                        "Content-Type": "application/json"
+                    },
+                    method="POST"
+                )
+                with urllib.request.urlopen(req, timeout=2) as resp:
+                    if resp.status == 200:
+                        print(f"[central] Successfully notified agent {agent_id[:8]} via {url}", flush=True)
+                        break
+            except Exception:
+                pass
+
+def notify_sync_async():
+    threading.Thread(target=notify_agents_catalog_updated, daemon=True).start()
+
 def _save_catalog():
     """Atomic catalog persist (tmp+rename) — a crash mid-write can't corrupt it.
     Falls back to a direct write when CATALOG_PATH is a bind-mounted single
@@ -344,6 +391,7 @@ def _save_catalog():
             os.remove(tmp)
         except OSError:
             pass
+    notify_sync_async()
 
 @app.post("/admin/catalog/reload")
 async def admin_reload_catalog(request: Request):
