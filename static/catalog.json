@@ -1237,7 +1237,6 @@
       "image": "gitlab/gitlab-ce:latest",
       "container_port": 80,
       "extra_ports": {
-        "80": "8083",
         "443": "8443",
         "22": "8022"
       },
@@ -2089,8 +2088,7 @@
       "container_port": 81,
       "extra_ports": {
         "80": "8087",
-        "443": "8444",
-        "81": "8089"
+        "443": "8444"
       },
       "volumes": [
         "npm-data:/data",
@@ -3919,8 +3917,7 @@
       "image": "ghcr.io/wg-easy/wg-easy:latest",
       "container_port": 51821,
       "extra_ports": {
-        "51820": "51820",
-        "51821": "8082"
+        "51820": "51820"
       },
       "volumes": [
         "wg-easy-data:/etc/wireguard"
@@ -4181,12 +4178,9 @@
       "volumes": [],
       "env": [
         "DATABASE_TYPE=postgresql",
-        "DATABASE_URL=postgresql://umami:umami_secret@app-central-postgres:5432/umami",
-        "DATABASE_HOST=app-central-postgres",
+        "DATABASE_URL=postgresql://postgres:postgres@app-umami-db:5432/umami",
         "DATABASE_PORT=5432",
         "DATABASE_NAME=umami",
-        "DATABASE_USER=umami",
-        "DATABASE_PASSWORD=umami_secret",
         "APP_SECRET=umami-secret-key-salt-change-me-001"
       ],
       "category": "other",
