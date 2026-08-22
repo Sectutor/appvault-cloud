@@ -2338,3 +2338,18 @@ async def admin_news_delete(nid: int, request: Request):
     _audit("news.delete", f"id={nid}")
     threading.Thread(target=notify_agents_catalog_updated, daemon=True).start()
     return RedirectResponse("/admin/news", status_code=303)
+
+
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# PILOT FUNNEL — public landing + lead capture + admin leads (/pilot, /admin/leads)
+# Every content CTA points at /pilot?src=<platform>&story=<slug> for attribution.
+# ─────────────────────────────────────────────────────────────────────────
+try:
+    from pilot_funnel import register_pilot_funnel
+    register_pilot_funnel(app, get_db, require_admin, _audit,
+                          HTMLResponse, RedirectResponse, Request)
+    print("[central] pilot funnel registered (/pilot, /admin/leads)")
+except Exception as _pf_err:
+    print(f"[central] pilot funnel registration failed: {_pf_err}")
