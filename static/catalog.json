@@ -16,7 +16,7 @@
         "MYSQL_ROOT_PASSWORD=appvault_root_secret"
       ],
       "free_tier": true,
-      "emoji": "🗄️",
+      "emoji": "὜4️",
       "healthcheck": {
         "port": 3306,
         "path": "/",
@@ -58,7 +58,7 @@
         "POSTGRES_PASSWORD=appvault_root_secret"
       ],
       "free_tier": false,
-      "emoji": "🐘",
+      "emoji": "ὁ8",
       "healthcheck": {
         "port": 5432,
         "path": "/",
@@ -261,7 +261,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=n8n+Workflow+Editor",
         "https://placehold.co/800x600/1e293b/38bdf8?text=n8n+Node+Library"
       ],
-      "emoji": "📝",
+      "emoji": "Ὅd",
       "healthcheck": {
         "port": 5678,
         "path": "/",
@@ -334,7 +334,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Pi-hole+Dashboard",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Pi-hole+Query+Log"
       ],
-      "emoji": "🛡️",
+      "emoji": "Ὦ1️",
       "healthcheck": {
         "port": 80,
         "path": "/",
@@ -411,7 +411,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Open+WebUI+Chat",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Open+WebUI+Models"
       ],
-      "emoji": "💬",
+      "emoji": "Ὂc",
       "healthcheck": {
         "port": 8080,
         "path": "/",
@@ -556,7 +556,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=CrewAI+Studio+Agents",
         "https://placehold.co/800x600/1e293b/38bdf8?text=CrewAI+Workflow"
       ],
-      "emoji": "🤖",
+      "emoji": "ᾑ6",
       "healthcheck": {
         "port": 8501,
         "path": "/",
@@ -642,7 +642,7 @@
       "changelog": "Real 10-minute RSS sweep, config persistence, keyless Ollama fallback.",
       "hidden": false,
       "container_name_override": "appvault-hermes-agent",
-      "emoji": "🧠",
+      "emoji": "ᾞ0",
       "healthcheck": {
         "port": 8095,
         "path": "/health",
@@ -699,7 +699,7 @@
       "changelog": "Real per-role LLM crew execution.",
       "hidden": false,
       "container_name_override": "appvault-crewai-runner",
-      "emoji": "🎼",
+      "emoji": "Ἳc",
       "healthcheck": {
         "port": 8000,
         "path": "/health",
@@ -756,7 +756,7 @@
       "changelog": "Agentic OS gateway with env-key passthrough.",
       "hidden": false,
       "container_name_override": "appvault-litellm",
-      "emoji": "🔀",
+      "emoji": "ὐ0",
       "healthcheck": {
         "port": 4000,
         "path": "/health",
@@ -814,7 +814,7 @@
       "changelog": "Real shared-memory MCP server (replaces nonexistent npm package).",
       "hidden": false,
       "container_name_override": "appvault-memory-mcp",
-      "emoji": "🧠",
+      "emoji": "ᾞ0",
       "healthcheck": {
         "port": 3001,
         "path": "/health",
@@ -877,7 +877,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=AdGuard+Home+Dashboard",
         "https://placehold.co/800x600/1e293b/38bdf8?text=AdGuard+Query+Log"
       ],
-      "emoji": "🛡️",
+      "emoji": "Ὦ1️",
       "healthcheck": {
         "port": 3003,
         "path": "/",
@@ -1052,7 +1052,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=WordPress+Editor",
         "https://placehold.co/800x600/1e293b/38bdf8?text=WordPress+Dashboard"
       ],
-      "emoji": "🌐",
+      "emoji": "ἱ0",
       "healthcheck": {
         "port": 80,
         "path": "/",
@@ -1125,7 +1125,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Nextcloud+Files",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Nextcloud+Dashboard"
       ],
-      "emoji": "📁",
+      "emoji": "Ὄ1",
       "deps": [
         {
           "name": "app-nextcloud-db",
@@ -1206,7 +1206,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=OnlyOffice+Document+Editor",
         "https://placehold.co/800x600/1e293b/38bdf8?text=OnlyOffice+Spreadsheet"
       ],
-      "emoji": "📄",
+      "emoji": "Ὄ4",
       "healthcheck": {
         "port": 80,
         "path": "/",
@@ -1290,7 +1290,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=GitLab+Repository",
         "https://placehold.co/800x600/1e293b/38bdf8?text=GitLab+CI%2FCD+Pipelines"
       ],
-      "emoji": "🔧",
+      "emoji": "ὒ7",
       "healthcheck": {
         "port": 80,
         "path": "/",
@@ -1368,7 +1368,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=BookStack+Bookshelf",
         "https://placehold.co/800x600/1e293b/38bdf8?text=BookStack+Page+Editor"
       ],
-      "emoji": "📖",
+      "emoji": "Ὅ6",
       "healthcheck": {
         "port": 80,
         "path": "/",
@@ -1448,7 +1448,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Paperless-ngx+Dashboard",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Paperless-ngx+Documents"
       ],
-      "emoji": "🗂️",
+      "emoji": "὜2️",
       "healthcheck": {
         "port": 8000,
         "path": "/",
@@ -1536,7 +1536,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Jellyfin+Home",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Jellyfin+Library"
       ],
-      "emoji": "🎬",
+      "emoji": "Ἲc",
       "healthcheck": {
         "port": 8096,
         "path": "/",
@@ -1615,7 +1615,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Navidrome+Interface",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Navidrome+Player"
       ],
-      "emoji": "🎵",
+      "emoji": "Ἳ5",
       "healthcheck": {
         "port": 4533,
         "path": "/",
@@ -1696,7 +1696,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Kavita+Library",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Kavita+Reader"
       ],
-      "emoji": "📚",
+      "emoji": "Ὅa",
       "healthcheck": {
         "port": 5000,
         "path": "/",
@@ -1780,7 +1780,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=PhotoPrism+Albums",
         "https://placehold.co/800x600/1e293b/38bdf8?text=PhotoPrism+Search"
       ],
-      "emoji": "🖼️",
+      "emoji": "Ὓc️",
       "healthcheck": {
         "port": 2342,
         "path": "/",
@@ -1856,7 +1856,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Immich+Photos",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Immich+Albums"
       ],
-      "emoji": "📸",
+      "emoji": "὏8",
       "healthcheck": {
         "port": 2283,
         "path": "/",
@@ -1904,7 +1904,7 @@
       "hidden": true,
       "free_tier": false,
       "container_port": 3003,
-      "emoji": "🧠",
+      "emoji": "ᾞ0",
       "healthcheck": {
         "port": 3003,
         "path": "/",
@@ -1992,7 +1992,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=WireGuard+Interface",
         "https://placehold.co/800x600/1e293b/38bdf8?text=WireGuard+Peer+Manager"
       ],
-      "emoji": "🔐",
+      "emoji": "ὑ0",
       "healthcheck": {
         "port": 51820,
         "path": "/",
@@ -2060,7 +2060,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Vaultwarden+Vault",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Vaultwarden+Login"
       ],
-      "emoji": "🔑",
+      "emoji": "ὑ1",
       "healthcheck": {
         "port": 80,
         "path": "/",
@@ -2140,7 +2140,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Nginx+Proxy+Manager",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Nginx+Proxy+Hosts"
       ],
-      "emoji": "🔄",
+      "emoji": "ὐ4",
       "healthcheck": {
         "port": 81,
         "path": "/",
@@ -2222,7 +2222,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Traefik+Dashboard",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Traefik+Routes"
       ],
-      "emoji": "🚦",
+      "emoji": "Ὢ6",
       "healthcheck": {
         "port": 8080,
         "path": "/",
@@ -2294,7 +2294,7 @@
       "repository_url": "https://github.com/louislam/uptime-kuma",
       "changelog": "Uptime Kuma latest with multi-channel alerts and beautiful status pages.",
       "screenshots": [],
-      "emoji": "📊",
+      "emoji": "Ὄa",
       "healthcheck": {
         "port": 3001,
         "path": "/",
@@ -2366,7 +2366,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Portainer+Dashboard",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Portainer+Containers"
       ],
-      "emoji": "🐳",
+      "emoji": "ὃ3",
       "healthcheck": {
         "port": 9000,
         "path": "/",
@@ -2442,7 +2442,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Dozzle+Logs",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Dozzle+Container+View"
       ],
-      "emoji": "📜",
+      "emoji": "Ὅc",
       "healthcheck": {
         "port": 8080,
         "path": "/",
@@ -2523,7 +2523,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=VS+Code+Browser",
         "https://placehold.co/800x600/1e293b/38bdf8?text=VS+Code+Terminal"
       ],
-      "emoji": "💻",
+      "emoji": "Ὃb",
       "healthcheck": {
         "port": 8443,
         "path": "/",
@@ -2604,7 +2604,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Gitea+Repository",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Gitea+Dashboard"
       ],
-      "emoji": "🐙",
+      "emoji": "ὁ9",
       "healthcheck": {
         "port": 3008,
         "path": "/",
@@ -2689,7 +2689,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Stirling+PDF+Tools",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Stirling+PDF+Merge"
       ],
-      "emoji": "📄",
+      "emoji": "Ὄ4",
       "healthcheck": {
         "port": 8080,
         "path": "/",
@@ -2835,7 +2835,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Draw.io+Editor",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Draw.io+Shapes"
       ],
-      "emoji": "📐",
+      "emoji": "Ὅ0",
       "healthcheck": {
         "port": 8080,
         "path": "/",
@@ -2912,7 +2912,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=9Router+Dashboard",
         "https://placehold.co/800x600/1e293b/38bdf8?text=9Router+Providers"
       ],
-      "emoji": "🔀",
+      "emoji": "ὐ0",
       "healthcheck": {
         "port": 20129,
         "path": "/",
@@ -2955,7 +2955,7 @@
       "compose_url": "https://raw.githubusercontent.com/THU-MAIC/OpenMAIC/main/docker-compose.yml",
       "free_tier": true,
       "hidden": true,
-      "emoji": "🤖",
+      "emoji": "ᾑ6",
       "healthcheck": {
         "port": 3014,
         "path": "/",
@@ -3037,7 +3037,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=OpenShip+Dashboard",
         "https://placehold.co/800x600/1e293b/38bdf8?text=OpenShip+Projects"
       ],
-      "emoji": "🚀",
+      "emoji": "Ὠ0",
       "healthcheck": {
         "port": 3001,
         "path": "/",
@@ -3142,50 +3142,6 @@
       "disabled": true
     },
     {
-      "id": "appflowy",
-      "name": "AppFlowy Cloud",
-      "description": "Open-source Notion alternative - collaboration workspace",
-      "image": "",
-      "container_port": 80,
-      "volumes": [],
-      "env": [],
-      "category": "productivity",
-      "min_ram_mb": 2048,
-      "type": "stack",
-      "is_stack": true,
-      "compose_url": "https://raw.githubusercontent.com/AppFlowy-IO/AppFlowy-Cloud/main/docker-compose.yml",
-      "hidden": true,
-      "emoji": "📝",
-      "healthcheck": {
-        "port": 80,
-        "path": "/",
-        "expect": [
-          200,
-          301,
-          302,
-          307,
-          401,
-          403,
-          404
-        ]
-      },
-      "boot_timeout": 180,
-      "min_mem_mb": 1024,
-      "min_disk_gb": 2,
-      "free_tier": false,
-      "education": {
-        "default_login": {
-          "username": "admin",
-          "email": "admin@example.com",
-          "password": "admin"
-        }
-      },
-      "needs_certification": true,
-      "certification_status": "pending",
-      "app_type": "official",
-      "disabled": true
-    },
-    {
       "id": "central-redis",
       "name": "Central Redis",
       "image": "redis:7-alpine",
@@ -3281,7 +3237,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Twenty+CRM+Contacts",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Twenty+CRM+Pipelines"
       ],
-      "emoji": "🤝",
+      "emoji": "ᾑd",
       "healthcheck": {
         "port": 3005,
         "path": "/",
@@ -3342,7 +3298,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=ShieldSign+Sign",
         "https://placehold.co/800x600/1e293b/38bdf8?text=ShieldSign+Documents"
       ],
-      "emoji": "🛡️",
+      "emoji": "Ὦ1️",
       "healthcheck": {
         "port": 3002,
         "path": "/",
@@ -3419,7 +3375,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=AnythingLLM+Chat",
         "https://placehold.co/800x600/1e293b/38bdf8?text=AnythingLLM+Workspaces"
       ],
-      "emoji": "🤖",
+      "emoji": "ᾑ6",
       "healthcheck": {
         "port": 3001,
         "path": "/",
@@ -3494,7 +3450,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=SearXNG+Search",
         "https://placehold.co/800x600/1e293b/38bdf8?text=SearXNG+Preferences"
       ],
-      "emoji": "🔎",
+      "emoji": "ὐe",
       "healthcheck": {
         "port": 8080,
         "path": "/",
@@ -3535,7 +3491,7 @@
       "hidden": true,
       "min_ram_mb": 512,
       "free_tier": false,
-      "emoji": "🍃",
+      "emoji": "ἴ3",
       "healthcheck": {
         "port": 27017,
         "path": "/",
@@ -3615,7 +3571,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Dify+App+Builder",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Dify+Workflow"
       ],
-      "emoji": "🧩",
+      "emoji": "ᾞ9",
       "healthcheck": {
         "port": 80,
         "path": "/",
@@ -3696,7 +3652,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=LibreChat+Chat",
         "https://placehold.co/800x600/1e293b/38bdf8?text=LibreChat+Models"
       ],
-      "emoji": "💬",
+      "emoji": "Ὂc",
       "healthcheck": {
         "port": 3080,
         "path": "/",
@@ -3764,7 +3720,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=ComfyUI+Workflow",
         "https://placehold.co/800x600/1e293b/38bdf8?text=ComfyUI+Gallery"
       ],
-      "emoji": "🎨",
+      "emoji": "Ἲ8",
       "healthcheck": {
         "port": 8188,
         "path": "/",
@@ -3832,7 +3788,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=OpenHands+Agent",
         "https://placehold.co/800x600/1e293b/38bdf8?text=OpenHands+Terminal"
       ],
-      "emoji": "🖐️",
+      "emoji": "Ὑ0️",
       "healthcheck": {
         "port": 3009,
         "path": "/",
@@ -3909,7 +3865,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Khoj+Chat",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Khoj+Knowledge+Base"
       ],
-      "emoji": "🧘",
+      "emoji": "ᾝ8",
       "healthcheck": {
         "port": 42110,
         "path": "/",
@@ -3982,7 +3938,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=WG-Easy+Setup",
         "https://placehold.co/800x600/1e293b/38bdf8?text=WG-Easy+Peers"
       ],
-      "emoji": "🔐",
+      "emoji": "ὑ0",
       "healthcheck": {
         "port": 51821,
         "path": "/",
@@ -4061,7 +4017,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Mattermost+Channels",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Mattermost+Chat"
       ],
-      "emoji": "💬",
+      "emoji": "Ὂc",
       "healthcheck": {
         "port": 8065,
         "path": "/",
@@ -4156,7 +4112,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Baserow+Database",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Baserow+Table"
       ],
-      "emoji": "🗄️",
+      "emoji": "὜4️",
       "healthcheck": {
         "port": 80,
         "path": "/",
@@ -4244,7 +4200,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Umami+Dashboard",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Umami+Websites"
       ],
-      "emoji": "📈",
+      "emoji": "Ὄ8",
       "healthcheck": {
         "port": 3006,
         "path": "/",
@@ -4329,7 +4285,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Ghost+Editor",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Ghost+Admin"
       ],
-      "emoji": "👻",
+      "emoji": "὇b",
       "healthcheck": {
         "port": 2368,
         "path": "/",
@@ -4417,7 +4373,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Directus+Data+Studio",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Directus+Collections"
       ],
-      "emoji": "🗃️",
+      "emoji": "὜3️",
       "healthcheck": {
         "port": 8055,
         "path": "/",
@@ -4499,7 +4455,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Formbricks+Surveys",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Formbricks+Analytics"
       ],
-      "emoji": "📋",
+      "emoji": "Ὄb",
       "healthcheck": {
         "port": 3012,
         "path": "/",
@@ -4574,7 +4530,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Chatwoot+Conversations",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Chatwoot+Dashboard"
       ],
-      "emoji": "💬",
+      "emoji": "Ὂc",
       "healthcheck": {
         "port": 3013,
         "path": "/",
@@ -4735,7 +4691,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Outline+Documents",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Outline+Search"
       ],
-      "emoji": "📘",
+      "emoji": "Ὅ8",
       "healthcheck": {
         "port": 3007,
         "path": "/",
@@ -5023,7 +4979,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Listmonk+Campaigns",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Listmonk+Subscribers"
       ],
-      "emoji": "📧",
+      "emoji": "὎7",
       "deps": [
         {
           "name": "app-listmonk-db",
@@ -5102,7 +5058,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=AFFiNE+Whiteboard",
         "https://placehold.co/800x600/1e293b/38bdf8?text=AFFiNE+Documents"
       ],
-      "emoji": "📝",
+      "emoji": "Ὅd",
       "healthcheck": {
         "port": 3010,
         "path": "/",
@@ -5305,7 +5261,7 @@
       ],
       "website": "https://planka.app/",
       "repository_url": "https://github.com/plankanban/planka",
-      "emoji": "📋",
+      "emoji": "Ὄb",
       "healthcheck": {
         "port": 1337,
         "path": "/",
@@ -5323,7 +5279,8 @@
       },
       "boot_timeout": 120,
       "disabled": true,
-      "app_type": "official"
+      "app_type": "official",
+      "min_mem_mb": 1024
     },
     {
       "id": "buzz",
@@ -5393,7 +5350,7 @@
         "https://placehold.co/800x600/1e293b/38bdf8?text=Buzz+Channel+Agents",
         "https://placehold.co/800x600/1e293b/38bdf8?text=Buzz+Media+Comments"
       ],
-      "emoji": "🐝",
+      "emoji": "ὁd",
       "healthcheck": {
         "port": 80,
         "path": "/",
@@ -5434,7 +5391,7 @@
       "category": "ai-agents",
       "free_tier": false,
       "requires_paid": true,
-      "emoji": "🤖",
+      "emoji": "ᾑ6",
       "image": "ghcr.io/sectutor/appvault-agent:latest",
       "container_port": 8096,
       "compose_url": "https://raw.githubusercontent.com/Sectutor/appvault-agent/main/docker-compose.agentic-windows.yml",
@@ -5468,7 +5425,123 @@
       ],
       "is_stack": true,
       "app_type": "official",
-      "disabled": true
+      "disabled": true,
+      "min_mem_mb": 2048
+    },
+    {
+      "id": "appflowy",
+      "name": "AppFlowy",
+      "description": "Open-source Notion alternative: projects, wikis and docs with AI. Self-hosted workspace server (AppFlowy-Cloud) with a web client, GoTrue auth, real-time collaboration, search, admin console and MinIO file storage. Desktop/mobile clients can connect to it too.",
+      "image": "",
+      "container_port": 8080,
+      "type": "stack",
+      "is_stack": true,
+      "compose_url": "http://appvault-central:8086/static/stacks/appflowy/docker-compose.yml",
+      "volumes": [],
+      "env": [],
+      "category": "productivity",
+      "min_ram_mb": 2048,
+      "education": {
+        "docs_url": "https://docs.appflowy.io/docs/appflowy-cloud",
+        "quick_start": "AppFlowy Cloud is the self-hosted Notion-alternative workspace. The stack starts its own PostgreSQL, Redis, MinIO storage, GoTrue auth, web client and admin console behind one nginx entrypoint on port 8080. After install, open the app and register a new account - the first registered user owns the workspace. Admin console lives at /console.",
+        "default_login": {
+          "username": "admin",
+          "email": "admin@example.com",
+          "password": "appvault-admin"
+        },
+        "setup_steps": [
+          "Open the launch URL in your browser",
+          "Click Sign up and create your account (email + password; no email confirmation needed)",
+          "The first account you create is the deployment owner; invite teammates from inside a workspace",
+          "Admin console for user/workspace management is at <launch-url>/console"
+        ]
+      },
+      "free_tier": true,
+      "github_url": "https://github.com/AppFlowy-IO/AppFlowy-Cloud",
+      "tagline": "AI collaborative workspace - open-source Notion alternative",
+      "long_description": "AppFlowy Cloud is the server behind AppFlowy, the leading open-source Notion alternative (75k+ GitHub stars). This stack self-hosts the full collaborative workspace: PostgreSQL (pgvector), Redis, MinIO object storage, GoTrue authentication, the AppFlowy Cloud API, real-time collaboration worker, semantic/keyword search service, AI service (optional OpenAI key), the AppFlowy Web client, an admin console, all behind a single nginx entrypoint. Works with the AppFlowy desktop and mobile apps via 'custom server', or directly in the browser through AppFlowy Web. AGPL-3.0 core.",
+      "version": "latest",
+      "author": "AppFlowy-IO",
+      "tags": [
+        "notion-alternative",
+        "wiki",
+        "notes",
+        "collaboration",
+        "ai"
+      ],
+      "website": "https://appflowy.io",
+      "docs_url": "https://docs.appflowy.io/docs/appflowy-cloud",
+      "repository_url": "https://github.com/AppFlowy-IO/AppFlowy-Cloud",
+      "emoji": "Ὅd",
+      "healthcheck": {
+        "port": 8080,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401,
+          403,
+          404
+        ]
+      },
+      "boot_timeout": 300,
+      "min_disk_gb": 3,
+      "extra_ports": {},
+      "app_type": "official",
+      "min_mem_mb": 2048
+    },
+    {
+      "id": "complianceos",
+      "name": "ComplianceOS / GRC Suite",
+      "tagline": "Full GRC program: policies, controls, audits, risk management",
+      "description": "Complete governance-risk-compliance platform. Policy library, control mapping, audit trails, risk quantification. Runs on your own infrastructure.",
+      "long_description": "ComplianceOS is a complete governance-risk-compliance platform for SMBs and MSPs. Run your entire compliance program - policy library, control mapping, audit trails, risk quantification and client management - on your own infrastructure.",
+      "category": "security",
+      "publisher": "AppVault (Sectutor)",
+      "author": "Sectutor",
+      "version": "1.0.0",
+      "emoji": "🛡️",
+      "image": "ghcr.io/sectutor/complianceos-self-hosted:dev",
+      "container_port": 3002,
+      "app_type": "official",
+      "market_product": true,
+      "requires_paid": true,
+      "locked": true,
+      "free_tier": false,
+      "min_mem_mb": 1024,
+      "boot_timeout": 300,
+      "env": [],
+      "volumes": [
+        "complianceos-data:/data"
+      ],
+      "deps": [
+        {
+          "name": "complianceos-db",
+          "image": "postgres:15-alpine",
+          "env": [
+            "POSTGRES_USER=complianceos",
+            "POSTGRES_PASSWORD=complianceos_secret",
+            "POSTGRES_DB=complianceos"
+          ],
+          "ports": {}
+        },
+        {
+          "name": "complianceos-redis",
+          "image": "redis:7-alpine",
+          "env": [],
+          "ports": {}
+        }
+      ],
+      "website": "https://grcompliance.com",
+      "docs_url": "",
+      "tags": [
+        "grc",
+        "compliance",
+        "security",
+        "premium"
+      ]
     }
   ]
 }
