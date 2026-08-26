@@ -2353,3 +2353,15 @@ try:
     print("[central] pilot funnel registered (/pilot, /admin/leads)")
 except Exception as _pf_err:
     print(f"[central] pilot funnel registration failed: {_pf_err}")
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# APPVAULT MARKET — in-app sales of proprietary apps (yearly licenses)
+# ─────────────────────────────────────────────────────────────────────────
+try:
+    from market import register_market
+    register_market(app, get_db, require_admin, _audit,
+                    HTMLResponse, RedirectResponse, Request, None, DOMAIN)
+    print("[central] market registered (/api/market, /admin/market)")
+except Exception as _mkt_err:
+    print(f"[central] market registration failed: {_mkt_err}")
