@@ -5542,6 +5542,70 @@
         "security",
         "premium"
       ]
+    },
+    {
+      "id": "writerstudio",
+      "name": "WriterStudio AI",
+      "tagline": "AI book writing studio - voice-matched chapters, covers, KDP-ready exports",
+      "description": "Write and publish books with AI. Voice-matched chapters, cover wrap designer, KDP-ready print PDF/ePub exports and the full KDP metadata suite.",
+      "long_description": "WriterStudio AI turns an idea into a publish-ready book. Plan with the AI agent, generate voice-matched chapters with your own API keys, then use the publishing engine: print-ready interior PDF, ePub, paperback cover wrap with spine math, and the full KDP metadata suite (keywords, categories, blurb, positioning). Your manuscripts and API keys stay on your own machine.",
+      "category": "ai",
+      "publisher": "AppVault (Sectutor)",
+      "author": "Sectutor",
+      "version": "1.0.0",
+      "emoji": "✍️",
+      "image": "ghcr.io/sectutor/writerstudio-self-hosted:latest",
+      "container_port": 3000,
+      "app_type": "official",
+      "market_product": true,
+      "requires_paid": true,
+      "locked": true,
+      "free_tier": false,
+      "min_mem_mb": 2048,
+      "boot_timeout": 300,
+      "env": [
+        "NODE_ENV=production",
+        "CLOUD_MODE=false",
+        "SELF_HOSTED=true",
+        "PGSSL_DISABLE=1",
+        "DATABASE_URL=postgres://writerstudio:writerstudio_secret@app-writerstudio-db:5432/writerstudio"
+      ],
+      "volumes": [
+        "writerstudio-data:/app/data"
+      ],
+      "deps": [
+        {
+          "name": "writerstudio-db",
+          "image": "postgres:15-alpine",
+          "env": [
+            "POSTGRES_USER=writerstudio",
+            "POSTGRES_PASSWORD=writerstudio_secret",
+            "POSTGRES_DB=writerstudio"
+          ],
+          "ports": {}
+        }
+      ],
+      "healthcheck": {
+        "port": 3000,
+        "path": "/",
+        "expect": [
+          200,
+          301,
+          302,
+          307,
+          401
+        ]
+      },
+      "website": "https://writerstudioai.com",
+      "docs_url": "https://writerstudioai.com",
+      "tags": [
+        "ai",
+        "writing",
+        "kdp",
+        "books",
+        "publishing",
+        "premium"
+      ]
     }
   ]
 }

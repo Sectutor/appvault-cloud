@@ -124,13 +124,14 @@ leaves your network. Includes all premium modules and 12 months of updates.',
               0),
              ('writerstudio', 'WriterStudioAI',
               'AI book writing studio - voice-matched chapters, covers, KDP-ready exports.',
-              'WriterStudioAI is a desktop AI writing studio for authors. Draft books with
-voice-matched chapters, generate covers, export KDP-ready files. Desktop app -
-your manuscripts stay on your machine.',
+              'WriterStudioAI turns an idea into a publish-ready book. Plan with the AI agent,
+generate voice-matched chapters with your own API keys, then use the publishing engine:
+print-ready PDF, ePub, cover wrap with spine math and the full KDP metadata suite.
+Your manuscripts and API keys stay on your own infrastructure.',
               'ai', 'AppVault (Sectutor)',
-              9900, 29400, '✍️', 0, 0, 0,
-              '["Voice-matched AI chapters","Cover generation","KDP-ready exports","Desktop app - offline first"]',
-              1);
+              9900, 29400, '✍️', 1, 0, 0,
+              '["Voice-matched AI chapter generation (BYOK)","Print-ready KDP PDF + ePub exports","Paperback cover wrap with spine math","KDP metadata suite: keywords, categories, blurb","Runs fully offline on your hardware","12 months of updates included"]',
+              0);
             """)
             db.commit()
         db.close()
@@ -270,6 +271,33 @@ your manuscripts stay on your machine.',
                             "key": row["key"]})
         return _JR({"licensed": False})
 
+    # ── WriterStudioAI bridge ────────────────────────────────────────────
+    async def _issue_writerstudio_license(email: str, order_id: str):
+        """Call WriterStudioAI's webhook to issue + email its offline Ed25519 license.
+
+        Yearly Market license -> 365-day app token the buyer activates in the
+        app (Settings -> License). Failures are logged only; the Market license
+        itself was already activated by the caller.
+        """
+        url = _os.environ.get("WRITERSTUDIO_WEBHOOK_URL", "")
+        secret = _os.environ.get("APPVAULT_WEBHOOK_SECRET", "")
+        if not email or not url or not secret:
+            return
+        import hmac as _hmac
+        import hashlib as _hashlib
+        body = _json.dumps({"app": "aiwriter", "email": email, "tier": "market_annual",
+                            "plan": "annual", "expDays": 365, "order_id": order_id})
+        sig = _hmac.new(secret.encode(), body.encode(), _hashlib.sha256).hexdigest()
+        try:
+            import httpx
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(url, content=body.encode(),
+                                         headers={"Content-Type": "application/json", "x-signature": sig},
+                                         timeout=15)
+                _audit("market.writerstudio", f"{email} status={resp.status_code}")
+        except Exception as e:
+            _audit("market.writerstudio.error", f"{email} {e}")
+
     # ── Stripe webhook (shared endpoint pattern from main.py; separate kind) ──
     @app.post("/api/market/webhook")
     async def market_webhook(request: Request):
@@ -307,6 +335,18 @@ your manuscripts stay on your machine.',
             db.commit()
             db.close()
             _audit("market.purchase", f"activated {key[:14]}... {meta.get('app_id')}")
+
+            # WriterStudioAI: also issue the app-internal offline license key
+            if meta.get("app_id") == "writerstudio":
+                row_email = ""
+                try:
+                    db = get_db()
+                    r = db.execute("SELECT email FROM app_licenses WHERE key=?", (key,)).fetchone()
+                    db.close()
+                    row_email = r["email"] if r else ""
+                except Exception:
+                    pass
+                await _issue_writerstudio_license(row_email or email, data.get("id", ""))
         elif etype == "charge.refunded":
             # Refund -> revoke the license (30-day money-back enforcement)
             payment_intent = data.get("payment_intent") or ""
