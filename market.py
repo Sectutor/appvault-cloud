@@ -134,7 +134,26 @@ Your manuscripts and API keys stay on your own infrastructure.',
               0);
             """)
             db.commit()
-        db.close()
+        # One-time data migration: flip the launch placeholder row for
+        # writerstudio to live now that the installable app + license bridge
+        # exist. Keyed on the old placeholder description so a deliberate
+        # later coming_soon=1 (with updated copy) is never overridden.
+        try:
+            db = get_db()
+            db.execute(
+                """UPDATE market_products
+                   SET coming_soon=0, deploy_desktop=1,
+                       description='WriterStudioAI turns an idea into a publish-ready book. Plan with the AI agent,
+generate voice-matched chapters with your own API keys, then use the publishing engine:
+print-ready PDF, ePub, cover wrap with spine math and the full KDP metadata suite.
+Your manuscripts and API keys stay on your own infrastructure.',
+                       features='["Voice-matched AI chapter generation (BYOK)","Print-ready KDP PDF + ePub exports","Paperback cover wrap with spine math","KDP metadata suite: keywords, categories, blurb","Runs fully offline on your hardware","12 months of updates included"]'
+                   WHERE app_id='writerstudio' AND coming_soon=1
+                     AND description LIKE 'WriterStudioAI is a desktop AI writing studio%'""")
+            db.commit()
+            db.close()
+        except Exception as _mig_err:
+            print(f"[market] writerstudio migration skipped: {_mig_err}")
 
     _seed_defaults()
 
