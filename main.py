@@ -237,15 +237,17 @@ def _load_or_create_session_secret() -> str:
 
 SESSION_SECRET = _load_or_create_session_secret()
 # A07 — cookie hardening. SameSite=lax stops CSRF on cross-site POSTs;
-# httponly keeps the cookie out of JS. ``secure`` follows the request
-# scheme so it works behind a TLS-terminating reverse proxy.
+# the session cookie is always HttpOnly in starlette; https_only adds the
+# Secure flag (we sit behind the TLS-terminating proxy).
 app.add_middleware(
     SessionMiddleware,
     secret_key=SESSION_SECRET,
     max_age=60*60*24*30,
     same_site="lax",
-    httponly=True,
-    secure=False,  # set True once the operator fronts Central with TLS
+    # starlette has no httponly/secure kwargs (cookie is always HttpOnly);
+    # https_only controls the Secure flag — safe to enable behind the
+    # TLS-terminating proxy that fronts this deployment.
+    https_only=True,
 )
 
 if not DISABLE_ADMIN and ADMIN_PASSWORD == "appvault-admin":
