@@ -43,3 +43,5 @@ DOMAIN=appvault.airepoindex.com
 | POST | /api/checkout | Create Stripe Checkout session |
 | POST | /api/webhook | Stripe payment webhook |
 | GET | /api/status/{id} | Check provisioning status |
+
+<!-- deploy marker: persistent volume wiring 20260903-1443 -->
