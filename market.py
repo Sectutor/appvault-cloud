@@ -111,6 +111,11 @@ def register_market(app, get_db, require_admin, _audit, HTMLResponse,
     import uuid as _uuid
     from fastapi.responses import JSONResponse as _JR
 
+    def _err(payload, status):
+        """FastAPI-compatible error response (Flask-style (body, status) tuples
+        are NOT supported by FastAPI and would return 200 with a broken body)."""
+        return _JR(payload, status_code=status)
+
     STRIPE_SECRET_KEY = _os.environ.get("STRIPE_SECRET_KEY", "")
     STRIPE_WEBHOOK_SECRET = _os.environ.get("STRIPE_WEBHOOK_SECRET", "")
 
@@ -266,7 +271,7 @@ Your manuscripts and API keys stay on your own infrastructure.',
                        (app_id,)).fetchone()
         db.close()
         if not r:
-            return _JR({"error": "not found"}), 404
+            return _err({"error": "not found"}, 404)
         d = dict(r)
         for f in ("features", "screenshots", "faq"):
             d[f] = _json.loads(d.get(f) or "[]")
@@ -280,8 +285,8 @@ Your manuscripts and API keys stay on your own infrastructure.',
         include_secure = bool(body.get("secure", False))
 
         if not STRIPE_SECRET_KEY:
-            return _JR({"error": "checkout-not-configured",
-                        "detail": "Stripe is not configured on this instance"}), 503
+            return _err({"error": "checkout-not-configured",
+                         "detail": "Stripe is not configured on this instance"}, 503)
 
         import stripe
         stripe.api_key = STRIPE_SECRET_KEY
@@ -292,10 +297,10 @@ Your manuscripts and API keys stay on your own infrastructure.',
             (app_id,)).fetchone()
         if not prod:
             db.close()
-            return _JR({"error": "not found"}), 404
+            return _err({"error": "not found"}, 404)
         if prod["coming_soon"]:
             db.close()
-            return _JR({"error": "coming-soon"}), 400
+            return _err({"error": "coming-soon"}, 400)
 
         total = prod["price_yearly_cents"]
         lines = [{
@@ -343,6 +348,7 @@ Your manuscripts and API keys stay on your own infrastructure.',
                     "kind": "market_purchase",
                     "app_id": app_id,
                     "license_key": key,
+                    "order_id": key,  # our order reference = the AVM license key
                     "agent_id": agent_id,
                     "email": email,
                     "secure": "1" if include_secure else "0",
@@ -350,23 +356,28 @@ Your manuscripts and API keys stay on your own infrastructure.',
             )
         except Exception as e:
             print(f"[market] checkout failed: {e}", flush=True)
-            return _JR({"error": "checkout-failed", "detail": str(e)[:200]}), 500
+            return _err({"error": "checkout-failed", "detail": str(e)[:200]}, 500)
 
         _audit("market.checkout", f"{app_id} key={key[:14]}...")
         return _JR({"url": session.url, "license_key": key})
 
     @app.get("/api/market/{app_id}/entitlement")
-    async def market_entitlement(app_id: str, agent_id: str = ""):
+    async def market_entitlement(app_id: str, agent_id: str = "", key: str = ""):
         """Does an agent own a valid license for this app?
-        Also accepts a license key directly via ?key="""
+        Lookup by agent_id (default) or by license key directly via ?key="""
         db = get_db()
-        key = None
-        # resolve via query param handled by FastAPI below
-        rows = db.execute(
-            """SELECT key, status, expires_at, refunded, app_token FROM app_licenses
-               WHERE app_id=? AND (?='' OR agent_id=?)
-               ORDER BY created_at DESC""",
-            (app_id, agent_id, agent_id)).fetchall()
+        key = (key or "").strip()
+        if key:
+            rows = db.execute(
+                """SELECT key, status, expires_at, refunded, app_token FROM app_licenses
+                   WHERE app_id=? AND key=?""",
+                (app_id, key)).fetchall()
+        else:
+            rows = db.execute(
+                """SELECT key, status, expires_at, refunded, app_token FROM app_licenses
+                   WHERE app_id=? AND (?='' OR agent_id=?)
+                   ORDER BY created_at DESC""",
+                (app_id, agent_id, agent_id)).fetchall()
         db.close()
         now = _time.strftime("%Y-%m-%d")
         for row in rows:
@@ -418,7 +429,7 @@ Your manuscripts and API keys stay on your own infrastructure.',
         # active license for any email + AVM-key. Match main.py's pattern.
         if not STRIPE_WEBHOOK_SECRET:
             print("[market] Rejected webhook: STRIPE_WEBHOOK_SECRET not configured", flush=True)
-            return _JR({"error": "webhook not configured"}), 503
+            return _err({"error": "webhook not configured"}, 503)
 
         payload = await request.body()
         sig = request.headers.get("stripe-signature", "")
@@ -427,7 +438,7 @@ Your manuscripts and API keys stay on your own infrastructure.',
         try:
             event = stripe.Webhook.construct_event(payload, sig, STRIPE_WEBHOOK_SECRET)
         except Exception as e:
-            return _JR({"error": str(e)}), 400
+            return _err({"error": str(e)}, 400)
 
         etype = event.get("type", "") if isinstance(event, dict) else event.type
         data = event.get("data", {}).get("object", {}) if isinstance(event, dict) else event.data.object
@@ -487,17 +498,22 @@ Your manuscripts and API keys stay on your own infrastructure.',
             # agent also injects it at install time). Non-fatal on failure.
             if app_token and email:
                 try:
+                    db = get_db()
+                    pr = db.execute("SELECT name FROM market_products WHERE app_id=?",
+                                    (meta.get("app_id", ""),)).fetchone()
+                    db.close()
+                    prod_name = (pr["name"] if pr else None) or meta.get("app_id") or "AppVault Market app"
                     from main import send_email  # runtime import avoids cycle
                     send_email(
                         email,
-                        "Your WriterStudioAI License Key — Activate Now",
+                        f"Your {prod_name} License Key — Activate Now",
                         f"""<div style="font-family:system-ui,sans-serif;max-width:600px;margin:0 auto;padding:32px">
-  <h2>Welcome to WriterStudioAI! 🎉</h2>
-  <p>Thank you for your purchase (AppVault order <code>{_re.escape(meta.get('order_id', '')) or 'n/a'}</code>).
+  <h2>Welcome to {_re.escape(prod_name)}! 🎉</h2>
+  <p>Thank you for your purchase (AppVault order <code>{_re.escape(key)}</code>).
      Your <strong>1-Year Market License</strong> is below.</p>
   <h3>How to Activate</h3>
   <ol>
-    <li>Open WriterStudioAI in your AppVault dashboard (it activates automatically when installed through AppVault).</li>
+    <li>Open {_re.escape(prod_name)} in your AppVault dashboard (it activates automatically when installed through AppVault).</li>
     <li>Otherwise: <strong>Settings → License</strong> → paste your key → <strong>Activate</strong>.</li>
   </ol>
   <div style="background:#f5f5f5;border-radius:8px;padding:16px;margin:24px 0">

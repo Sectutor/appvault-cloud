@@ -11,7 +11,11 @@
 #    • Optional Tailscale join (private access mesh)
 #    • Deny-all firewall applied LAST (lockout-proof ordering)
 #
-#  Usage (as root):
+#  Usage (as root — two-step form; the store UI is embedded in the script):
+#    curl -fsSL https://raw.githubusercontent.com/Sectutor/appvault-agent/main/install.sh -o /root/install.sh
+#    bash /root/install.sh
+#
+#  One-liner also works (store UI is then downloaded instead of embedded):
 #    bash -c "$(curl -fsSL https://raw.githubusercontent.com/Sectutor/appvault-agent/main/install.sh)"
 #
 #  No license needed — anyone can install. Free plan: 10 starter apps free,
@@ -64,11 +68,11 @@ detect_public_url() {
 # Parse flags
 while [ $# -gt 0 ]; do
   case "$1" in
-    --ts-authkey)   TS_AUTH_KEY="${2:-}"; shift 2 ;;
-    --cf-token|--cf-tunnel-token) CF_TUNNEL_TOKEN="${2:-}"; shift 2 ;;
-    --agent-name)   AGENT_NAME="${2:-}"; shift 2 ;;
-    --public-url)   PUBLIC_URL="${2:-}"; shift 2 ;;
-    --central-url)  CENTRAL_URL="${2:-}"; shift 2 ;;
+    --ts-authkey)   TS_AUTH_KEY="${2:-}"; [ $# -ge 2 ] && shift 2 || shift ;;
+    --cf-token|--cf-tunnel-token) CF_TUNNEL_TOKEN="${2:-}"; [ $# -ge 2 ] && shift 2 || shift ;;
+    --agent-name)   AGENT_NAME="${2:-}"; [ $# -ge 2 ] && shift 2 || shift ;;
+    --public-url)   PUBLIC_URL="${2:-}"; [ $# -ge 2 ] && shift 2 || shift ;;
+    --central-url)  CENTRAL_URL="${2:-}"; [ $# -ge 2 ] && shift 2 || shift ;;
     *) echo "[install] Unknown arg: $1"; exit 2 ;;
   esac
 done
@@ -111,9 +115,29 @@ systemctl enable --now docker >/dev/null 2>&1 || true
 log "Docker: $(docker --version)"
 
 # ═══════════ 3. Secrets + .env ═══════════
-API_KEY="$(head -c 40 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 40)"
-SESSION_SECRET="$(head -c 40 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 40)"
-ADMIN_PASSWORD="$(head -c 16 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 16)"
+# Idempotent re-runs: if /opt/appvault/.env already exists, REUSE its secrets.
+# Rotating them on re-run would orphan persisted DB volumes (MariaDB/Postgres
+# keep their first-init password) and break previously-issued UI/API keys.
+if [ -f "$INSTALL_DIR/.env" ]; then
+  while IFS='=' read -r _ek _ev; do
+    case "$_ek" in
+      API_KEY|SESSION_SECRET|ADMIN_PASSWORD|MARIADB_ROOT_PASSWORD|POSTGRES_PASSWORD|LITELLM_MASTER_KEY|PORTAINER_ADMIN_PASS)
+        [ -n "$_ev" ] && printf -v "$_ek" '%s' "$_ev"
+        ;;
+    esac
+  done < "$INSTALL_DIR/.env"
+  log "Reusing existing secrets from $INSTALL_DIR/.env (re-run detected)"
+fi
+API_KEY="${API_KEY:-$(head -c 40 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 40)}"
+SESSION_SECRET="${SESSION_SECRET:-$(head -c 48 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 48)}"
+ADMIN_PASSWORD="${ADMIN_PASSWORD:-$(head -c 16 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 16)}"
+# A07 — every database / internal service gets a per-install random
+# password (32+ chars). The literal `appvault_root_secret` from older
+# versions is gone; passwords flow in via env_file / env interpolation.
+MARIADB_ROOT_PASSWORD="${MARIADB_ROOT_PASSWORD:-$(head -c 48 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 48)}"
+POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-$(head -c 48 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 48)}"
+LITELLM_MASTER_KEY="${LITELLM_MASTER_KEY:-$(head -c 48 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 48)}"
+PORTAINER_ADMIN_PASS="${PORTAINER_ADMIN_PASS:-$(head -c 24 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 24)}"
 [ -n "$AGENT_NAME" ] || AGENT_NAME="appvault-$(hostname -s | tr '[:upper:]' '[:lower:]')"
 [ -n "$PUBLIC_URL" ] || PUBLIC_URL="$(detect_public_url)"
 mkdir -p "$INSTALL_DIR" "$DATA_DIR"
@@ -125,6 +149,10 @@ ADMIN_PASSWORD=$ADMIN_PASSWORD
 SESSION_SECRET=$SESSION_SECRET
 AGENT_NAME=$AGENT_NAME
 API_KEY=$API_KEY
+MARIADB_ROOT_PASSWORD=$MARIADB_ROOT_PASSWORD
+POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+LITELLM_MASTER_KEY=$LITELLM_MASTER_KEY
+PORTAINER_ADMIN_PASS=$PORTAINER_ADMIN_PASS
 CENTRAL_URL=$CENTRAL_URL
 CENTRAL_IMAGE=$CENTRAL_IMAGE
 AGENT_IMAGE=$AGENT_IMAGE
@@ -140,7 +168,7 @@ NETDATA_PORT=$NETDATA_PORT
 MONITORING_ENABLED=1
 EOF
 chmod 600 "$INSTALL_DIR/.env"
-log "Secrets generated — admin/pw + API key saved in $INSTALL_DIR/.env"
+log "Secrets generated — admin/pw + API key + DB passwords saved in $INSTALL_DIR/.env"
 log "PUBLIC_URL=$PUBLIC_URL"
 
 # ═══════════ 4. Network + TLS cert ═══════════
@@ -156,26 +184,36 @@ if [ ! -f "$INSTALL_DIR/certs/cert.pem" ]; then
   log "TLS cert generated"
 fi
 
-# ═══════════ 5. Store index (with Manage tab) ═══════════
-# The store UI (index.html with the "Manage" tab that loads /api/monitoring) is
-# embedded at the end of this script (base64) so the one-liner is self-contained.
+# ═══════════ 5. Store index (full dashboard, with offline fallback) ═══════════
+# Primary: download the full dashboard build (store + Market tab + Manage tab)
+# from the agent repo — the same source the Windows installer uses, so Linux
+# and Windows installs serve the same UI. Fallbacks: the base64 blob embedded
+# at the end of this script (offline installs / GitHub outage), then the store
+# image's baked-in UI (bind mount skipped entirely).
 mkdir -p "$INSTALL_DIR/appvault-heimdall"
-# Find script source path (handles curl | bash piped execution gracefully)
-SCRIPT_SRC="$0"
-[ -f "$SCRIPT_SRC" ] || SCRIPT_SRC="${BASH_SOURCE[0]:-}"
-B64_POS=""
-if [ -f "$SCRIPT_SRC" ]; then
-  B64_POS=$(grep -n '__APPVAULT_INDEX_B64__' "$SCRIPT_SRC" 2>/dev/null | tail -1 | cut -d: -f1)
+STORE_UI_URL="https://raw.githubusercontent.com/Sectutor/appvault-agent/main/dashboard/index.html"
+if curl -fsSL -m 120 "$STORE_UI_URL" -o "$INSTALL_DIR/appvault-heimdall/index.html" 2>/dev/null \
+   && [ -s "$INSTALL_DIR/appvault-heimdall/index.html" ]; then
+  log "Store UI downloaded (full dashboard build)"
 fi
-if [ -n "$B64_POS" ] && [ -f "$SCRIPT_SRC" ]; then
-  # decode the base64 index.html from the __EMBEDDED_B64__ block into the store file
-  awk -v start="$B64_POS" 'NR>start && /__END_APPVAULT_INDEX_B64__/{exit} NR>start' "$SCRIPT_SRC" \
-    | tr -d ' \n' | base64 -d > "$INSTALL_DIR/appvault-heimdall/index.html" 2>/dev/null \
-    || log "WARN: embedded store UI decode failed"
-  [ -s "$INSTALL_DIR/appvault-heimdall/index.html" ] && log "Store UI written (embedded, with Manage tab)" \
-    || log "WARN: store index missing; monitoring Manage tab may be unavailable"
-else
-  log "WARN: no embedded store UI marker found in $SCRIPT_SRC; Manage tab may be unavailable"
+if [ ! -s "$INSTALL_DIR/appvault-heimdall/index.html" ]; then
+  # Embedded fallback: decode the base64 index.html from the marker block.
+  # NOTE: under `bash -c "$(curl ...)"` there is no script file on disk, so
+  # this may find nothing — the download above already handled that case.
+  SCRIPT_SRC="$0"
+  [ -f "$SCRIPT_SRC" ] || SCRIPT_SRC="${BASH_SOURCE[0]:-}"
+  B64_POS=""
+  if [ -f "$SCRIPT_SRC" ]; then
+    B64_POS=$(grep -n '__APPVAULT_INDEX_B64__' "$SCRIPT_SRC" 2>/dev/null | tail -1 | cut -d: -f1)
+  fi
+  if [ -n "$B64_POS" ] && [ -f "$SCRIPT_SRC" ]; then
+    awk -v start="$B64_POS" 'NR>start && /__END_APPVAULT_INDEX_B64__/{exit} NR>start' "$SCRIPT_SRC" \
+      | tr -d ' \n' | base64 -d > "$INSTALL_DIR/appvault-heimdall/index.html" 2>/dev/null \
+      || log "WARN: embedded store UI decode failed"
+    [ -s "$INSTALL_DIR/appvault-heimdall/index.html" ] && log "Store UI written (embedded fallback, with Manage tab)"
+  else
+    log "WARN: no store UI obtained — the store will serve its baked-in UI"
+  fi
 fi
 
 # ═══════════ 6. Caddy configuration ═══════════
@@ -192,11 +230,11 @@ import /etc/caddy/caddy.d/monitoring.conf
 	}
 
 	handle_path /dashboard* {
-		reverse_proxy heimdall:80
+		reverse_proxy store:80
 	}
 
 	handle {
-		reverse_proxy heimdall:80
+		reverse_proxy store:80
 	}
 }
 CADDY
@@ -269,8 +307,12 @@ services:
     restart: unless-stopped
     volumes:
       - central-mariadb-data:/var/lib/mysql
+    # A07 — root password is generated at install time and stored in
+    # $INSTALL_DIR/.env (chmod 600). The literal `appvault_root_secret`
+    # from older installs has been removed.
+    env_file: [.env]
     environment:
-      - MYSQL_ROOT_PASSWORD=appvault_root_secret
+      - MYSQL_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
     networks: [appvault-net]
 
   central-postgres:
@@ -279,8 +321,9 @@ services:
     restart: unless-stopped
     volumes:
       - central-postgres-data:/var/lib/postgresql/data
+    env_file: [.env]
     environment:
-      - POSTGRES_PASSWORD=appvault_root_secret
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     networks: [appvault-net]
 
   central-redis:
@@ -370,6 +413,13 @@ networks:
   appvault-net:
     driver: bridge
 YML
+# If no store UI file was produced (embedded decode + download both failed),
+# drop the bind mount — otherwise Docker would create a DIRECTORY over the
+# store image's baked-in index.html and the store would 404.
+if [ ! -s "$INSTALL_DIR/appvault-heimdall/index.html" ]; then
+  sed -i '\|./appvault-heimdall/index.html|d' "$INSTALL_DIR/docker-compose.yml"
+  log "NOTE: store UI file absent — serving the store image's built-in UI"
+fi
 log "Compose written (Caddy HTTPS + monitoring)"
 
 # ═══════════ 8. Tailscale (optional) — BEFORE lockdown ═══════════
@@ -506,8 +556,28 @@ TSEOF
 chmod +x "$INSTALL_DIR/tailscale-onboard.sh"
 log "Tailscale onboarding helper written to $INSTALL_DIR/tailscale-onboard.sh"
 
-# ═══════════ 13. Setup Watchdog Cron ═══════════
+# ═══════════ 13. Ops kit + Setup Watchdog Cron ═══════════
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+OPS_RAW_BASE="https://raw.githubusercontent.com/Sectutor/appvault-agent/main"
+# appvault_ops.sh powers the dashboard's Ops Kit buttons (backup / safe update
+# with rollback / restore). Prefer a copy next to this installer; for piped
+# one-liner installs, download it. The agent mounts /opt/appvault so the
+# /api/ops/* endpoints find the script here.
+if [ -f "$SCRIPT_DIR/appvault_ops.sh" ]; then
+  cp "$SCRIPT_DIR/appvault_ops.sh" "$INSTALL_DIR/appvault_ops.sh"
+elif [ ! -f "$INSTALL_DIR/appvault_ops.sh" ]; then
+  curl -fsSL -m 30 "$OPS_RAW_BASE/appvault_ops.sh" -o "$INSTALL_DIR/appvault_ops.sh" 2>/dev/null \
+    || log "WARN: could not fetch appvault_ops.sh — Ops Kit buttons will show setup instructions"
+fi
+if [ -f "$INSTALL_DIR/appvault_ops.sh" ]; then
+  chmod +x "$INSTALL_DIR/appvault_ops.sh"
+  log "Ops kit installed: $INSTALL_DIR/appvault_ops.sh (backup / safe update / restore)"
+fi
+# Self-heal watchdog (optional; registered on cron only when present locally)
+if [ -f "$SCRIPT_DIR/selfheal_watchdog.sh" ]; then
+  cp "$SCRIPT_DIR/selfheal_watchdog.sh" "$INSTALL_DIR/selfheal_watchdog.sh"
+  chmod +x "$INSTALL_DIR/selfheal_watchdog.sh"
+fi
 if [ -f "$SCRIPT_DIR/watchdog.sh" ]; then
   cp "$SCRIPT_DIR/watchdog.sh" "$INSTALL_DIR/watchdog.sh"
   chmod +x "$INSTALL_DIR/watchdog.sh"
@@ -519,7 +589,7 @@ CRON
 fi
 
 # ═══════════ 14. Success screen (credentials printed once) ═══════════
-ACCESS="https://127.0.0.1:443"
+ACCESS="$PUBLIC_URL"
 [ -n "$TS_IP" ] && ACCESS="https://$TS_IP"
 cat <<EOF | tee -a "$LOG"
 
