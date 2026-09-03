@@ -22,6 +22,85 @@ Admin:
   GET/POST /admin/market           — manage products
 """
 
+# ─── App license token signing (Ed25519 JWT, WriterStudio-compatible) ─────
+# These helpers live at module level (outside register_market) so they can be
+# unit-tested and reused without importing FastAPI. The token format MUST stay
+# byte-compatible with the app's verifier (src/lib/server/licensing.ts):
+#   header   {"typ":"JWT","alg":"EdDSA"}          (compact JSON, typ first)
+#   payload  claims JSON with keys SORTED alphabetically (stableJson)
+#   sig      Ed25519 over the ASCII "h.p", base64url, no padding
+
+
+def normalize_private_key_pem(raw):
+    """Tolerant PEM normalizer for LICENSE_PRIVATE_KEY_PEM env values that
+    Docker UIs / CI flatten or escape. Returns a clean PKCS8 PEM or None."""
+    import base64 as _b64
+    import re as _re
+
+    s = (raw or "").strip()
+    if not s:
+        return None
+    if s.startswith('"') and s.endswith('"'):
+        s = s[1:-1].strip()
+    if "\\n" in s:
+        s = s.replace("\\n", "\n")
+    if "\n" not in s and "BEGIN PRIVATE KEY" in s:
+        body = _re.sub(r"[\s]+", "", s)
+        body = (body.replace("-----BEGINPRIVATEKEY-----", "")
+                    .replace("-----ENDPRIVATEKEY-----", "")
+                    .replace("-----BEGIN PRIVATE KEY-----", "")
+                    .replace("-----END PRIVATE KEY-----", ""))
+        if not body or not _re.fullmatch(r"[A-Za-z0-9+/=]+", body):
+            return None
+        s = "-----BEGIN PRIVATE KEY-----\n" + "\n".join(
+            body[i:i + 64] for i in range(0, len(body), 64)
+        ) + "\n-----END PRIVATE KEY-----"
+    return s if "\n" in s else None
+
+
+def sign_app_license_token(private_key_pem, email, ent, plan="annual", days=365):
+    """Sign an offline Ed25519 JWT license accepted by WriterStudio's
+    /api/license activation. Returns the token string or None on failure."""
+    import json as _json
+    import time as _time
+    import base64 as _b64
+
+    pem = normalize_private_key_pem(private_key_pem)
+    if not pem:
+        return None
+    try:
+        from cryptography.hazmat.primitives.asymmetric import ed25519
+        from cryptography.hazmat.primitives import serialization
+
+        key = serialization.load_pem_private_key(pem.encode(), password=None)
+        if not isinstance(key, ed25519.Ed25519PrivateKey):
+            return None
+
+        def _b64url(data: bytes) -> str:
+            return _b64.urlsafe_b64encode(data).decode().rstrip("=")
+
+        now = int(_time.time())
+        claims = {"v": 1, "sub": email, "plan": plan, "ent": ent, "iat": now}
+        if plan in ("annual", "trial"):
+            claims["exp"] = now + int(days) * 86400
+        header = _json.dumps({"typ": "JWT", "alg": "EdDSA"},
+                             separators=(",", ":"), ensure_ascii=False)
+        payload = _json.dumps({k: claims[k] for k in sorted(claims)},
+                              separators=(",", ":"), ensure_ascii=False)
+        h = _b64url(header.encode())
+        p = _b64url(payload.encode())
+        sig = key.sign(f"{h}.{p}".encode())
+        return f"{h}.{p}.{_b64url(sig)}"
+    except Exception as e:
+        print(f"[market] license signing failed: {e}", flush=True)
+        return None
+
+
+# Market purchase → app entitlements. Mirrors the app's TIER_MAP
+# ("market_annual"): starter features + BYOK for the yearly market license.
+MARKET_APP_ENTITLEMENTS = ["starter", "byok"]
+MARKET_LICENSE_DAYS = 365
+
 
 def register_market(app, get_db, require_admin, _audit, HTMLResponse,
                     RedirectResponse, Request, jsonify, DOMAIN):
@@ -71,9 +150,15 @@ def register_market(app, get_db, require_admin, _audit, HTMLResponse,
                 stripe_session_id TEXT,
                 stripe_payment_intent TEXT DEFAULT '',
                 refunded INTEGER DEFAULT 0,
+                app_token TEXT DEFAULT '',
                 created_at TEXT DEFAULT (datetime('now'))
             );
             """)
+            # Existing DBs (created before app_token) need the column added.
+            try:
+                db.execute("ALTER TABLE app_licenses ADD COLUMN app_token TEXT DEFAULT ''")
+            except Exception:
+                pass  # column already exists
             db.commit()
             db.close()
         except Exception as e:
@@ -278,7 +363,7 @@ Your manuscripts and API keys stay on your own infrastructure.',
         key = None
         # resolve via query param handled by FastAPI below
         rows = db.execute(
-            """SELECT key, status, expires_at, refunded FROM app_licenses
+            """SELECT key, status, expires_at, refunded, app_token FROM app_licenses
                WHERE app_id=? AND (?='' OR agent_id=?)
                ORDER BY created_at DESC""",
             (app_id, agent_id, agent_id)).fetchall()
@@ -286,8 +371,16 @@ Your manuscripts and API keys stay on your own infrastructure.',
         now = _time.strftime("%Y-%m-%d")
         for row in rows:
             if row["status"] == "active" and not row["refunded"] and row["expires_at"] >= now:
-                return _JR({"licensed": True, "expires_at": row["expires_at"],
-                            "key": row["key"]})
+                resp = {"licensed": True, "expires_at": row["expires_at"],
+                        "key": row["key"]}
+                # The signed offline app token: the agent injects it into the
+                # app container (LICENSE_KEY env) at install time so buyer
+                # activation is automatic, not frontend-dependent.
+                try:
+                    resp["app_token"] = row["app_token"] or ""
+                except Exception:
+                    resp["app_token"] = ""
+                return _JR(resp)
         return _JR({"licensed": False})
 
     # ── WriterStudioAI bridge ────────────────────────────────────────────
@@ -320,15 +413,19 @@ Your manuscripts and API keys stay on your own infrastructure.',
     # ── Stripe webhook (shared endpoint pattern from main.py; separate kind) ──
     @app.post("/api/market/webhook")
     async def market_webhook(request: Request):
+        # Fail-closed: never accept webhooks without a configured signing
+        # secret. Without this, any unauthenticated POST could mint an
+        # active license for any email + AVM-key. Match main.py's pattern.
+        if not STRIPE_WEBHOOK_SECRET:
+            print("[market] Rejected webhook: STRIPE_WEBHOOK_SECRET not configured", flush=True)
+            return _JR({"error": "webhook not configured"}), 503
+
         payload = await request.body()
         sig = request.headers.get("stripe-signature", "")
         import stripe
         stripe.api_key = STRIPE_SECRET_KEY
         try:
-            if STRIPE_WEBHOOK_SECRET:
-                event = stripe.Webhook.construct_event(payload, sig, STRIPE_WEBHOOK_SECRET)
-            else:
-                event = _json.loads(payload)
+            event = stripe.Webhook.construct_event(payload, sig, STRIPE_WEBHOOK_SECRET)
         except Exception as e:
             return _JR({"error": str(e)}), 400
 
@@ -342,15 +439,34 @@ Your manuscripts and API keys stay on your own infrastructure.',
             key = meta.get("license_key", "")
             email = meta.get("email", "")
             agent_id = meta.get("agent_id", "")
+            app_id = meta.get("app_id", "")
+
+            # Sign the vendor app's offline license token (Ed25519 JWT) so the
+            # buyer can activate the app itself, not just the AppVault install.
+            # The signing key NEVER leaves this server; the app only embeds the
+            # public half. Failure to sign is logged but does not fail the
+            # webhook — the AppVault-level license still activates below.
+            app_token = sign_app_license_token(
+                _os.environ.get("LICENSE_PRIVATE_KEY_PEM", ""),
+                email or "buyer@appvault.local",
+                MARKET_APP_ENTITLEMENTS,
+                plan="annual", days=MARKET_LICENSE_DAYS)
+            if not app_token and email:
+                print("[market] WARNING: app token not signed "
+                      "(LICENSE_PRIVATE_KEY_PEM missing/unparseable on central)",
+                      flush=True)
+
             db = get_db()
             db.execute(
                 """UPDATE app_licenses SET status='active', stripe_session_id=?,
                    stripe_payment_intent=?,
                    email=CASE WHEN ?='' THEN email ELSE ? END,
-                   agent_id=CASE WHEN ?='' THEN agent_id ELSE ? END
+                   agent_id=CASE WHEN ?='' THEN agent_id ELSE ? END,
+                   app_token=CASE WHEN ?='' THEN app_token ELSE ? END
                    WHERE key=? AND status='pending'""",
                 (data.get("id"), data.get("payment_intent") or "",
-                 email, email, agent_id, agent_id, key))
+                 email, email, agent_id, agent_id,
+                 app_token, app_token, key))
             db.commit()
             db.close()
             _audit("market.purchase", f"activated {key[:14]}... {meta.get('app_id')}")
@@ -366,12 +482,42 @@ Your manuscripts and API keys stay on your own infrastructure.',
                 except Exception:
                     pass
                 await _issue_writerstudio_license(row_email or email, data.get("id", ""))
+
+            # Email the buyer their app license key (delivery of record; the
+            # agent also injects it at install time). Non-fatal on failure.
+            if app_token and email:
+                try:
+                    from main import send_email  # runtime import avoids cycle
+                    send_email(
+                        email,
+                        "Your WriterStudioAI License Key — Activate Now",
+                        f"""<div style="font-family:system-ui,sans-serif;max-width:600px;margin:0 auto;padding:32px">
+  <h2>Welcome to WriterStudioAI! 🎉</h2>
+  <p>Thank you for your purchase (AppVault order <code>{_re.escape(meta.get('order_id', '')) or 'n/a'}</code>).
+     Your <strong>1-Year Market License</strong> is below.</p>
+  <h3>How to Activate</h3>
+  <ol>
+    <li>Open WriterStudioAI in your AppVault dashboard (it activates automatically when installed through AppVault).</li>
+    <li>Otherwise: <strong>Settings → License</strong> → paste your key → <strong>Activate</strong>.</li>
+  </ol>
+  <div style="background:#f5f5f5;border-radius:8px;padding:16px;margin:24px 0">
+    <p style="margin:0 0 8px;font-size:12px;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Your License Key</p>
+    <p style="margin:0;font-family:monospace;font-size:12px;word-break:break-all">{app_token}</p>
+  </div>
+  <p style="color:#666;font-size:14px">✅ Valid for <strong>{MARKET_LICENSE_DAYS} days</strong> — renewals issue a fresh key.<br>
+  ✅ Works <strong>100% offline</strong> — no internet connection required after activation.</p>
+</div>""")
+                except Exception as e:
+                    print(f"[market] license email failed: {e}", flush=True)
         elif etype == "charge.refunded":
-            # Refund -> revoke the license (30-day money-back enforcement)
+            # Refund -> revoke the license (30-day money-back enforcement).
+            # The offline app token cannot be revoked remotely (by design the
+            # app verifies offline); the annual expiry bounds the exposure and
+            # the token is cleared here so the agent stops delivering it.
             payment_intent = data.get("payment_intent") or ""
             db = get_db()
             db.execute(
-                "UPDATE app_licenses SET refunded=1, status='revoked' "
+                "UPDATE app_licenses SET refunded=1, status='revoked', app_token='' "
                 "WHERE stripe_session_id=? OR stripe_payment_intent=?",
                 (data.get("id"), payment_intent))
             db.commit()
@@ -426,5 +572,34 @@ h1,h2{{color:#38bdf8}}</style></head><body>
 {lic_rows or '<tr><td colspan=6>No licenses yet</td></tr>'}</table>
 </body></html>"""
         return HTMLResponse(html)
+
+    # ── post-purchase pages (Stripe success/cancel URLs point here) ──────
+    @app.get("/market/acknowledge")
+    async def market_acknowledge(key: str = ""):
+        """Stripe success landing page. The license itself is activated by the
+        /api/market/webhook (checkout.session.completed); this page just tells
+        the buyer what happens next and shows their key for safe-keeping."""
+        key = (key or "").strip()[:40]
+        safe_key = _re.sub(r"[^A-Za-z0-9\-]", "", key)
+        html = f"""<!DOCTYPE html><html><head><title>License activated — AppVault Market</title><style>
+body{{font-family:sans-serif;background:#0a0e1a;color:#e2e8f0;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}}
+.box{{max-width:520px;padding:36px;background:#0f172a;border:1px solid #1e293b;border-radius:14px;text-align:center}}
+h1{{color:#4ade80;font-size:20px;margin:0 0 10px}}p{{color:#94a3b8;font-size:14px;line-height:1.6}}
+code{{display:inline-block;margin:14px 0;padding:8px 14px;background:#0a0e1a;border:1px solid #334155;border-radius:8px;color:#38bdf8;font-size:13px;user-select:all}}
+</style></head><body><div class="box">
+<h1>✅ Payment received — license active</h1>
+<p>Your yearly license is being activated right now (usually instant).</p>
+{f'<p>Keep your license key:</p><code>{safe_key}</code>' if safe_key else ''}
+<p><b style="color:#e2e8f0;">Next step:</b> go back to your AppVault dashboard,
+open the 💎 <b>Market</b> tab (or the app's Install button) — the app is now
+unlocked for this machine.</p>
+<p style="font-size:12px;">30-day money-back guarantee · support@appvault.com</p>
+</div></body></html>"""
+        return HTMLResponse(html)
+
+    @app.get("/market")
+    async def market_landing():
+        """Stripe cancel_url target — send the buyer back to central's root."""
+        return RedirectResponse("/", status_code=302)
 
     print("[central] market registered (/api/market, /admin/market)")

@@ -6,3 +6,7 @@ data/
 *.log.*
 static/catalog.json.backup-*
 static/catalog.json.bak-*
+session_secret
+app_audit_report.json
+static/catalog.json.backup
+references/

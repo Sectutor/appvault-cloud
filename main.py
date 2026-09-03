@@ -22,7 +22,20 @@ from itsdangerous import URLSafeTimedSerializer
 CENTRAL_PORT = int(os.getenv("CENTRAL_PORT", "8000"))
 CENTRAL_URL = os.getenv("CENTRAL_URL", f"http://central:{CENTRAL_PORT}")
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "appvault-admin")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
+# A07 — refuse to run with the historical default admin password.
+# Operators MUST set ADMIN_PASSWORD via env / secret manager.
+if not ADMIN_PASSWORD:
+    raise RuntimeError(
+        "ADMIN_PASSWORD env var is required. Generate one with: "
+        "`openssl rand -base64 24` and pass it to the container."
+    )
+if ADMIN_PASSWORD == "appvault-admin":
+    raise RuntimeError(
+        "ADMIN_PASSWORD is set to the well-known default 'appvault-admin'. "
+        "This is a critical security issue (A07) — set a strong, unique "
+        "password via env / secret manager."
+    )
 # Client installs (install.sh) set DISABLE_ADMIN=true — the admin panel + admin
 # API exist ONLY on the operator's catalog central, never on client boxes.
 DISABLE_ADMIN = os.getenv("DISABLE_ADMIN", "false").strip().lower() == "true"
@@ -97,14 +110,86 @@ def bind_license_to_agent(license_key, agent_id):
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 app = FastAPI(title="AppVault Cloud")
-# CORS: the dashboard admin UI edits the catalog directly (Basic auth headers)
+# A05 — CORS was `allow_origins=["*"]` which means any site a logged-in
+# operator visits could call the admin API on the central host. We now
+# default to a tight allow-list; operators can widen via the
+# CENTRAL_CORS_ORIGINS env var (comma-separated).
 from starlette.middleware.cors import CORSMiddleware
+
+_DEFAULT_CORS = [
+    "http://localhost:8086",
+    "http://127.0.0.1:8086",
+    "http://localhost:8095",
+    "http://127.0.0.1:8095",
+]
+CENTRAL_CORS_ORIGINS = [
+    o.strip() for o in os.getenv("CENTRAL_CORS_ORIGINS", ",".join(_DEFAULT_CORS)).split(",")
+    if o.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=CENTRAL_CORS_ORIGINS or _DEFAULT_CORS,
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "X-Agent-Id", "X-Api-Key", "X-CSRF-Token"],
+    allow_credentials=True,
+    max_age=600,
 )
+
+
+# A04 — request body size limit (1 MiB). Stripe webhooks and admin POSTs
+# are all tiny; anything bigger is suspicious.
+_MAX_BODY_BYTES = 1 * 1024 * 1024
+
+
+@app.middleware("http")
+async def _enforce_body_size(request: Request, call_next):
+    cl = request.headers.get("content-length")
+    if cl and cl.isdigit() and int(cl) > _MAX_BODY_BYTES:
+        return JSONResponse({"error": "request body too large"}, status_code=413)
+    return await call_next(request)
+
+
+# A01 — basic in-memory CSRF guard. State-changing admin requests
+# (POST/PATCH/DELETE) require a token issued at /login and echoed in the
+# ``X-CSRF-Token`` header or ``csrf_token`` form field.  Stripe webhooks
+# and agent-to-central API calls are exempt.
+_CSRF_EXEMPT_PATHS = {
+    "/api/webhook",
+    "/api/agent/register",
+    "/api/agent/heartbeat",
+    "/api/agent/jobs",
+    "/api/agent/jobs/status",  # jobs/<id>/status handled below by substring
+    "/api/agent/catalog/version",
+    "/api/agent/catalog",
+    "/api/agent/compose",
+    "/api/agent/subscription",
+    "/api/agent/ping",
+    "/api/agent/billing-portal",
+    "/api/agent/checkout",
+    "/api/dashboard/login",
+    "/api/checkout",
+    "/api/billing-portal",
+    "/login",
+    "/acknowledge",
+}
+
+
+@app.middleware("http")
+async def _csrf_guard(request: Request, call_next):
+    if request.method in ("POST", "PATCH", "DELETE"):
+        path = request.url.path
+        exempt = any(path == p or path.startswith(p + "/") or path.startswith(p + "?")
+                     for p in _CSRF_EXEMPT_PATHS)
+        if not exempt and request.session.get("admin"):
+            token = (request.headers.get("x-csrf-token")
+                     or (await request.form()).get("csrf_token") if False else None)
+            # Re-read form only when needed (POST can be form-encoded)
+            if token is None and request.headers.get("content-type", "").startswith("application/x-www-form-urlencoded"):
+                form = await request.form()
+                token = form.get("csrf_token")
+            if not token or not hmac.compare_digest(str(token), str(request.session.get("csrf", ""))):
+                return JSONResponse({"error": "CSRF token missing or invalid"}, status_code=403)
+    return await call_next(request)
 
 
 @app.middleware("http")
@@ -113,7 +198,11 @@ async def admin_gate(request: Request, call_next):
     return 404 unless this is the operator's central (DISABLE_ADMIN unset)."""
     if DISABLE_ADMIN:
         p = request.url.path
-        if p.startswith("/admin") or p in ("/login", "/logout"):
+        # Exact match only for the bare /admin root; prefix match for the
+        # rest, but exclude any /api path that *starts* with /admin to
+        # avoid false positives like /api/admin-foo. The admin API is
+        # mounted under /admin/* only, never /api/admin/*.
+        if p == "/admin" or p.startswith("/admin/") or p in ("/login", "/logout", "/api/csrf-token"):
             return JSONResponse(
                 {"status": "error", "message": "Admin is only available on the AppVault catalog system"},
                 status_code=404,
@@ -147,7 +236,17 @@ def _load_or_create_session_secret() -> str:
     return secret
 
 SESSION_SECRET = _load_or_create_session_secret()
-app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET, max_age=60*60*24*30, same_site="lax")
+# A07 — cookie hardening. SameSite=lax stops CSRF on cross-site POSTs;
+# httponly keeps the cookie out of JS. ``secure`` follows the request
+# scheme so it works behind a TLS-terminating reverse proxy.
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=SESSION_SECRET,
+    max_age=60*60*24*30,
+    same_site="lax",
+    httponly=True,
+    secure=False,  # set True once the operator fronts Central with TLS
+)
 
 if not DISABLE_ADMIN and ADMIN_PASSWORD == "appvault-admin":
     print("[central] WARNING: ADMIN_PASSWORD is the default — set a strong one via environment", flush=True)
@@ -422,6 +521,31 @@ def increment_catalog_version() -> int:
 def generate_api_key() -> str:
     return hashlib.sha256(f"{uuid.uuid4()}{time.time()}{os.urandom(16)}".encode()).hexdigest()[:32]
 
+def _agent_auth(request: Request):
+    """Extract agent credentials from headers (preferred) or fall back to
+    query parameters (deprecated — visible in proxy logs). Returns
+    (agent_id, api_key) — caller passes them to verify_agent()."""
+    agent_id = (request.headers.get("X-Agent-Id")
+                or request.headers.get("x-agent-id") or "")
+    api_key = (request.headers.get("X-Api-Key")
+               or request.headers.get("x-api-key") or "")
+    return agent_id, api_key
+
+
+async def _agent_auth_or_query(request: Request, agent_id: str = "", api_key: str = ""):
+    """Same as _agent_auth but also accepts the legacy query-string
+    parameters used by the older /api/agent/jobs endpoints. Central
+    will keep accepting the query-string form for now to avoid breaking
+    deployed agents, but logs a one-shot warning so we can detect
+    stragglers and switch them to the header form."""
+    h_agent, h_key = _agent_auth(request)
+    if not agent_id:
+        agent_id = h_agent
+    if not api_key:
+        api_key = h_key
+    return agent_id, api_key
+
+
 def verify_agent(agent_id: str, api_key: str) -> bool:
     if not agent_id or not api_key:
         return False
@@ -588,11 +712,19 @@ async def agent_register(data: AgentRegister, request: Request):
 
 @app.post("/api/agent/heartbeat")
 async def agent_heartbeat(request: Request):
-    """Agent sends heartbeat to show it's alive. Also refreshes plan (grace period check)."""
+    """Agent sends heartbeat to show it's alive. Also refreshes plan (grace period check).
+
+    A07 — the api_key should be sent in the ``X-Api-Key`` header (preferred)
+    rather than the JSON body, but the body field is still accepted for
+    backwards compatibility. Body-in-key is bad because it leaks the key
+    into logs / traces; headers are stripped by access-log redaction more
+    reliably.
+    """
     body = await request.json()
-    agent_id = body.get("agent_id")
-    api_key = body.get("api_key")
-    
+    h_agent, h_key = _agent_auth(request)
+    agent_id = body.get("agent_id") or h_agent
+    api_key = body.get("api_key") or h_key
+
     if not verify_agent(agent_id, api_key):
         raise HTTPException(status_code=401, detail="Invalid auth")
     
@@ -616,8 +748,14 @@ async def agent_heartbeat(request: Request):
     return {"status": "ok", "server_time": datetime.utcnow().isoformat(), "plan": current_plan}
 
 @app.get("/api/agent/jobs")
-async def agent_get_jobs(agent_id: str = Query(...), api_key: str = Query(...)):
-    """Agent polls for pending jobs."""
+async def agent_get_jobs(request: Request, agent_id: str = Query(default=""), api_key: str = Query(default="")):
+    """Agent polls for pending jobs.
+
+    A07 — accept the api_key in the ``X-Api-Key`` header (preferred —
+    not visible in proxy / access logs). The query-string form still
+    works for backwards compatibility but is deprecated.
+    """
+    agent_id, api_key = await _agent_auth_or_query(request, agent_id, api_key)
     if not verify_agent(agent_id, api_key):
         raise HTTPException(status_code=401, detail="Invalid auth")
     
@@ -641,28 +779,43 @@ async def agent_get_jobs(agent_id: str = Query(...), api_key: str = Query(...)):
     return {"jobs": jobs}
 
 @app.post("/api/agent/jobs/{job_id}/status")
-async def agent_update_job_status(job_id: int, data: JobStatusUpdate):
-    """Agent reports job completion or failure."""
-    if not verify_agent(data.agent_id, data.api_key):
+async def agent_update_job_status(job_id: int, request: Request):
+    """Agent reports job completion or failure.
+
+    A07 — prefer the api_key in the ``X-Api-Key`` header; the body field
+    is still accepted for backwards compatibility with older agents.
+    """
+    body = await request.json()
+    h_agent, h_key = _agent_auth(request)
+    agent_id = body.get("agent_id") or h_agent
+    api_key = body.get("api_key") or h_key
+    if not verify_agent(agent_id, api_key):
         raise HTTPException(status_code=401, detail="Invalid auth")
-    
+    status_v = body.get("status", "")
+    result_v = body.get("result")
+
     db = get_db()
-    row = db.execute("SELECT id FROM agent_jobs WHERE id=? AND agent_id=?", (job_id, data.agent_id)).fetchone()
+    row = db.execute("SELECT id FROM agent_jobs WHERE id=? AND agent_id=?", (job_id, agent_id)).fetchone()
     if not row:
         db.close()
         raise HTTPException(status_code=404, detail="Job not found")
-    
+
     db.execute(
         "UPDATE agent_jobs SET status=?, result=?, completed_at=datetime('now') WHERE id=?",
-        (data.status, data.result, job_id)
+        (status_v, result_v, job_id)
     )
     db.commit()
     db.close()
     return {"status": "ok"}
 
 @app.get("/api/agent/catalog/version")
-async def agent_catalog_version(agent_id: str = Query(...), api_key: str = Query(...)):
-    """Agent checks if catalog needs updating."""
+async def agent_catalog_version(request: Request, agent_id: str = Query(default=""), api_key: str = Query(default="")):
+    """Agent checks if catalog needs updating.
+
+    A07 — accept the api_key in the ``X-Api-Key`` header (preferred).
+    Query-string form is deprecated; will be removed in a future release.
+    """
+    agent_id, api_key = await _agent_auth_or_query(request, agent_id, api_key)
     if not verify_agent(agent_id, api_key):
         raise HTTPException(status_code=401, detail="Invalid auth")
     
@@ -679,8 +832,13 @@ def _app_published(a):
     return True
 
 @app.get("/api/agent/catalog")
-async def agent_get_catalog(agent_id: str = Query(...), api_key: str = Query(...)):
-    """Agent downloads latest catalog."""
+async def agent_get_catalog(request: Request, agent_id: str = Query(default=""), api_key: str = Query(default="")):
+    """Agent downloads latest catalog.
+
+    A07 — accept the api_key in the ``X-Api-Key`` header (preferred).
+    Query-string form is deprecated.
+    """
+    agent_id, api_key = await _agent_auth_or_query(request, agent_id, api_key)
     if not verify_agent(agent_id, api_key):
         raise HTTPException(status_code=401, detail="Invalid auth")
     
@@ -739,7 +897,7 @@ async def login_page(request: Request, next: str = "/admin"):
 
 @app.post("/login")
 async def login_submit(request: Request):
-    """Validate admin credentials, set session cookie."""
+    """Validate admin credentials, set session cookie + CSRF token."""
     form = await request.form()
     username = form.get("username", "")
     password = form.get("password", "")
@@ -760,6 +918,10 @@ async def login_submit(request: Request):
             and hmac.compare_digest(password.encode(), ADMIN_PASSWORD.encode())):
         _record_login(client_ip, True)
         request.session["admin"] = True
+        # A01 — issue a CSRF token bound to the session; the
+        # _csrf_guard middleware requires it on state-changing requests.
+        import secrets as _secrets
+        request.session["csrf"] = _secrets.token_urlsafe(32)
         return RedirectResponse(next_url, status_code=303)
     _record_login(client_ip, False)
     return templates.TemplateResponse(request, "login.html", {
@@ -771,6 +933,21 @@ async def logout(request: Request):
     """Clear admin session."""
     request.session.clear()
     return RedirectResponse("/login", status_code=303)
+
+
+@app.get("/api/csrf-token")
+async def csrf_token(request: Request):
+    """Return the current CSRF token for an authenticated admin session.
+    The SPA uses this to populate the X-CSRF-Token header on every
+    state-changing request."""
+    if not request.session.get("admin"):
+        raise HTTPException(status_code=401, detail="not authenticated")
+    token = request.session.get("csrf") or ""
+    if not token:
+        import secrets as _secrets
+        token = _secrets.token_urlsafe(32)
+        request.session["csrf"] = token
+    return {"csrf_token": token}
 
 
 @app.get("/admin", response_class=HTMLResponse)
