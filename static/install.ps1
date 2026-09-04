@@ -332,7 +332,7 @@ function Pull-Image([string]$image) {
 }
 
 $pullExit = Pull-Image "ghcr.io/sectutor/appvault-agent:latest"
-if ($pullExit -eq 0) { $pullExit = Pull-Image "ghcr.io/sectutor/appvault-releases:v68" }
+if ($pullExit -eq 0) { $pullExit = Pull-Image "ghcr.io/sectutor/appvault-releases:v70" }
 if ($pullExit -ne 0) {
     $ErrorActionPreference = $dockerEAP
     Fail "Could not pull the AppVault images (exit $pullExit). Docker said: $script:lastPullError Make sure Docker Desktop is running and you have internet access, then run this installer again."
@@ -392,7 +392,7 @@ Remove-Item "$env:USERPROFILE\.appvault\heimdall-config\www" -Recurse -Force -Er
   -e PUID=1000 `
   -e PGID=1000 `
   -e TZ=Etc/UTC `
-  ghcr.io/sectutor/appvault-releases:v68
+  ghcr.io/sectutor/appvault-releases:v70
 $storeRunExit = $LASTEXITCODE
 
 $ErrorActionPreference = $dockerEAP
