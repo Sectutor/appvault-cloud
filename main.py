@@ -1422,6 +1422,11 @@ STRIPE_PRICE_PRO_YEARLY = os.getenv("STRIPE_PRICE_PRO_YEARLY", "price_xxx_pro_ye
 # Starter/Power tiers deprecated — kept for backward compat (not in checkout)
 STRIPE_PRICE_STARTER = os.getenv("STRIPE_PRICE_STARTER", "price_xxx_starter")
 STRIPE_PRICE_POWER = os.getenv("STRIPE_PRICE_POWER", "price_xxx_power")
+# Optional comma-separated extra Price IDs (price_...) and Product IDs
+# (prod_...) that count as AppVault. Read per request. The STRIPE_PRICE_*
+# values above are included automatically. Placeholder price_xxx* IDs are not.
+# This account also sells GRCompliance and sectutor.com, so checkout events
+# for those products must not mint an AppVault licence.
 SMTP_HOST = os.getenv("SMTP_HOST", "")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 SMTP_USER = os.getenv("SMTP_USER", "")
@@ -1519,9 +1524,162 @@ def _set_license_status(sub_id, status):
     return keys
 
 
-async def _handle_checkout_completed(session):
-    email = session.get("customer_email") or session.get("customer_details", {}).get("email")
-    metadata = session.get("metadata", {})
+# Stamped on Checkout Sessions this process creates. The webhook refuses
+# to license a session that does not carry it.
+APPVAULT_CHECKOUT_PRODUCT = "appvault"
+_PRICE_PLACEHOLDER_PREFIX = "price_xxx"
+_allowlist_empty_logged = False
+
+
+def _configured_appvault_price_ids():
+    """Stripe price/product IDs that are allowed to mint an AppVault licence.
+
+    Built from the configured checkout prices plus STRIPE_APPVAULT_PRICE_IDS
+    (comma-separated). Unconfigured placeholder IDs are left out so a fresh
+    deploy does not treat ``price_xxx_pro`` as a real price.
+    """
+    ids = set()
+    for price in (
+        STRIPE_PRICE_PRO,
+        STRIPE_PRICE_PRO_YEARLY,
+        STRIPE_PRICE_STARTER,
+        STRIPE_PRICE_POWER,
+    ):
+        price = str(price or "").strip()
+        if price and not price.startswith(_PRICE_PLACEHOLDER_PREFIX):
+            ids.add(price)
+    extra = os.getenv("STRIPE_APPVAULT_PRICE_IDS", "")
+    for part in str(extra).split(","):
+        part = part.strip()
+        if part and not part.startswith(_PRICE_PLACEHOLDER_PREFIX):
+            ids.add(part)
+    return ids
+
+
+def _appvault_checkout_metadata(price_id, **fields):
+    """Session metadata for an AppVault Checkout Session.
+
+    ``product`` is the ownership marker. ``price_id`` is the Stripe Price
+    on the session — webhook payloads do not include line items unless
+    expanded, so the price has to travel in metadata too.
+    """
+    meta = {
+        "product": APPVAULT_CHECKOUT_PRODUCT,
+        "price_id": str(price_id or ""),
+    }
+    for key, value in fields.items():
+        meta[key] = "" if value is None else str(value)
+    return meta
+
+
+def _appvault_subscription_metadata(price_id):
+    return {
+        "product": APPVAULT_CHECKOUT_PRODUCT,
+        "price_id": str(price_id or ""),
+    }
+
+
+def _session_commerce_ids(session):
+    """Price and product IDs visible on a Checkout Session.
+
+    Line items, when the event actually includes them, are authoritative.
+    Otherwise the price/product ids this server stored in metadata are used.
+    """
+    metadata = session.get("metadata") or {}
+    if not isinstance(metadata, dict):
+        metadata = {}
+    from_metadata = []
+    for key in ("price_id", "product_id"):
+        val = metadata.get(key)
+        if isinstance(val, str) and val.strip():
+            from_metadata.append(val.strip())
+
+    from_lines = []
+    saw_lines = False
+    for key in ("line_items", "display_items"):
+        container = session.get(key)
+        if not container:
+            continue
+        items = container.get("data") if isinstance(container, dict) else container
+        if not isinstance(items, list) or not items:
+            continue
+        saw_lines = True
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            price = item.get("price")
+            if isinstance(price, str) and price.strip():
+                from_lines.append(price.strip())
+            elif isinstance(price, dict):
+                if price.get("id"):
+                    from_lines.append(str(price["id"]).strip())
+                product = price.get("product")
+                if isinstance(product, str) and product.strip():
+                    from_lines.append(product.strip())
+                elif isinstance(product, dict) and product.get("id"):
+                    from_lines.append(str(product["id"]).strip())
+            plan = item.get("plan")
+            if isinstance(plan, dict) and plan.get("id"):
+                from_lines.append(str(plan["id"]).strip())
+            if isinstance(item.get("price_id"), str) and item["price_id"].strip():
+                from_lines.append(item["price_id"].strip())
+    if saw_lines:
+        return from_lines
+    return from_metadata
+
+
+def _checkout_ignore_reason(session):
+    """Return a short log token when this session must not be licensed.
+
+    Empty string means the session belongs to AppVault and is paid.
+    Tokens are safe to log: no email, name, or customer id.
+    """
+    global _allowlist_empty_logged
+    if not isinstance(session, dict):
+        return "not-appvault"
+    metadata = session.get("metadata") or {}
+    if not isinstance(metadata, dict):
+        metadata = {}
+    product = str(metadata.get("product") or "").strip().lower()
+    if product != APPVAULT_CHECKOUT_PRODUCT:
+        return "not-appvault"
+    allow = _configured_appvault_price_ids()
+    if not allow:
+        if not _allowlist_empty_logged:
+            _allowlist_empty_logged = True
+            print(
+                "[stripe] AppVault price allowlist is empty; "
+                "set STRIPE_PRICE_PRO / STRIPE_APPVAULT_PRICE_IDS. "
+                "Ownership check is metadata.product only.",
+                flush=True,
+            )
+    else:
+        prices = set(_session_commerce_ids(session))
+        if not prices or prices.isdisjoint(allow):
+            return "price-not-allowlisted"
+    payment_status = str(session.get("payment_status") or "").strip().lower()
+    if payment_status != "paid":
+        return "unpaid"
+    return ""
+
+
+async def _handle_checkout_completed(session, event_id="", event_type="checkout.session.completed"):
+    reason = _checkout_ignore_reason(session)
+    if reason:
+        # 200 at the route: Stripe must not retry other products' sessions
+        # or unpaid ones. Nothing is written.
+        print(
+            f"[stripe] Ignored {event_type} reason={reason} event={event_id or '-'}",
+            flush=True,
+        )
+        return
+    details = session.get("customer_details") or {}
+    if not isinstance(details, dict):
+        details = {}
+    email = session.get("customer_email") or details.get("email")
+    metadata = session.get("metadata") or {}
+    if not isinstance(metadata, dict):
+        metadata = {}
     instance_id = metadata.get("instance_id")
     agent_id = metadata.get("agent_id")
     tier = metadata.get("tier", "starter")
@@ -1659,7 +1817,16 @@ async def _handle_invoice_failed(inv):
 
 @app.post("/api/webhook")
 async def stripe_webhook(request: Request):
-    """Handle Stripe events: checkout, subscription lifecycle, invoices."""
+    """Handle Stripe events for AppVault: checkout, subscription lifecycle, invoices.
+
+    This Stripe account also sells GRCompliance licences and sectutor.com
+    products. A paid checkout.session.completed is not enough to mint an
+    AppVault licence — the session must carry metadata.product=appvault
+    (set when we create the session) and, when a price allowlist is
+    configured, one of those price/product IDs. Anything else, including
+    unpaid sessions and unknown event types, is acknowledged with HTTP 200
+    so Stripe does not retry it. Signature verification stays mandatory.
+    """
     import json as json_lib
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature")
@@ -1679,11 +1846,19 @@ async def stripe_webhook(request: Request):
         event = json_lib.loads(payload)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid payload: {str(e)}")
-    etype = event["type"]
-    obj = event["data"]["object"]
+    etype = str(event.get("type") or "")
+    data = event.get("data") if isinstance(event.get("data"), dict) else {}
+    obj = data.get("object")
+    event_id = event.get("id") or ""
+    # A signed but unusable payload cannot be fixed by a retry. Ack it.
+    if not etype or not isinstance(obj, dict):
+        print(
+            f"[stripe] Ignored event type={etype or '-'} event={event_id or '-'} reason=malformed",
+            flush=True,
+        )
+        return JSONResponse({"status": "ok"})
 
     # Idempotency: Stripe retries delivery — process each event id exactly once.
-    event_id = event.get("id") or ""
     if event_id:
         db = get_db()
         try:
@@ -1695,8 +1870,11 @@ async def stripe_webhook(request: Request):
         finally:
             db.close()
 
-    if etype == "checkout.session.completed":
-        await _handle_checkout_completed(obj)
+    if etype in ("checkout.session.completed", "checkout.session.async_payment_succeeded"):
+        # async_payment_succeeded is the paid follow-up for delayed methods.
+        # checkout.session.completed can arrive while payment_status is still
+        # unpaid; that one is ignored and this later event licenses it.
+        await _handle_checkout_completed(obj, event_id=event_id, event_type=etype)
     elif etype == "customer.subscription.updated":
         await _handle_subscription_updated(obj)
     elif etype == "customer.subscription.deleted":
@@ -1706,7 +1884,7 @@ async def stripe_webhook(request: Request):
     elif etype == "invoice.payment_failed":
         await _handle_invoice_failed(obj)
     else:
-        print(f"[stripe] Unhandled event type: {etype}", flush=True)
+        print(f"[stripe] Ignored event type={etype} event={event_id or '-'}", flush=True)
 
     return JSONResponse({"status": "ok"})
 
@@ -1960,7 +2138,15 @@ async def create_checkout(request: Request):
             success_url=f"http://{DOMAIN}/acknowledge?instance={instance_id}&src=web",
             cancel_url=f"http://{DOMAIN}",
             customer_email=email or None,
-            metadata={"instance_id": instance_id, "tier": tier, "billing": billing, "license_key": license_key, "email": email},
+            metadata=_appvault_checkout_metadata(
+                price_id,
+                instance_id=instance_id,
+                tier=tier,
+                billing=billing,
+                license_key=license_key,
+                email=email,
+            ),
+            subscription_data={"metadata": _appvault_subscription_metadata(price_id)},
         )
     except Exception as e:
         print(f"[stripe] Checkout session creation failed: {e}", flush=True)
@@ -2030,7 +2216,17 @@ async def agent_checkout(request: Request):
             success_url=f"http://{DOMAIN}/acknowledge?instance={instance_id}&src=client&agent={agent_id}",
             cancel_url=cancel_url,
             customer_email=email or None,
-            metadata={"agent_id": agent_id, "instance_id": instance_id, "tier": "pro", "billing": billing, "license_key": license_key, "email": email, "return_url": return_url},
+            metadata=_appvault_checkout_metadata(
+                price_id,
+                agent_id=agent_id,
+                instance_id=instance_id,
+                tier="pro",
+                billing=billing,
+                license_key=license_key,
+                email=email,
+                return_url=return_url,
+            ),
+            subscription_data={"metadata": _appvault_subscription_metadata(price_id)},
         )
     except Exception as e:
         print(f"[stripe] Agent checkout session creation failed: {e}", flush=True)
